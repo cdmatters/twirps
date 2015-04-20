@@ -55,12 +55,59 @@ def generate_d3_json():
         f.write(json.dumps(result))
 
 
+def generate_d3_json_improved():
+
+    parldb = '/Users/macintosh/Programming/Projects/Parliament/parl.db'
+    twirpdb = '/Users/macintosh/Programming/Projects/Parliament/Twirps/twirpy.db'
+
+    with sqlite3.connect(twirpdb) as connection:
+        cur = connection.cursor()
+        cur.execute('SELECT UserName, Handle, FollowersCount, FriendsCount,\
+                    TweetCount, OfficialId FROM TwirpData')
+
+        plot_data = [{'name': u_name,  'handle':handle, 'followers':followers,
+                    'friends':friends, 'tweets':tweets, 'o_id': o_id}
+                    for (u_name, handle, followers, friends, tweets, o_id) in cur.fetchall()]
+            
+    with sqlite3.connect(parldb) as connection:
+        cur = connection.cursor()
+        for mp_data in plot_data:
+            cur.execute('SELECT Name, Party, Constituency, PersonId \
+                        FROM MPCommons WHERE OfficialId=?', (mp_data['o_id'],) )
+            gov_tuple = cur.fetchall()
+            gov_data = {'party': gov_tuple[0][1], 'constituency':gov_tuple[0][2]}
+            
+            cur.execute('SELECT Office, StartDate FROM Offices \
+                        WHERE PersonId=?', (gov_tuple[0][3],))
+
+            gov_data.update({'offices': cur.fetchall()})
+            mp_data.update(gov_data)
+
+
+
+    with open('map.json', 'r+') as f:
+        twirp_map = json.load(f)
+
+    for mp_data in plot_data:
+        if mp_data['handle'] in twirp_map.keys():
+            mp_data.update(twirp_map[mp_data['handle']])
+
+
+    result = {'nodes':plot_data}
+
+    with open('map_d3_improved.json', 'w') as f:
+        f.write(json.dumps(result))
+
+
+
 
 def commands():
     if len(sys.argv)<2:
         print 'more args necc'
     elif sys.argv[1]=='d3_map':
         generate_d3_json()
+    elif sys.argv[1]=='d3_imp':
+        generate_d3_json_improved()
     else:
         print 'bad args'
 

@@ -1,41 +1,50 @@
 ;(function(){
 
     var width = 960, 
-        height =400;
+        height =680;
 
-    var color = d3.scale.category20()
+    var color = d3.scale.category20();
 
     var force = d3.layout.force()
-        .charge(-500)
-        .linkDistance(30)
-        .friction(0.2)
+        .charge(-700)
+        .friction(0.4)
         .size([width, height]);
 
-    var svg = d3.select("body").append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
+    var svg; 
     var displayedNodes = [],
         displayedEdges = [];
 
+
+
     //mapData = JSON.parse('map.json')
     //console.log(JSON.stringify(mapData, null, 2))
-    d3.json('map_d3.json', function(error, map){
+    d3.json('map_d3_improved.json', function(error, map){
         
-        displayedNodes= map.nodes.slice(1,2);
+        displayedNodes = map.nodes.slice(3,4);
+        
         var displayedHandles = {};
-        displayedNodes.forEach(function(d){displayedHandles[d.handle]=displayedNodes.indexOf(d);});
+
+        displayedNodes.forEach(function(d){
+            displayedHandles[d.handle] = displayedNodes.indexOf(d);
+        });
         
 
 
         
         redraw();
-        console.log(force.nodes())
 
-         var link;
-         var node;
+        var link;
+        var node;
+
+        d3.select('body').on('dblclick', function(){
+            addManyNodes});
+
+        function addManyNodes(){
+            d3.select('.node').forEach(addNode)
+        }
 
         function redraw(){
+            
             d3.selectAll('svg').remove();
 
             svg = d3.select("body").append("svg")
@@ -45,93 +54,111 @@
             force
                 .nodes(displayedNodes)
                 .links(displayedEdges)
+                .linkDistance(Math.sqrt(100000/displayedNodes.length))
                 .start();
 
             link = svg.selectAll(".link")
                 .data(displayedEdges)
                 .enter().append("line")
                 .attr("class", "link")
-                .style("stroke-width",   1);
+                .style("stroke-width",  function(d){return Math.ceil(Math.log(d.value))});
 
             node = svg.selectAll(".node")
                 .data(displayedNodes)
                 .enter().append("circle")
                 .attr("class", "node")
-                .attr("r", 5)
-                .style("fill", function(d){return color(d.party_no);})
+                .attr("r", function(d){return Math.log(d.tweets*50/displayedNodes.length)})
                 .call(force.drag)
-                .on("dblclick", addNode)
+                .attr("clicked", 0)
+                .style("fill", function(d) { return color(d.party); })
+                .attr("party", function(d){return d.party})
+                .attr("id", function(d){return d.handle})
+                //.on("dblclick", addNode)
 
-                node.append("title")
-                .text(function(d){return d.name;});
+                
+
+
+
+            force.links().forEach(function(d){
+                d3.select('#'+d.source.handle).attr("clicked", 1)
+            });            
+
+            node.append("title")
+                .text(function(d){return d.name;})
         };
 
         function addNode(clickedNode){
-            console.log(force.nodes())
-            console.log(displayedNodes)  
-        
-            // var newvar = force.nodes()
-            // displayedNodes = newvar.slice(0)
-
-            //  var newvar = force.nodes()
-            //  var newvar2 = newvar.slice()
-            //  console.log(newvar);
-            //  console.log(newvar2);
-            //  console.log(displayedNodes)   
-
+            // console.log(force.nodes())
+            // console.log(displayedNodes)              
             
+        
+            var cNode = d3.select(clickedNode).node()
 
-            var clickedNode = d3.select(clickedNode).node()
-            for (mentioned in map.old[clickedNode.handle].mentions){
-                if (displayedHandles[mentioned]== undefined){
-                    //console.log(mentioned)
-                    //console.log(Object.keys(displayedHandles))
+            var contact = ['mentions', 'retweets']
 
-                    for (i=0;i<map.nodes.length; i++){
+            for (var i=0; i<contact.length; i++){
+                displayedNodes.forEach(function(d){displayedHandles[d.handle]=displayedNodes.indexOf(d);});
+                for (twirpContact in cNode[contact[i]]){
+                    if (displayedHandles[twirpContact]== undefined){
+                        //console.log(displayedHandles)
+                        //console.log(twirpContact)
 
-                        if (map.nodes[i].handle == mentioned){
-                            displayedNodes.push(map.nodes[i]);
-                        };
-                    };  
+                        for (j=0;j<map.nodes.length; j++){
+
+                            if (map.nodes[j].handle == twirpContact &&
+                                cNode[contact[i]][twirpContact]>10){
+
+                                displayedNodes.push(map.nodes[j]);
+                            };
+                        };  
+                    };
                 };
-            }
+            };
             //displayedNodes.forEach(function(d){console.log(d.handle);});   
-            force.stop;
-            calculateEdges(clickedNode);
-
-            redraw();
+            click  = d3.select(this)
+            if (click.attr("clicked") == 0){
+                force.stop();
+                calculateEdges(clickedNode);
+                redraw();
+                d3.select('#'+cNode.handle).attr("clicked", 2);
+            };
         };
 
 
         function calculateEdges(clickedNode){
-            displayedHandles = {}
-
             displayedNodes.forEach(function(d){displayedHandles[d.handle]=displayedNodes.indexOf(d);});
-            ////console.log(displayedHandles)
-            //displayedNodes.forEach(function(d){
-
-            var clickedNode = d3.select(clickedNode).node()
-
-            for(var mentionHandle in map.old[clickedNode.handle].mentions){
-                
-                if (mentionHandle in displayedHandles){
-
-                    var newEdge = {source: displayedHandles[clickedNode.handle],
-                               target: displayedHandles[mentionHandle], 
-                               value: map.old[clickedNode.handle].mentions[mentionHandle],
-                               contact:'mentions'
-                            };
-                    //console.log(newEdge)
-                    if (newEdge.value > 5){
-                        displayedEdges.push(newEdge);     
-                    }       
-                };
+            console.log(displayedHandles)
             
+
+            var cNode = d3.select(clickedNode).node()
+
+            var contact = ['mentions', 'retweets']
+   
+            for (i=0; i<contact.length; i++){
+                
+                for(var mentionHandle in cNode[contact[i]]){
+                    
+                    if (mentionHandle in displayedHandles){
+
+                        var newEdge = {source: displayedHandles[cNode.handle],
+                                   target: displayedHandles[mentionHandle], 
+                                   value: cNode[contact[i]][mentionHandle],
+                                   contact: contact[i]
+                                };
+
+                        if (newEdge.value > 10){
+                            displayedEdges.push(newEdge);
+
+                        };       
+                    };
+                
+                };
             };
             //console.log(displayedEdges)
             //});
-
-            };
+            console.log(displayedEdges);
+            displayedNodes.forEach(function(d){console.log(d.name)});
+        };
 
 
 

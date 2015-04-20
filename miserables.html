@@ -54,6 +54,8 @@ d3.json("map_d3.json", function(error, graph) {
   node.append("title")
       .text(function(d) { return d.name; });
 
+
+
   force.on("tick", function() {
     link.attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
