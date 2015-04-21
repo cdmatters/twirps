@@ -38,14 +38,14 @@
             .start();
 
         var node = svg.selectAll(".node")
-            .data(graph.nodes.slice(2,10))
+            .data(graph.nodes.slice(2,10)
             .enter().append("circle")
             .attr("class", "node")
             .attr("r", 5)
             .attr("party", function(d){return d.party;})
             .style("fill", function(d) { return color(d.party_no); })
             .call(force.drag)
-            .on("click", addLinks(this, link))
+            .on("click", addLinks(this, link));
             
         
         function addLinks(thisNode, links){
@@ -61,8 +61,6 @@
                 }
                 console.log(i)
             }
-
-
             return false;
         };
 

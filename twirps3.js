@@ -6,7 +6,7 @@
     var color = d3.scale.category20();
 
     var force = d3.layout.force()
-        .charge(-700)
+        .charge(-500)
         .friction(0.4)
         .size([width, height]);
 
@@ -36,12 +36,6 @@
         var link;
         var node;
 
-        d3.select('body').on('dblclick', function(){
-            addManyNodes});
-
-        function addManyNodes(){
-            d3.select('.node').forEach(addNode)
-        }
 
         function redraw(){
             
@@ -71,9 +65,12 @@
                 .call(force.drag)
                 .attr("clicked", 0)
                 .style("fill", function(d) { return color(d.party); })
+                .style("stroke", 'white' )
+                .style("stroke-width", 7)
+                .style("stroke-opacity",0.5)
                 .attr("party", function(d){return d.party})
                 .attr("id", function(d){return d.handle})
-                //.on("dblclick", addNode)
+                .on("dblclick", addNode)
 
                 
 
@@ -84,8 +81,22 @@
             });            
 
             node.append("title")
-                .text(function(d){return d.name;})
-        };
+                .text(function(d){return d.name;});
+            node.style("stroke-opacity", function(d){
+                var clicked = d3.select('#'+d.handle).attr("clicked")
+                console.log(clicked) 
+                    if (clicked == 0){console.log('yo');return 0.5;}
+                    else if (clicked == 1){return 1;}
+                    else if (clicked ==2) {return 0 ;};
+                })
+                .style("stroke-width", function(d){
+                var clicked = d3.select('#'+d.handle).attr("clicked")
+                console.log(clicked) 
+                    if (clicked == 0){return 6;}
+                    else if (clicked == 1){return 3;}
+                    else if (clicked ==2) {return 0 ;};
+                });
+            };
 
         function addNode(clickedNode){
             // console.log(force.nodes())
@@ -127,7 +138,7 @@
 
         function calculateEdges(clickedNode){
             displayedNodes.forEach(function(d){displayedHandles[d.handle]=displayedNodes.indexOf(d);});
-            console.log(displayedHandles)
+            //console.log(displayedHandles)
             
 
             var cNode = d3.select(clickedNode).node()
@@ -156,7 +167,7 @@
             };
             //console.log(displayedEdges)
             //});
-            console.log(displayedEdges);
+           // console.log(displayedEdges);
             displayedNodes.forEach(function(d){console.log(d.name)});
         };
 
