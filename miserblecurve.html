@@ -42,6 +42,7 @@ d3.json("map_d3.json", function(error, graph) {
         t = nodes[link.target],
         i = {}; // intermediate node
     nodes.push(i);
+    console.log(s);
     links.push({source: s, target: i, contact:link.contact }, 
                {source: i, target: t, contact:link.contact});
     bilinks.push([s, i, t, link.contact]);
