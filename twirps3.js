@@ -1,14 +1,27 @@
 ;(function(){
 
-    var width = 1000, 
-        height =1000;
+    var width = 2000, 
+        height =800;
 
-    var color = d3.scale.category20();
+    var parties_map= {"Conservative":"#0575c9", "Labour":"#ed1e0e",
+        "Liberal Democrat":"#fe8300", "UKIP":"#712f87", "Green":"#78c31e",
+        "Scottish National Party":"#EBC31C", "Social Democratic and Labour Party":"#65a966",
+        "DUP":"#c0153d", "Sinn Fein":"#00623f", "Alliance":"#e1c21e", "Respect":"#31b56a",
+        "Plaid Cymru":"#4e9f2f", "Independent":"#4e9f2f", "UUP":"#4e9f2f"
+         };
+
+   // var color = d3.scale.category20()
+                    //ordinal()
+                  // .domain(Object.keys(parties_scale))
+                  // .range(Object.keys(parties_scale).forEach(function(d){return parties_scale[d];}));
+
+    
+
 
     var force = d3.layout.force()
-        .charge(-600)
-        .gravity(.8)
-        .linkDistance(20)
+        .charge(-200)
+        .gravity(.5)
+        .linkDistance(10)
         .linkStrength(2)
         .size([width, height]);
 
@@ -17,7 +30,8 @@
     var displayedNodes = [],
         displayedEdges = [],
         displayedInvisibleEdges = [],
-        displayedInvisibleNodes = [];
+        displayedInvisibleNodes = [],
+        poppedNodes=[];
 
 
 
@@ -26,7 +40,7 @@
     //console.log(JSON.stringify(mapData, null, 2))
     d3.json('map_d3_improved.json', function(error, map){
         
-        displayedNodes = map.nodes.slice(3,4);
+        displayedNodes = map.nodes.slice();
         displayedInvisibleNodes = displayedNodes.slice()
         
         
@@ -57,17 +71,19 @@
                 .attr("width", width)
                 .attr("height", height);
 
-            console.log(displayedNodes.length);
-            console.log(displayedInvisibleNodes.length);
+            // console.log(displayedNodes.length);
+            // console.log(displayedInvisibleNodes.length);
             
-            console.log(displayedEdges.length);
-            console.log(displayedInvisibleEdges.length);
+            // console.log(displayedEdges.length);
+            // console.log(displayedInvisibleEdges.length);
 
             force
                 .nodes(displayedInvisibleNodes)
                 .links(displayedInvisibleEdges)
                 .linkDistance(Math.sqrt(100000/displayedNodes.length))
                 .start();
+
+
 
             link = svg.selectAll(".link")
                 .data(displayedEdges)
@@ -82,22 +98,49 @@
                   else {
                     return 'black';};
                    })
+                .style("marker-end", "url(#end)")
+
+            svg.append("defs").selectAll("marker")
+                .data(["end"])
+              .enter().append("marker")
+                .attr("id", function(d){console.log(d);return d;})
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 20)
+                .attr("refY", -1.5)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+              .append("path")
+                .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
+                .style("stroke", function(d){
+                 // console.log(d[3])
+                  if (d[3]=='mentions'){
+                    //console.log('hey')
+                    return 'grey';}
+                  else {
+                    return 'black';};
+                   })
+                .style("stroke-opacity",0.5);
+
 
             node = svg.selectAll(".node")
                 .data(displayedNodes)
               .enter().append("circle")
                 .attr("class", "node")
-                .attr("r", function(d){return 10 + (d.tweets/5000)})
+                .attr("r", function(d){return 5})// + (d.tweets/5000)})
                 .call(force.drag)
                 .attr("clicked", 0)
-                .style("fill", function(d) { return color(d.party); })
+                .attr("fill", function(d) {return parties_map[d.party]; })
                 .style("stroke", 'white' )
-                .style("stroke-width", 7)
+               // .style("stroke-width", 7)
                 .style("stroke-opacity",0.5)
                 .attr("party", function(d){return d.party})
                 .attr("id", function(d){return d.handle})
-                .on("dblclick", addNode)
+                .on("click", addNode)
                 .on("mouseover", null);
+
+
+
 
                 
             force.links().forEach(function(d){
@@ -117,22 +160,18 @@
                 .style("stroke-width", function(d){
                 var clicked = d3.select('#'+d.handle).attr("clicked")
                 //console.log(clicked) 
-                    if (clicked == 0){return 6;}
-                    else if (clicked == 1){return 3;}
+                    if (clicked == 0){return 3;}
+                    else if (clicked == 1){return 1.5;}
                     else if (clicked ==2) {return 0 ;};
                 });
             };
 
         function addNode(clickedNode){
-            //console.log(clickedNode)
-            //console.log(this)
 
-            //console.log(clickedNode.retweets)
 
-            var cNode = d3.select(clickedNode).node() //why?? why not just clicked
-            var contact = ['mentions', 'retweets']
+            var cNode = d3.select(clickedNode).node() ;//why?? why not just clicked
+            var contact = ['mentions', 'retweets'];
 
-            //console.log(cNode)
 
             for (var i=0; i<contact.length; i++){
 
@@ -140,15 +179,15 @@
 
                 for (twirpContact in cNode[contact[i]]){   //retweets and mentions separately
                     
-                    if (displayedHandles[twirpContact]== undefined){  //only add new nodes
+                    if (displayedHandles[twirpContact] == undefined){  //only add new nodes
                         
                         for (j=0;j<map.nodes.length; j++){   
-
+                            
                             if (map.nodes[j].handle == twirpContact &&
                                 cNode[contact[i]][twirpContact]>10){ //should add global variable for control
                                 
+                                console.log(tally);
                                 displayedNodes.push(map.nodes[j]);
-
                                 displayedInvisibleNodes.splice(displayedNodes.length, 0, map.nodes[j]);
 
                             };
@@ -172,9 +211,10 @@
             updateDisplayedNodes()
             
             
-            var cNode = d3.select(clickedNode).node()
+            var cNode = d3.select(clickedNode).node();
 
-            var contact = ['mentions', 'retweets']
+            var contact = ['mentions', 'retweets'];
+
    
             for (j=0; j<contact.length; j++){
                 
@@ -198,7 +238,7 @@
                         var visibleEdge = [ s, i,  t, contact[j], cNode[contact[j]][mentionHandle]];
 
                         if (cNode[contact[j]][mentionHandle]>10 && s.handle!=t.handle){
-                            displayedInvisibleNodes.push(i)
+                            displayedInvisibleNodes.push(i);
                             displayedEdges.push(visibleEdge);
                             displayedInvisibleEdges.push(invisibleEdgeA);
                             displayedInvisibleEdges.push(invisibleEdgeB); 
@@ -228,7 +268,9 @@
             });
 
             node.attr("transform", function(d) {
-                return "translate("+ d.x + "," + d.y + ")";
+                var r = 10 + (d.tweets/5000);
+                return "translate("+ Math.max(r, Math.min(width-r, d.x)) + ","
+                                   + Math.max(r, Math.min(width-r, d.y)) + ")";
             });
                 
         });
