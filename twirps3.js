@@ -10,14 +10,6 @@
         "Plaid Cymru":"#4e9f2f", "Independent":"#4e9f2f", "UUP":"#4e9f2f"
          };
 
-   // var color = d3.scale.category20()
-                    //ordinal()
-                  // .domain(Object.keys(parties_scale))
-                  // .range(Object.keys(parties_scale).forEach(function(d){return parties_scale[d];}));
-
-    
-
-
     var force = d3.layout.force()
         .charge(-200)
         .gravity(.5)
@@ -31,7 +23,13 @@
         displayedEdges = [],
         displayedInvisibleEdges = [],
         displayedInvisibleNodes = [],
-        poppedNodes=[];
+        clickedNodes =[],
+        lastCursor;
+        toggle = {radius:false, highlight:false};
+
+    
+
+    
 
 
 
@@ -42,17 +40,16 @@
         
         displayedNodes = map.nodes.slice();
         displayedInvisibleNodes = displayedNodes.slice()
+
         
-        
+        d3.select("body").on("keypress", keyController );
         var displayedHandles = {};
         var link;
         var node;
-
-
-
         
         updateDisplayedNodes();
-        redraw();
+        redrawMap();
+        
 
 
         function updateDisplayedNodes(){
@@ -62,20 +59,19 @@
             );
         }
 
+        function keyController(){
+            var key = d3.event.keyCode;
 
-        function redraw(){
-            
+            if (key == 116){ radiusTransition();}
+            else if (key == 32){ highlightTransition();}
+        };
+        
+        function redrawMap(){
             d3.selectAll('svg').remove();
 
             svg = d3.select("body").append("svg")
                 .attr("width", width)
                 .attr("height", height);
-
-            // console.log(displayedNodes.length);
-            // console.log(displayedInvisibleNodes.length);
-            
-            // console.log(displayedEdges.length);
-            // console.log(displayedInvisibleEdges.length);
 
             force
                 .nodes(displayedInvisibleNodes)
@@ -92,7 +88,7 @@
                 .style("stroke-width",  1)
                 .style("stroke", function(d){
                  // console.log(d[3])
-                  if (d[3]=='mentions'){
+                  if (d.contact=='mentions'){
                     //console.log('hey')
                     return 'grey';}
                   else {
@@ -103,7 +99,7 @@
             svg.append("defs").selectAll("marker")
                 .data(["end"])
               .enter().append("marker")
-                .attr("id", function(d){console.log(d);return d;})
+                .attr("id", "end")
                 .attr("viewBox", "0 -5 10 10")
                 .attr("refX", 20)
                 .attr("refY", -1.5)
@@ -114,7 +110,7 @@
                 .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
                 .style("stroke", function(d){
                  // console.log(d[3])
-                  if (d[3]=='mentions'){
+                  if (d.contact=='mentions'){
                     //console.log('hey')
                     return 'grey';}
                   else {
@@ -122,61 +118,68 @@
                    })
                 .style("stroke-opacity",0.5);
 
-
             node = svg.selectAll(".node")
                 .data(displayedNodes)
-              .enter().append("circle")
+              .enter().append("g") 
                 .attr("class", "node")
-                .attr("r", function(d){return 5})// + (d.tweets/5000)})
                 .call(force.drag)
+                .attr("id", function(d){return d.handle;})
+            node.append("circle")
                 .attr("clicked", 0)
                 .attr("fill", function(d) {return parties_map[d.party]; })
                 .style("stroke", 'white' )
-               // .style("stroke-width", 7)
-                .style("stroke-opacity",0.5)
                 .attr("party", function(d){return d.party})
-                .attr("id", function(d){return d.handle})
                 .on("click", addNode)
-                .on("mouseover", null);
-
-
-
-
-                
-            force.links().forEach(function(d){
-                d3.select('#'+d.source.handle).attr("clicked", 1)
-            });            
-
+            node.append("text")
+                .attr("dx", -25)
+                .attr("dy", 5)
+                .text(function(d){return })
+                .style("stroke", "black");
             node.append("title")
                 .text(function(d){return d.name;});
+                
 
-            node.style("stroke-opacity", function(d){
-                var clicked = d3.select('#'+d.handle).attr("clicked")
-               // console.log(clicked) 
+                
+            clickedNodes.forEach(function(d){
+                d3.select('#'+d).selectAll('circle').attr("clicked", 1)
+            });            
+
+            
+
+            node.selectAll("circle")
+                .style("stroke-opacity", function(d){
+                    var clicked = d3.select('#'+d.handle).selectAll('circle').attr("clicked");
                     if (clicked == 0){return 0.5;}
-                    else if (clicked == 1){return 1;}
-                    else if (clicked == 2) {return 0 ;};
+                    else if (clicked == 1){return 1;};
                 })
                 .style("stroke-width", function(d){
-                var clicked = d3.select('#'+d.handle).attr("clicked")
-                //console.log(clicked) 
+                    var clicked = d3.select('#'+d.handle).selectAll('circle').attr("clicked");
                     if (clicked == 0){return 3;}
-                    else if (clicked == 1){return 1.5;}
-                    else if (clicked ==2) {return 0 ;};
+                    else if (clicked == 1){return 1.5;};
+                })
+                .attr("r", function(d){
+                    var clicked = d3.select('#'+d.handle).selectAll('circle').attr("clicked");
+                    if (clicked == 1 && toggle.radius==true){return 5 + Math.sqrt(d.tweets/100);}
+                    else{return 5;}; 
                 });
-            };
+            node.selectAll("text")
+                .text( function(d){
+                    var clicked = d3.select('#'+d.handle).selectAll('circle').attr("clicked");
+                    if (clicked == 1 && toggle.radius==true){return d.name;}
+                    else{return};
+                })
+
+
+
+        };
 
         function addNode(clickedNode){
-
-
             var cNode = d3.select(clickedNode).node() ;//why?? why not just clicked
             var contact = ['mentions', 'retweets'];
-
 
             for (var i=0; i<contact.length; i++){
 
                 updateDisplayedNodes()
-
                 for (twirpContact in cNode[contact[i]]){   //retweets and mentions separately
                     
                     if (displayedHandles[twirpContact] == undefined){  //only add new nodes
@@ -186,7 +189,7 @@
                             if (map.nodes[j].handle == twirpContact &&
                                 cNode[contact[i]][twirpContact]>10){ //should add global variable for control
                                 
-                                console.log(tally);
+                                //console.log(tally);
                                 displayedNodes.push(map.nodes[j]);
                                 displayedInvisibleNodes.splice(displayedNodes.length, 0, map.nodes[j]);
 
@@ -194,27 +197,25 @@
                         };  
                     };
                 };
-            };
+            }
 
-            click  = d3.select(this)
+            click  = d3.select(this);
+            lastCursor = click;
+            
             if (click.attr("clicked") == 0){
+                clickedNodes.push(click[0][0].__data__.handle)
                 force.stop();
                 calculateEdges(clickedNode);
-                redraw();
+                redrawMap();
                 d3.select('#'+cNode.handle).attr("clicked", 2);
             };
         };
-
-
         function calculateEdges(clickedNode){
 
             updateDisplayedNodes()
             
-            
             var cNode = d3.select(clickedNode).node();
-
             var contact = ['mentions', 'retweets'];
-
    
             for (j=0; j<contact.length; j++){
                 
@@ -235,42 +236,80 @@
                         var invisibleEdgeA = {source : s, target : i },
                             invisibleEdgeB = {source : i, target : t }; 
 
-                        var visibleEdge = [ s, i,  t, contact[j], cNode[contact[j]][mentionHandle]];
+                        var visibleEdge = {source:s, inter:i, target:t, contact:contact[j], value:cNode[contact[j]][mentionHandle]};
 
-                        if (cNode[contact[j]][mentionHandle]>10 && s.handle!=t.handle){
+                        if (visibleEdge.value>10 && s.handle!=t.handle){
                             displayedInvisibleNodes.push(i);
                             displayedEdges.push(visibleEdge);
                             displayedInvisibleEdges.push(invisibleEdgeA);
                             displayedInvisibleEdges.push(invisibleEdgeB); 
-
-
                         };       
-                    };
-                
+                    };  
                 };
             };
-            //console.log(displayedEdges)
-            //});
-           // console.log(displayedEdges);
-            //displayedInvisibleNodes.forEach(function(d){console.log(d)});
+        };
+        function radiusTransition(){
+
+            if (toggle.radius == false){
+                clickedNodes.forEach( function(handle){
+                    d3.select("#"+handle).selectAll('circle')
+                        .transition()
+                        .duration(2000)
+                        .attr("r", function(d){return 5+ Math.sqrt(d.tweets/100);});
+                    d3.select("#"+handle).selectAll('text')
+                        .text(function(d){return d.name})
+                });
+                toggle.radius = true;
+            } else if (toggle.radius == true){
+                clickedNodes.forEach( function(handle){
+                    d3.select("#"+handle).selectAll('circle')
+                        .transition()
+                        .duration(2000)
+                        .attr("r", 5);
+                    d3.select("#"+handle).selectAll('text')
+                        .text(function(d){return});
+                });
+                toggle.radius = false;
+            };
+            
+        };
+
+        function highlightTransition(){
+            if (toggle.highlight == false){
+                displayedEdges.forEach(function(d){console.log(d)})
+
+                toggle.highlight = true
+            } else if (toggle.highlight == true){
+
+
+                toggle.highlight = false
+            };
+
+            
         };
 
 
 
 
 
-
         force.on("tick", function(){
+
+            function border(z, axis ){
+                var r = 5; 
+                if (axis == 'x'){return Math.max(2*r, Math.min(width-2*r, z))}
+                else if (axis == 'y'){return Math.max(2*r, Math.min(height-2*r, z))};
+            }
+
             link.attr("d", function(d){
-                return "M" + d[0].x + "," + d[0].y
-                    + "S" + d[1].x + "," + d[1].y
-                    + " " + d[2].x + "," + d[2].y;
+                return "M" + border(d.source.x,'x') + "," + border(d.source.y,'y')
+                    + "S" + border(d.inter.x,'x') + "," + border(d.inter.y,'y')
+                    + " " + border(d.target.x,'x') + "," + border(d.target.y,'y');
             });
 
             node.attr("transform", function(d) {
-                var r = 10 + (d.tweets/5000);
-                return "translate("+ Math.max(r, Math.min(width-r, d.x)) + ","
-                                   + Math.max(r, Math.min(width-r, d.y)) + ")";
+                var r = 5
+                return "translate("+ border(d.x,'x') + ","
+                                   + border(d.y,'y') + ")";
             });
                 
         });
