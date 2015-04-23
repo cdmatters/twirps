@@ -1,7 +1,7 @@
 ;(function(){
 
     var width = 2000, 
-        height =800;
+        height =1200;
 
     var parties_map= {"Conservative":"#0575c9", "Labour":"#ed1e0e",
         "Liberal Democrat":"#fe8300", "UKIP":"#712f87", "Green":"#78c31e",
@@ -63,7 +63,9 @@
             var key = d3.event.keyCode;
 
             if (key == 116){ radiusTransition();}
-            else if (key == 32){ highlightTransition();}
+            else if (key == 32){ 
+                highlightTransition();
+                toggle.highlight = (!toggle.highlight)}
         };
         
         function redrawMap(){
@@ -86,6 +88,7 @@
               .enter().append("path")
                 .attr("class", "link")
                 .style("stroke-width",  1)
+                .style("stroke-opacity", 0.5)
                 .style("stroke", function(d){
                  // console.log(d[3])
                   if (d.contact=='mentions'){
@@ -97,7 +100,7 @@
                 .style("marker-end", "url(#end)")
 
             svg.append("defs").selectAll("marker")
-                .data(["end"])
+                .data(displayedEdges.map(function(d){return d.source.handle}))
               .enter().append("marker")
                 .attr("id", "end")
                 .attr("viewBox", "0 -5 10 10")
@@ -108,6 +111,7 @@
                 .attr("orient", "auto")
               .append("path")
                 .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
+                .attr("class", function(d){return d})
                 .style("stroke", function(d){
                  // console.log(d[3])
                   if (d.contact=='mentions'){
@@ -169,6 +173,8 @@
                     else{return};
                 })
 
+            highlightTransition()
+
 
 
         };
@@ -200,7 +206,7 @@
             }
 
             click  = d3.select(this);
-            lastCursor = click;
+            lastCursor = click.node();
             
             if (click.attr("clicked") == 0){
                 clickedNodes.push(click[0][0].__data__.handle)
@@ -266,26 +272,74 @@
                         .transition()
                         .duration(2000)
                         .attr("r", 5);
-                    d3.select("#"+handle).selectAll('text')
-                        .text(function(d){return});
                 });
+                node.selectAll('text')
+                    .text(function(){return;});
+
                 toggle.radius = false;
-            };
-            
+            };            
         };
 
         function highlightTransition(){
-            if (toggle.highlight == false){
-                displayedEdges.forEach(function(d){console.log(d)})
 
-                toggle.highlight = true
-            } else if (toggle.highlight == true){
+            if (lastCursor != undefined){
+                if (toggle.highlight == false){
+                    var highlightedNodes = [lastCursor.__data__.handle];
 
+                    displayedEdges.forEach( function(d){
+                        if (d.source.handle == lastCursor.__data__.handle){
+                            highlightedNodes.push(d.target.handle);
+                        };
+                    });
 
-                toggle.highlight = false
-            };
+                    node.selectAll("circle")
+                        .transition()
+                        .duration(1000)
+                        .attr('opacity', function(d){
+                            if (highlightedNodes.some(function(e){return d.handle==e;})){
+                                return 1;
+                            } else {return 0.1;}
+                        });
+                    node.selectAll("text")
+                        .transition()
+                        .duration(3000)
+                        .text(function(d){
+                            if (highlightedNodes.some(function(e){return d.handle==e;}) && toggle.radius == true){
+                                return d.name;
+                            } else {return;}
+                        });
+                    link.style('stroke-opacity', function(d){
+                            if (d.source.handle == lastCursor.__data__.handle) {return 1;}
+                            else {return 0.05} })
+                    svg.selectAll("marker").selectAll("path")
+                            .style("stroke-opacity", 0.05);
 
-            
+                    //console.log(svg.selectAll("."+lastCursor.__data__.handle).style("stroke-opacity", 1))
+
+                    
+
+                } else if (toggle.highlight == true){
+
+                    node.selectAll("circle")
+                        .transition()
+                        .duration(1000)
+                        .attr('opacity', 1)
+                    node.selectAll("text")
+                        .text(function(){return})
+                    if (toggle.radius == true){
+                        clickedNodes.forEach( function(handle){  
+                            d3.select("#"+handle).selectAll('text')
+                               .text(function(d){return d.name})
+                        });
+                    };
+                    link.style('stroke-opacity', 0.5) ;
+                    svg.selectAll("marker").selectAll("path")
+                            .style("stroke-opacity", 0.5); 
+        
+                    
+                };
+
+            };  
         };
 
 
