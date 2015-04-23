@@ -64,8 +64,9 @@
 
             if (key == 116){ radiusTransition();}
             else if (key == 32){ 
+                toggle.highlight = (!toggle.highlight);
                 highlightTransition();
-                toggle.highlight = (!toggle.highlight)}
+                }
         };
         
         function redrawMap(){
@@ -173,7 +174,7 @@
                     else{return};
                 })
 
-            highlightTransition()
+            highlightTransition();
 
 
 
@@ -283,7 +284,7 @@
         function highlightTransition(){
 
             if (lastCursor != undefined){
-                if (toggle.highlight == false){
+                if (toggle.highlight == true){
                     var highlightedNodes = [lastCursor.__data__.handle];
 
                     displayedEdges.forEach( function(d){
@@ -318,7 +319,7 @@
 
                     
 
-                } else if (toggle.highlight == true){
+                } else if (toggle.highlight == false){
 
                     node.selectAll("circle")
                         .transition()
