@@ -1,0 +1,12 @@
+# databases
+*.db
+
+# python
+*.pyc
+
+# keys
+tweepy_key.py
+
+# sublime
+*.sublime-project
+*.sublime-workspace

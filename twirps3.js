@@ -28,17 +28,9 @@
         toggle = {radius:false, highlight:false};
 
     
-
-    
-
-
-
-
-    //mapData = JSON.parse('map.json')
-    //console.log(JSON.stringify(mapData, null, 2))
     d3.json('map_d3_improved.json', function(error, map){
         
-        displayedNodes = map.nodes.slice();
+        displayedNodes = map.nodes.slice(3,4);
         displayedInvisibleNodes = displayedNodes.slice()
 
         
@@ -106,7 +98,7 @@
                 .attr("id", "end")
                 .attr("viewBox", "0 -5 10 10")
                 .attr("refX", 20)
-                .attr("refY", -1.5)
+                .attr("refY", -5)
                 .attr("markerWidth", 6)
                 .attr("markerHeight", 6)
                 .attr("orient", "auto")
@@ -208,6 +200,7 @@
 
             click  = d3.select(this);
             lastCursor = click.node();
+            highlightTransition() 
             
             if (click.attr("clicked") == 0){
                 clickedNodes.push(click[0][0].__data__.handle)
@@ -342,6 +335,8 @@
 
             };  
         };
+
+
 
 
 
