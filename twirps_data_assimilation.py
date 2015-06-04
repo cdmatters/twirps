@@ -1,3 +1,7 @@
+# This module is used to assimilate and clean the data provided in the 
+# twirpy.db database. It is also used to isolate useful pieces of data and
+# turn them into useful json files
+
 import sqlite3
 import time, sys, json, re 
 import unicodedata
@@ -11,6 +15,9 @@ START_TIME = time.time()
 
 
 def return_top_10():
+    '''A catchall method that simply returns a .txt file for easy inspection 
+    of assimilated data'''
+
     list_length = 20
     stored_names = generate_stored_twirp_list()
 
@@ -66,6 +73,12 @@ def return_top_10():
 
 
 def generate_map():
+    """Tale a list of twirps and for each:
+    -use mention_freq.json and retweet_freq.json 
+to generate a graph datastructure of communications
+Write map to JSON file.
+
+OUTPUT: {MPname: {"mentions":{JoeBloggs: 1, AnneClark:2, ...}, "retweets": {TimCook: 5, ...} }, ... }"""
     stored_twirps = {handle for handle, _ in generate_stored_twirp_list()}
     results = {}
     lap_time()
@@ -89,6 +102,9 @@ def generate_map():
     lap_time()
 
 def unshorten_url(url):
+    """Generate HEAD request of url to find 'unshortened url'
+     eg: 'bit.ly/i24rs -> google.com/hello"""
+
     parsed = urlparse.urlparse(url)
     http_obj = httplib.HTTPConnection(parsed.netloc)
     http_obj.request('HEAD', parsed.path)
@@ -99,20 +115,22 @@ def unshorten_url(url):
         return url
 
 def parse_url(url):
+    """Find the base of the url, using regex"""
     reg = re.compile('/')
     reg_result = reg.split(url)
     output = reg_result[0]+'//'+reg_result[2]
     return output
 
 def store_url(url, tweet_ID):
+    """Store new url in database"""
     with sqlite3.connect('twirpy.db') as connection:
         cur = connection.cursor()
         cur.execute('UPDATE TweetEntities SET UrlBase=?\
                     WHERE TweetID=? AND EntityType="url"',(url, tweet_ID) )
 
-
-
 def clean_up_urls():
+    """For each url in database, call unshorten_url and parse_url, 
+    then update database with new url"""
     with sqlite3.connect('twirpy.db') as connection:
         cur = connection.cursor()
         cur.execute('SELECT Entity, TweetID, UrlBase FROM TweetEntities WHERE EntityType="url"')
@@ -152,6 +170,10 @@ def clean_up_urls():
 
 
 def generate_url_frequency_json():
+    """Take list of twirps and for each:
+    - get list of urls tweeted or retweeted
+    - tally urls
+Write url frequency data to JSON file """ 
     stored_names = generate_stored_twirp_list()
     results = {}
 
@@ -174,6 +196,10 @@ def generate_url_frequency_json():
             
 
 def generate_retweet_frequency_json():
+    """Take list of twirps and for each:
+    - get list of retweet ids 
+    - tally retweet handles 
+Write retweet frequency data to JSON file """
     stored_names = generate_stored_twirp_list()
     results = {}
 
@@ -191,11 +217,14 @@ def generate_retweet_frequency_json():
     with open('retweet_freq.json', 'w+') as f:
         f.write(json.dumps(results))
     lap_time()
-            
-
-
 
 def generate_hashtag_frequency_json():
+    """Take list of twirps and for each:
+    - get list of retweet ids
+    - get list of hashtags 
+    -tally hashtags, filtering out retweeted messages 
+Write hashtag frequency data to JSON file"""
+
     stored_names = generate_stored_twirp_list()
     results = {}
 
@@ -216,8 +245,13 @@ def generate_hashtag_frequency_json():
         f.write(json.dumps(results))
     lap_time()
 
-
 def generate_mention_frequency_json():
+    """Take list of twirps and for each:
+    - get list of retweet ids 
+    - get list of mentioned entities
+    - tally mentioned entities, filtering out retweeted messages
+Write mention frequency data to JSON file """
+
     stored_names = generate_stored_twirp_list()
     results = {}
 
@@ -239,8 +273,12 @@ def generate_mention_frequency_json():
     lap_time()
     pass
 
-
 def generate_word_frequency_json():
+    """Take list of twirps, and for each:
+    - get list of tweets 
+    - filter out retweets
+    - tally words from all tweets' content in a dict, filtering out stopwords
+Write twirp word frequency data to single JSON file"""
 
     stored_names = generate_stored_twirp_list()
     results = {}
@@ -274,8 +312,12 @@ def generate_word_frequency_json():
     lap_time()
     pass
 
+########################
+# DATABASE QUERY METHODS
+########################
 
 def generate_stored_twirp_list():
+    """Return a list of tuples, containing (TwitterHandles, UserID) from twirpy.db"""
     with sqlite3.connect('twirpy.db') as connection:
         cur = connection.cursor()
         cur.execute('SELECT DISTINCT Userhandle, UserID FROM TweetData')
@@ -283,56 +325,75 @@ def generate_stored_twirp_list():
         return twirp_list
 
 def select_tweets_by_twirp(user_id):
+    """Return a list of tweet-info tuples from a certain user id: 
+    [ (UserId, UserHandle, Favourite Count, RetweetCount, Content, Retweet, CreatedDate, TweetID), ...]"""
+
     with sqlite3.connect('twirpy.db') as connection:
         cur = connection.cursor()
         cur.execute('SELECT * FROM TweetData WHERE UserID=?', (user_id,))
         return cur.fetchall()
 
 def select_entities_by_twirp(user_id, entity):
+    """Return a list of entities-info-tuples from a certain user id, and entity:
+ [ (TweetID, UserID, EntityType, Entity, ToUser, UrlBase), ...]"""
+
     with sqlite3.connect('twirpy.db') as connection:
         cur = connection.cursor()
         cur.execute('SELECT * FROM TweetEntities WHERE UserID=? AND EntityType=?', (user_id,entity))
         return cur.fetchall()
 
 def select_retweet_ids_by_twirp(user_id):
+    """Return a list of tuples of TweetIDs with Handles for all retweets by a user: 
+[ (TweetId, TwitterHandle),...]"""
+
     with sqlite3.connect('twirpy.db') as connection:
         cur = connection.cursor()
         cur.execute('SELECT TwitterID, Retweet FROM TweetData \
             WHERE UserID=? AND Retweet<>"NULL" AND Retweet<>"REPLY"', (user_id,))
         return cur.fetchall()
-        
 
+
+        
+###########################
+# DATABASE ALTERING METHODS
+###########################
 
 def tally_retweets():
+    """UNBUILT: Tally up the total number of times a twirp has been retweeted,
+and update TwirpData"""
     pass
 
 def tally_favourites():
+    """UNBUILT: Tally up the total number of times a twirp has been favourited,
+and update TwirpData"""
     pass
 
-def monitor_twirps():
-    with sqlite3.connect('twirpy.db') as connection:
-        cur = connection.cursor()
-        cur.execute('SELECT COUNT(DISTINCT UserHandle) FROM TweetData')
-        mp_no = cur.fetchall()
-        print mp_no[0][0]
-        
-        name_list = generate_stored_twirp_list()
 
-        for name, _  in name_list:
 
-            cur.execute('SELECT COUNT(*) FROM TweetData WHERE UserHandle=?', (name,))
-            tally = cur.fetchall()
-
-            cur.execute('SELECT TweetCount FROM TwirpData WHERE Handle=?', (name,))
-            tweet_count = cur.fetchall()
-
-            print name, '\t', tally[0][0], '\t', tweet_count[0][0]
 
 def lap_time():
+    """Prints the time elapsed since the start of program running"""
     lap = time.time()
     print '---%s s ---' %(START_TIME-lap)
 
+
+
+
+#################################
+#    CONTROL FLOW & UTILITY METHODS
+#################################
+
+
+def lap_time():
+    '''Prints the time elapsed since the start of program running'''
+
+    lap = time.time()
+    print '---%s s ---' %(START_TIME-lap)
+
+
 def main():
+    '''Controls the flow of operations from cmd line'''
+
     words = sys.argv
     if len(words) ==1:
         print 'print arg: [monitor, map]'
