@@ -13,64 +13,9 @@ from nltk.corpus import stopwords
 
 START_TIME = time.time()
 
-
-def return_top_10():
-    '''A catchall method that simply returns a .txt file for easy inspection 
-    of assimilated data'''
-
-    list_length = 20
-    stored_names = generate_stored_twirp_list()
-
-    with open('hashtag_freq.json', 'r') as f:
-        hashtag_dict = json.load(f)
-    with open('mention_freq.json', 'r') as m:
-        mention_dict = json.load(m)
-    with open('word_freq.json', 'r') as w:
-        word_dict = json.load(w)
-    with open('retweet_freq.json', 'r') as r:
-        retweet_dict = json.load(r)
-    with open('url_freq.json', 'r') as u:
-        url_dict = json.load(u)
-
-    for name, user_id in stored_names:
-        sorted_hashtags = sorted(hashtag_dict[name].items(), key=operator.itemgetter(1), reverse=True)
-        sorted_mentions = sorted(mention_dict[name].items(), key=operator.itemgetter(1), reverse=True)
-        sorted_words = sorted(word_dict[name].items(), key=operator.itemgetter(1), reverse=True)
-        sorted_retweets = sorted(retweet_dict[name].items(), key=operator.itemgetter(1), reverse=True)
-        sorted_urls= sorted(url_dict[name].items(), key=operator.itemgetter(1), reverse=True)
-        print 'NAME: %s' %name, '\n'
-        
-        top_h = sorted_hashtags[:list_length]
-        top_m = sorted_mentions[:list_length]
-        top_w = sorted_words[:list_length]
-        top_r = sorted_retweets[:list_length]
-        top_u = sorted_urls[:list_length]
-
-        if len(top_h)<list_length:
-            top_h.extend([(0,0)]*(list_length-len(top_h)))
-        if len(top_m)<list_length:
-            top_m.extend([(0,0)]*(list_length-len(top_m)))
-        if len(top_w)<list_length:
-            top_w.extend([(0,0)]*(list_length-len(top_w)))
-        if len(top_r)<list_length:
-            top_r.extend([(0,0)]*(list_length-len(top_r)))
-        if len(top_u)<list_length:
-            top_u.extend([(0,0)]*(list_length-len(top_u)))
-
-        template = "{0:5}|{1:25}{2:5}||{3:15}{4:5}||{5:15}{6:5}||{7:15}{8:5}||{9:30}{10:5}||"
-    
-        print template.format('Order', 'HASHTAG','No.','WORDS','No.','MENTIONS','No.', 'RETWEETS', 'No.', "URLS", 'No.')
-        for i in range(0,list_length):
-            in_tuple = (i, top_h[i][0], top_h[i][1], top_w[i][0], top_w[i][1], top_m[i][0], 
-                        top_m[i][1], top_r[i][0], top_r[i][1], top_u[i][0], top_u[i][1])
-            try:
-                print template.format(*in_tuple)
-            except:
-                print 'Error'
-
-        print '\n\n\n'
-    lap_time()
-
+##########################################
+# HIGHER ORDER DATA ASSIMILATION METHODS  (Generate maps, etc...)
+##########################################
 
 def generate_map():
     """Tale a list of twirps and for each:
@@ -101,73 +46,10 @@ OUTPUT: {MPname: {"mentions":{JoeBloggs: 1, AnneClark:2, ...}, "retweets": {TimC
         f.write(json.dumps(results))
     lap_time()
 
-def unshorten_url(url):
-    """Generate HEAD request of url to find 'unshortened url'
-     eg: 'bit.ly/i24rs -> google.com/hello"""
 
-    parsed = urlparse.urlparse(url)
-    http_obj = httplib.HTTPConnection(parsed.netloc)
-    http_obj.request('HEAD', parsed.path)
-    response = http_obj.getresponse()
-    if response.status/100 == 3 and response.getheader('Location'):
-        return response.getheader('Location')
-    else:
-        return url
-
-def parse_url(url):
-    """Find the base of the url, using regex"""
-    reg = re.compile('/')
-    reg_result = reg.split(url)
-    output = reg_result[0]+'//'+reg_result[2]
-    return output
-
-def store_url(url, tweet_ID):
-    """Store new url in database"""
-    with sqlite3.connect('twirpy.db') as connection:
-        cur = connection.cursor()
-        cur.execute('UPDATE TweetEntities SET UrlBase=?\
-                    WHERE TweetID=? AND EntityType="url"',(url, tweet_ID) )
-
-def clean_up_urls():
-    """For each url in database, call unshorten_url and parse_url, 
-    then update database with new url"""
-    with sqlite3.connect('twirpy.db') as connection:
-        cur = connection.cursor()
-        cur.execute('SELECT Entity, TweetID, UrlBase FROM TweetEntities WHERE EntityType="url"')
-        lap_time()
-
-    reg = re.compile('/{1}')
-
-    for i, (url, tweet_ID, url_base) in enumerate(cur.fetchall()):
-        print i, unicode(url), url_base
-
-        if url_base == None or url_base == '':
-            try: 
-                url = unshorten_url(url)
-            except:
-                print 'Error in Url Following'
-            try:
-                base = parse_url(url)
-            except:
-                print 'Error in Regex'
-            store_url(base, tweet_ID) 
-            print url
-        elif 'http' not in url_base:
-
-            try:
-                base = parse_url(url)
-            except:
-                print 'Error in Regex'
-            store_url(base, tweet_ID)
-            print url
-        else:
-            print url_base
-    
-        connection.commit()
-
-        lap_time()
-
-
+##############################
+# LOWER ORDER JSON ASSIMILATION METHODS (Counting etc)
+##############################
 
 def generate_url_frequency_json():
     """Take list of twirps and for each:
@@ -191,9 +73,6 @@ Write url frequency data to JSON file """
     with open('url_freq.json', 'w+') as f:
         f.write(json.dumps(results))
     lap_time()
-
-            
-            
 
 def generate_retweet_frequency_json():
     """Take list of twirps and for each:
@@ -313,7 +192,7 @@ Write twirp word frequency data to single JSON file"""
     pass
 
 ########################
-# DATABASE QUERY METHODS
+# DIRECT DATABASE QUERY METHODS
 ########################
 
 def generate_stored_twirp_list():
@@ -352,11 +231,9 @@ def select_retweet_ids_by_twirp(user_id):
             WHERE UserID=? AND Retweet<>"NULL" AND Retweet<>"REPLY"', (user_id,))
         return cur.fetchall()
 
-
-        
-###########################
-# DATABASE ALTERING METHODS
-###########################
+#############################
+# DATABASE ALTERING METHODS (CLEANING & OTHER)
+#############################
 
 def tally_retweets():
     """UNBUILT: Tally up the total number of times a twirp has been retweeted,
@@ -368,32 +245,161 @@ def tally_favourites():
 and update TwirpData"""
     pass
 
+def clean_up_urls():
+    """For each url in database, call unshorten_url and parse_url, 
+    then update database with new url"""
+    with sqlite3.connect('twirpy.db') as connection:
+        cur = connection.cursor()
+        cur.execute('SELECT Entity, TweetID, UrlBase FROM TweetEntities WHERE EntityType="url"')
+        lap_time()
 
+    reg = re.compile('/{1}')
 
+    for i, (url, tweet_ID, url_base) in enumerate(cur.fetchall()):
+        print i, unicode(url), url_base
 
-def lap_time():
-    """Prints the time elapsed since the start of program running"""
-    lap = time.time()
-    print '---%s s ---' %(START_TIME-lap)
+        if url_base == None or url_base == '':
+            try: 
+                url = unshorten_url(url)
+            except:
+                print 'Error in Url Following'
+            try:
+                base = parse_url(url)
+            except:
+                print 'Error in Regex'
+            store_url(base, tweet_ID) 
+            print url
+        elif 'http' not in url_base:
 
+            try:
+                base = parse_url(url)
+            except:
+                print 'Error in Regex'
+            store_url(base, tweet_ID)
+            print url
+        else:
+            print url_base
+    
+        connection.commit()
 
+        lap_time()
 
+def unshorten_url(url):
+    """Generate HEAD request of url to find 'unshortened url'
+     eg: 'bit.ly/i24rs -> google.com/hello"""
+
+    parsed = urlparse.urlparse(url)
+    http_obj = httplib.HTTPConnection(parsed.netloc)
+    http_obj.request('HEAD', parsed.path)
+    response = http_obj.getresponse()
+    if response.status/100 == 3 and response.getheader('Location'):
+        return response.getheader('Location')
+    else:
+        return url
+
+def parse_url(url):
+    """Find the base of the url, using regex"""
+    reg = re.compile('/')
+    reg_result = reg.split(url)
+    output = reg_result[0]+'//'+reg_result[2]
+    return output
+
+def store_url(url, tweet_ID):
+    """Store new url in database"""
+    with sqlite3.connect('twirpy.db') as connection:
+        cur = connection.cursor()
+        cur.execute('UPDATE TweetEntities SET UrlBase=?\
+                    WHERE TweetID=? AND EntityType="url"',(url, tweet_ID) )
 
 #################################
 #    CONTROL FLOW & UTILITY METHODS
 #################################
 
 
+def return_top_20():
+    """Print top 20 items from assimilated JSON for inspection purposes"""
+    list_length = 20
+    stored_names = generate_stored_twirp_list()
+
+    with open('hashtag_freq.json', 'r') as f:
+        hashtag_dict = json.load(f)
+    with open('mention_freq.json', 'r') as m:
+        mention_dict = json.load(m)
+    with open('word_freq.json', 'r') as w:
+        word_dict = json.load(w)
+    with open('retweet_freq.json', 'r') as r:
+        retweet_dict = json.load(r)
+    with open('url_freq.json', 'r') as u:
+        url_dict = json.load(u)
+
+    for name, user_id in stored_names:
+        sorted_hashtags = sorted(hashtag_dict[name].items(), key=operator.itemgetter(1), reverse=True)
+        sorted_mentions = sorted(mention_dict[name].items(), key=operator.itemgetter(1), reverse=True)
+        sorted_words = sorted(word_dict[name].items(), key=operator.itemgetter(1), reverse=True)
+        sorted_retweets = sorted(retweet_dict[name].items(), key=operator.itemgetter(1), reverse=True)
+        sorted_urls= sorted(url_dict[name].items(), key=operator.itemgetter(1), reverse=True)
+        print 'NAME: %s' %name, '\n'
+        
+        top_h = sorted_hashtags[:list_length]
+        top_m = sorted_mentions[:list_length]
+        top_w = sorted_words[:list_length]
+        top_r = sorted_retweets[:list_length]
+        top_u = sorted_urls[:list_length]
+
+        if len(top_h)<list_length:
+            top_h.extend([(0,0)]*(list_length-len(top_h)))
+        if len(top_m)<list_length:
+            top_m.extend([(0,0)]*(list_length-len(top_m)))
+        if len(top_w)<list_length:
+            top_w.extend([(0,0)]*(list_length-len(top_w)))
+        if len(top_r)<list_length:
+            top_r.extend([(0,0)]*(list_length-len(top_r)))
+        if len(top_u)<list_length:
+            top_u.extend([(0,0)]*(list_length-len(top_u)))
+
+        template = "{0:5}|{1:25}{2:5}||{3:15}{4:5}||{5:15}{6:5}||{7:15}{8:5}||{9:30}{10:5}||"
+    
+        print template.format('Order', 'HASHTAG','No.','WORDS','No.','MENTIONS','No.', 'RETWEETS', 'No.', "URLS", 'No.')
+        for i in range(0,list_length):
+            in_tuple = (i, top_h[i][0], top_h[i][1], top_w[i][0], top_w[i][1], top_m[i][0], 
+                        top_m[i][1], top_r[i][0], top_r[i][1], top_u[i][0], top_u[i][1])
+            try:
+                print template.format(*in_tuple)
+            except:
+                print 'Error'
+
+        print '\n\n\n'
+    lap_time()
+
+def monitor_twirps():
+    """ Print handle, number of tweets stored in database, total number of tweets
+ever tweeted for each twirp """
+
+    with sqlite3.connect('twirpy.db') as connection:
+        cur = connection.cursor()
+        cur.execute('SELECT COUNT(DISTINCT UserHandle) FROM TweetData')
+        mp_no = cur.fetchall()
+        print mp_no[0][0]
+        
+        name_list = generate_stored_twirp_list()
+
+        for name, _  in name_list:
+
+            cur.execute('SELECT COUNT(*) FROM TweetData WHERE UserHandle=?', (name,))
+            tally = cur.fetchall()
+
+            cur.execute('SELECT TweetCount FROM TwirpData WHERE Handle=?', (name,))
+            tweet_count = cur.fetchall()
+
+            print name, '\t', tally[0][0], '\t', tweet_count[0][0]
+
 def lap_time():
     '''Prints the time elapsed since the start of program running'''
-
     lap = time.time()
     print '---%s s ---' %(START_TIME-lap)
 
-
 def main():
     '''Controls the flow of operations from cmd line'''
-
     words = sys.argv
     if len(words) ==1:
         print 'print arg: [monitor, map]'
@@ -409,8 +415,8 @@ def main():
         generate_hashtag_frequency_json()
     elif words[1]=='mention':
         generate_mention_frequency_json()
-    elif words[1]=='top_10':
-        return_top_10()
+    elif words[1]=='top_20':
+        return_top_20()
     elif words[1]=='retweets':
         generate_retweet_frequency_json()
     elif words[1]=='clean_urls':
@@ -428,7 +434,5 @@ def main():
     else:
         print 'bad arguments'
     
-
-
 if __name__=='__main__':
     main()
