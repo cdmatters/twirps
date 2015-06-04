@@ -20,6 +20,7 @@ Current Functionality
 ####Data 
 + *twirps_data_collection* is responsible for all data collection from Twitter
 + *twirps_data_assimilation* takes the raw data and generates some useful JSON
++ *twirps_data_investigation* provides analytical investigations of data using scikit and numpy
 
 ####Visualization
 + d3 force graph used to generate an intereactive map of tweets and retweets for MPs using 4 years data in run up to General Election 2015 *incomplete*
