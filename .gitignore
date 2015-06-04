@@ -10,3 +10,6 @@ tweepy_key.py
 # sublime
 *.sublime-project
 *.sublime-workspace
+
+# venv
+venv/
