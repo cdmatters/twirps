@@ -24,9 +24,9 @@ when cluster and centroids not changing finish algo.
 
 def naive_clustering(filename):
     """perform kmeans clustering on a single assimilated frequency json file. 
-output to .csv"""
+output to json for d3 visual exploration"""
     
-    k = 4
+    k = 2
 
     dv = DictVectorizer(sparse=True)
     
@@ -46,10 +46,26 @@ output to .csv"""
     initial_centroids = normalize(sp.sparse.rand(dim, k , density=0.1), axis=0)
     centroids = initial_centroids.tocsc()
 
+    count, clusters = 0, []
+    
 
-    distances = kmeans_find_distance(data_points, centroids)
-    clusters = kmeans_find_cluster(distances)
-    centroids = kmeans_find_centroid(data_points, clusters, k)
+    while count < 3: 
+        old_clusters = clusters
+
+        distances = kmeans_find_distance(data_points, centroids)
+        clusters = kmeans_find_cluster(distances)
+        centroids = kmeans_find_centroid(data_points, clusters, k)
+
+        if old_clusters == clusters: #no convergence with centroids?
+            count +=1
+
+    #note: no averages done yet
+    def print_json():
+         
+        with open('data_analysis_vis/kmeans_naive.json', 'w+') as f:
+            f.write(json.dumps(  [{'name':MP, 'cluster': clusters[i]} for i, MP in enumerate(MPnames) ] ) )
+    
+    print_json()
 
 
 def kmeans_find_distance(M,C):
@@ -80,14 +96,13 @@ def kmeans_find_centroid(M, clusters, k):
         A = M[clust_indices] #matrix of clusters
         centroid_list.append(sp.sparse.csr_matrix(A.mean(axis=0)))
         i+=1
+    
     print centroid_list
 
     C = sp.sparse.vstack(centroid_list).transpose()
+    C = np.round(C, decimals=5)
     return C
 
-
-        
-        
 
 
 if __name__ == '__main__':
