@@ -101,6 +101,7 @@ def kmeans_find_centroid(M, clusters, k):
     return C
 
 def print_json(results):
+    "add archipelago & twirp info to results, and write full results to JSON"
     with open('data_analysis_vis/basic_info.json', 'r+') as b:
         basix = json.load(b)
 

@@ -17,13 +17,17 @@ The twitter addresses were supplied by the government
 Current Functionality
 ---------------------
 
-####Data 
+####Data & Code
 + *twirps_data_collection* is responsible for all data collection from Twitter
 + *twirps_data_assimilation* takes the raw data and generates some useful JSON
 + *twirps_data_investigation* provides analytical investigations of data using scikit and numpy
 
 ####Visualization
-+ d3 force graph used to generate an intereactive map of tweets and retweets for MPs using 4 years data in run up to General Election 2015 *incomplete*
++ d3 force graph used to generate an intereactive map of tweets and retweets for MPs using 4 years data in run up to General Election 2015 
++ d3 divergent force graph showing the clusters from the kmeans data analysis investigations, but visually coloured by potential causes of clustering (party, geography, etc).  *in progress*
+
+####Analysis
++ The K-Mean clustering algorithm is implemented in *twirps_data_assimilation*, designed to work on frequency json, to see if any natural clusterings form from data on hashtags, words, urls etc.  *refinement of model in progress*
 
 Future Work
 ---------------
