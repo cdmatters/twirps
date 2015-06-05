@@ -57,8 +57,8 @@ def generate_d3_json():
 
 def generate_d3_json_improved():
 
-    parldb = '/Users/macintosh/Programming/Projects/Parliament/parl.db'
-    twirpdb = '/Users/macintosh/Programming/Projects/Parliament/Twirps/twirpy.db'
+    parldb = '/Users/macintosh/Programming/Projects/Parliament/ArchiveData/Westminster2010-15/parl.db'
+    twirpdb = '/Users/macintosh/Programming/HackerSchool/Twirps/twirpy.db'
 
     with sqlite3.connect(twirpdb) as connection:
         cur = connection.cursor()
@@ -83,9 +83,11 @@ def generate_d3_json_improved():
             gov_data.update({'offices': cur.fetchall()})
             mp_data.update(gov_data)
 
+    with open('basic_info.json', 'w+') as f:
+        f.write(json.dumps(plot_data))
 
 
-    with open('map.json', 'r+') as f:
+    with open('../assimilated_json/map.json', 'r+') as f:
         twirp_map = json.load(f)
 
     for mp_data in plot_data:
