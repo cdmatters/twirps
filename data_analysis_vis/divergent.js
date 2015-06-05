@@ -6,10 +6,18 @@
 
     var fill = d3.scale.category10();
 
+    var parties_map= {"Conservative":"#0575c9", "Labour":"#ed1e0e",
+        "Liberal Democrat":"#fe8300", "UKIP":"#712f87", "Green":"#78c31e",
+        "Scottish National Party":"#EBC31C", "Social Democratic and Labour Party":"#65a966",
+        "DUP":"#c0153d", "Sinn Fein":"#00623f", "Alliance":"#e1c21e", "Respect":"#31b56a",
+        "Plaid Cymru":"#4e9f2f", "Independent":"#4e9f2f", "UUP":"#4e9f2f"
+         };
+
 
 
     d3.json('kmeans_naive.json', function(data){ 
         var nodes = data
+        console.log(data)
     
 
         var force = d3.layout.force()
@@ -31,7 +39,7 @@
             .attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; })
             .attr("r", 8)
-            .style("fill", function(d) { return fill(d.cluster); })
+            .style("fill", function(d) { return parties_map[d.party]; })
             .style("stroke", function(d) { return d3.rgb(d.cluster).darker(2); })
             .call(force.drag)
             .on("mousedown", function() { d3.event.stopPropagation(); });
