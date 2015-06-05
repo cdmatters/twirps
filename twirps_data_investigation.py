@@ -26,7 +26,7 @@ def naive_clustering(filename):
     """perform kmeans clustering on a single assimilated frequency json file. 
 output to json for d3 visual exploration"""
     
-    k = 2
+    k = 1
 
     dv = DictVectorizer(sparse=True)
     
@@ -60,12 +60,9 @@ output to json for d3 visual exploration"""
             count +=1
 
     #note: no averages done yet
-    def print_json():
-         
-        with open('data_analysis_vis/kmeans_naive.json', 'w+') as f:
-            f.write(json.dumps(  [{'name':MP, 'cluster': clusters[i]} for i, MP in enumerate(MPnames) ] ) )
+    result = { MP:{'cluster': clusters[i]} for i, MP in enumerate(MPnames) }
     
-    print_json()
+    print_json(result)
 
 
 def kmeans_find_distance(M,C):
@@ -102,6 +99,18 @@ def kmeans_find_centroid(M, clusters, k):
     C = sp.sparse.vstack(centroid_list).transpose()
     C = np.round(C, decimals=5)
     return C
+
+def print_json(results):
+    with open('data_analysis_vis/basic_info.json', 'r+') as b:
+        basix = json.load(b)
+
+    for i,data in enumerate(basix):
+        if data['handle'] in results.keys():
+            data.update(results[data['handle']])
+
+    with open('data_analysis_vis/kmeans_naive.json', 'w+') as f:
+        f.write(json.dumps(basix))
+
 
 
 
