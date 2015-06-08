@@ -59,10 +59,11 @@
 
           // Push different nodes in different directions for clustering.
           var k = 6 * e.alpha;
-          nodes.forEach(function(o, i) {
+          nodes.forEach(function(o) {
             console
-            o.y += o.cluster & 1 ? k : -k;
-            o.x += o.cluster & 2 ? k : -k;
+            o.y += o.cluster & 1 ? k : -k ; //bitwise operations
+            o.x += o.cluster & 2 ? (o.cluster & 4 ? 3*k : k) : (o.cluster & 4 ? -3*k : -k);
+
           });
 
           node.attr("cx", function(d) { return d.x; })
