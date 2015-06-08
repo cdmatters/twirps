@@ -59,7 +59,7 @@ output to json for d3 visual exploration"""
         if old_clusters == clusters: #no convergence with centroids?
             count +=1
     
-    variance_ratio = find_variance_ratio(distances, clusters, data_points)
+    variance_ratio = kmeans_find_variance_ratio(distances, clusters, data_points)
 
     result = { MP:{'cluster': clusters[i]} for i, MP in enumerate(MPnames) }
     return (variance_ratio, result)
