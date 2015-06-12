@@ -11,8 +11,14 @@ this more complete history of the working commits of this repo can be found [her
 
 Requirements
 ------------
-A twitter api oauth is required, available from the twitter dev website
-The twitter addresses were supplied by the government
+A twitter api oauth is required, available from the twitter dev website.
+The twitter addresses were supplied by the government. 
+(see requirements.txt for pip installation)
++ tweepy
++ nltk
++ scikit learn
++ requests
++ *D3.js (javascript)*
 
 Current Functionality
 ---------------------
