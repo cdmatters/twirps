@@ -10,10 +10,10 @@ np.set_printoptions(threshold=1e9)
 
 """ basic implementation of kmeans:
 create MATRIX M: (370 x 30000)   [= (MP x Words), say] 
-let CENTROIDS be C: (k x 30000)   [k= centroid no]
+let CENTROIDS be C: (30000 x k)   [k= centroid no]
 
 to find distances:
-    - C.dot(M.transpose) gives effective distances = D (k x 370) 
+    - M.dot(C) gives effective distances = D (k x 370) (both M, C NORMALIZED) 
     - then find largest & take column index to cluster.
 to find mean of cluster:
     - take rows in cluster (normalized) & generate from this
@@ -49,15 +49,12 @@ output to json for d3 visual exploration"""
     count, clusters = 0, []
     
 
-    while count < 3: 
+    while old_clusters != clusters: 
         old_clusters = clusters
 
         distances = kmeans_find_distance(data_points, centroids)
         clusters = kmeans_find_cluster(distances)
         centroids = kmeans_find_centroid(data_points, clusters, k)
-
-        if old_clusters == clusters: #no convergence with centroids?
-            count +=1
     
     variance_ratio = kmeans_find_variance_ratio(distances, clusters, data_points)
 
