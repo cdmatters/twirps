@@ -41,3 +41,10 @@ Future Work
 ---------------
 ####Analysis
 + beyond simple tallies of favourite url links etc little analysis done. clustering on types of mps may yield some interesting results (indepedent-minded or party drive? left or right? nlp on type of language and party?)
+
+Screenshots
+-----------
+
+![all edges displayed](/screenshots/contact_all_edges10.png?raw=True)
+
+![names & total no of tweets displayed](/screenshots/contact_names_tweets.png?raw=True)
