@@ -20,6 +20,8 @@ The twitter addresses were supplied by the government.
 + requests
 + *D3.js (javascript)*
 
+Also requires a parl.db built using [Archipelago](https://github.com/condnsdmatters/archipelago)
+
 Current Functionality
 ---------------------
 
