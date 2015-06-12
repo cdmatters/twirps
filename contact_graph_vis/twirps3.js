@@ -30,7 +30,7 @@
     
     d3.json('map_d3_improved.json', function(error, map){
         
-        displayedNodes = map.nodes.slice(3,4);
+        displayedNodes = map.nodes.slice();
         displayedInvisibleNodes = displayedNodes.slice()
 
         
