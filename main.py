@@ -30,7 +30,7 @@ def load_tweepy_key():
         env_vars = []
         if os.path.isfile('tweepy.key'):
             with open('tweepy.key', 'r') as f:
-                for line in f:
+                for line in  f.read().splitlines():
                     env_vars.append(line)
         else:
             env_vars.append( raw_input( tweepy_help_1 ) ) 
