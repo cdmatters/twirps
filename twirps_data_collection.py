@@ -1,14 +1,18 @@
 #Twirps is a visual mapping of how much MPs communicate with 
 #each other on social media.  It will use the parl_db database, and its
 #own twirpy.db for any extra data.
+
 from __future__ import unicode_literals
 import sqlite3
 import requests
 import time, json, os, sys
 import tweepy
-import tweepy_key as tk
+
+from twirp import Twirp
+from tweet import Tweet
 
 START_TIME = time.time()
+
 
 def create_twirpy_db():
     '''Creates a database with tables for TweetData and TwirpData'''
@@ -156,131 +160,6 @@ def get_tweets_main():
             time.sleep(15*60)
             continue
 
-
-
-        
-class Tweet(object):
-    def __init__(self, tweet, source):
-        self.tweetid = 0
-        self.userid = 0
-        self.handle = ''
-        self.mentions = [] 
-        self.content = ''
-        self.retweet = 'NULL'
-        self.retweet_count = 0
-        self.favourite_count = 0
-        self.hashtags = []
-        self.date = ''
-        self.urls = []
-
-        if source=='twitter':
-            self.from_twitter(tweet)
-
-        elif source=='database':
-            self.from_database(tweet)
-
-    def from_twitter(self, tweet):
-        self.tweetid  = tweet.id
-        self.userid = tweet.user.id
-        self.handle = tweet.user.screen_name
-        self.date = tweet.created_at
-        self.retweet_count = tweet.retweet_count
-        self.favourite_count  = tweet.favorite_count
-        
-        if tweet.in_reply_to_user_id != None:
-            #self.mentions.append((tweet.in_reply_to_user_id, tweet.in_reply_to_screen_name))
-            self.retweet = 'REPLY'
-
-        if hasattr(tweet, 'retweeted_status'):
-            tweet = tweet.retweeted_status
-            self.retweet = tweet.user.screen_name
-            self.mentions.append((tweet.user.id, tweet.user.screen_name))
-
-        self.content = tweet.text
-        self.mentions = [ (ent['id'],ent['screen_name'] 
-                            ) for ent in tweet.entities['user_mentions'] ]
-        self.hashtags =  [ent['text'] for ent in tweet.entities['hashtags']]
-        self.urls = [urls['expanded_url'] for urls in tweet.entities['urls']]
-
-
-    def __str__(self):
-        return u'Tweet %d %s || RC: %d || FC: %d || RT: %s || @ %s || # %s || Url %s\nContent: %s' %(
-            self.tweetid, self.handle, self.retweet_count, self.favourite_count,
-            self.retweet, len(self.mentions), len(self.hashtags), len(self.urls),
-            unicode(self.content) )
-
-    def from_database(self, tweet):
-        pass
-
-    def to_database(self):
-        input_tuple = (self.userid, self.handle,  self.favourite_count, self.retweet_count,
-            self.content, self.retweet,  self.date, self.tweetid )
-
-        with sqlite3.connect('twirpy.db') as connection:
-            cur = connection.cursor()
-            cur.execute('INSERT OR REPLACE INTO TweetData\
-                        VALUES (?,?,?,?,?,?,?,?) ', input_tuple)
-            for h in self.hashtags:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
-                    (self.tweetid, self.userid, 'hashtag', h))
-            for u in self.urls:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
-                    (self.tweetid, self.userid, 'url', u))
-            for m in self.mentions:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,?,NULL)',
-                    (self.tweetid, self.userid, 'mention', m[1], m[0]))
-
-
-class Twirp(object):
-    def __init__(self, user, source):
-        self.statuses = 0
-        self.followers_count = 0
-        self.friends_count = 0
-        self.geo = False
-        self.id = 0
-        self.name = ''
-        self.handle = ''
-        self.official_id = 0 
-        self.retweet_count = 0
-        self.been_retweet_count = 0 
-        self.favourite_hashtag = 'NULL'
-        self.hashtag_count = 0
-
-        if source=='twitter':
-            self.from_twitter(user)
-
-        elif source=='database':
-            self.from_database(user)
-
-    def __str__(self):
-        return u'||%s : %s\n||Id %d; Fol %d; Fri %d; Geo %s ' % (
-            self.handle, self.name, self.id, 
-            self.followers_count, self.friends_count, self.geo )
-
-    def from_twitter(self, user ):
-        self.statuses = user.statuses_count
-        self.followers_count = user.followers_count
-        self.friends_count = user.friends_count
-        self.geo = user.geo_enabled
-        self.id = user.id
-        self.name = user.name
-        self.handle = user.screen_name
-        self.official_id = 0
-
-    def to_database(self):
-        input_tuple =  (self.id, self.name, self.handle, self.followers_count, 
-                        self.friends_count, self.statuses, self.retweet_count, 
-                        self.been_retweet_count, self.favourite_hashtag,
-                        self.hashtag_count, self.official_id)
-
-        with sqlite3.connect('twirpy.db') as connection:
-            cur = connection.cursor()
-            cur.execute('INSERT OR REPLACE INTO TwirpData\
-                        VALUES (?,?,?,?,?,?,?,?,?,?,?) ', input_tuple)
-
-
-    def from_database(self, user):
-        pass
 
 
 def main():
