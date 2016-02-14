@@ -54,12 +54,19 @@ def build_parser():
 
     arg_parser = ArgumentParser( description )
     arg_parser.add_argument( '-i', '--init',action='store_true', help="initialise the database")
+    arg_parser.add_argument( '-t', '--twirps',action='store_true', help="get twirps")
+
 
     return arg_parser
 
 def execute( options ):
     if options.init:
         t_data_collect.create_twirpy_db()
+
+    if options.twirps:
+        session_api = t_data_collect.authorize_twitter()
+        t_data_collect.get_twirps_main(session_api)
+
 
 
 

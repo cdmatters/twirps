@@ -9,8 +9,7 @@ import requests
 import time, json, os, sys
 import tweepy
 
-from twirp import Twirp
-from tweet import Tweet
+from twirps_classes import Twirp, Tweet
 
 START_TIME = time.time()
 
@@ -55,9 +54,9 @@ def authorize_twitter():
 def return_twitter_list():
     '''Returns a list of tuples, each containing an MPs OfficialId and Twitter handle'''
 
-    with sqlite3.connect('../parl.db') as connection:
+    with sqlite3.connect('./parl.db') as connection:
         cur = connection.cursor()
-        cur.execute('SELECT OfficialId, Address FROM Addresses WHERE Type="Twitter"')
+        cur.execute('SELECT OfficialId, Address FROM Addresses WHERE AddressType="twitter"')
         tuplelist = cur.fetchall()
     complete_mp_list = [(o_id, handle[20:]) for o_id, handle in tuplelist]
     return complete_mp_list
@@ -152,7 +151,7 @@ def get_twirps_main(api):
         except Exception, e:
             print e
 
-def get_tweets_main():
+def get_tweets_main_():
     
     while True:
         api = authorize_twitter()
@@ -175,7 +174,7 @@ def main():
         print 'print arg: [get_twirps, get_tweets]'
     elif words[1]=='get_twirps':
         session_api = authorize_twitter()
-        get_tweets_main(session_api)
+        get_twirps_main(session_api)
     elif words[1]=='get_tweets':
         get_tweets_main()
     elif words[1]=='to_do_list':
