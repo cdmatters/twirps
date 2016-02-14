@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 
 from archipelago import Archipelago, setup
 import twirps_data_collection as t_data_collect
+from twirps_classes import TDBHandler
 
 
 
@@ -53,15 +54,17 @@ def build_parser():
     """
 
     arg_parser = ArgumentParser( description )
-    arg_parser.add_argument( '-i', '--init',action='store_true', help="initialise the database")
+    arg_parser.add_argument( '-r', '--reset',action='store_true', help="will completely reset the datebase")
     arg_parser.add_argument( '-t', '--twirps',action='store_true', help="get twirps")
 
 
     return arg_parser
 
 def execute( options ):
-    if options.init:
-        t_data_collect.create_twirpy_db()
+    if options.reset:
+        db_handler = TDBHandler()
+        db_handler.complete_reboot()
+
 
     if options.twirps:
         session_api = t_data_collect.authorize_twitter()
@@ -74,7 +77,7 @@ if __name__ == "__main__":
     load_tweepy_key()
     if not setup.is_arch_setup():
         setup.setup_archipelago()
-
+    
     arg_parser = build_parser()
     opts = arg_parser.parse_args( sys.argv[1:] )
 

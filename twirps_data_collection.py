@@ -9,31 +9,9 @@ import requests
 import time, json, os, sys
 import tweepy
 
-from twirps_classes import Twirp, Tweet
+from twirps_classes import Twirp, Tweet, TDBHandler
 
 START_TIME = time.time()
-
-
-def create_twirpy_db():
-    '''Creates a database with tables for TweetData and TwirpData'''
-    
-    if not os.path.exists('./twirpy.db'):
-        with sqlite3.connect('twirpy.db') as connection:
-            cur = connection.cursor()
-            cur.execute('CREATE TABLE TweetData (UserID Number, UserHandle Text, FavouriteCount Number, \
-                                                RetweetCount Number, Content Text, Retweet Text, \
-                                                CreatedDate Text, TwitterID Number UNIQUE)')
-            cur.execute('CREATE TABLE TwirpData (UserID Number UNIQUE, UserName Text, Handle Text, \
-                                                FollowersCount Number, FriendsCount Number,\
-                                                TweetCount Number, RetweetCount Number, \
-                                                BeenRetweeted Number, FavouriteHashtag Text, \
-                                                HashtagCount Number, OfficialId Number)')
-            cur.execute('CREATE TABLE TweetEntities (TweetID Number, UserID Number,\
-                                                EntityType Text, Entity Text, ToUser Number,\
-                                                UrlBase Text, UNIQUE(TweetID, UserID, EntityType, Entity) )')
-
-            cur.execute('CREATE INDEX UserIDIndex ON TweetData (UserID)')
-            cur.execute('CREATE INDEX UserIDEntityIndex ON TweetEntities (UserID)')
 
 def authorize_twitter():
     '''Authorizes the session for access to twitter API'''
@@ -70,7 +48,7 @@ Twirps that have already been collected'''
     return tuplelist
 
 
-def collect_twirp_data(api, handle, official_id):
+def get_Twirp_from_twitter(api, handle, official_id):
     '''Feeding in the session, a handle and it's mp's official id, this queries the
 the twitter API, instantiates Twirp class with the data and populates the database 
 with that record'''
@@ -78,9 +56,10 @@ with that record'''
     twitter_user = api.get_user(screen_name=handle)
     twirp = Twirp(twitter_user, 'twitter')
     twirp.official_id = official_id
-
+    
     print unicode(twirp)
-    twirp.to_database()
+    return twirp
+
 
 def collect_tweet_data(api, user_id, max_id=None, no_of_items=3200):
     '''Feeding in the session, a user_id and possibly tweet id, this queries the 
@@ -141,11 +120,16 @@ def get_twirps_main(api):
 
     remaining_mp_list = list(set(complete_mp_list)-set(fetched_mp_list))
 
-    print remaining_mp_list 
+    # print remaining_mp_list 
+    db_handler = TDBHandler()
 
     for mp_tuple in remaining_mp_list:
         # try:
-            collect_twirp_data(api, mp_tuple[1], mp_tuple[0])
+        
+        mp_twirp = get_Twirp_from_twitter(api, mp_tuple[1], mp_tuple[0])
+        #set name here for mp_tuple
+        db_handler.add_Twirp_to_database( mp_twirp )
+
         # except Exception, e:
         #     print e
 
