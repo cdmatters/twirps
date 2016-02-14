@@ -3,6 +3,7 @@
 #own twirpy.db for any extra data.
 
 from __future__ import unicode_literals
+from archipelago import Archipelago
 import sqlite3
 import requests
 import time, json, os, sys
@@ -38,8 +39,14 @@ def create_twirpy_db():
 def authorize_twitter():
     '''Authorizes the session for access to twitter API'''
 
-    auth = tweepy.auth.OAuthHandler(tk.consumer_key, tk.consumer_secret)
-    auth.set_access_token(tk.access_token, tk.access_secret)
+    consumer_key = os.environ.get('TWEEPY_CONSUMER_KEY')
+    consumer_secret = os.environ.get('TWEEPY_CONSUMER_SECRET')
+    access_token =  os.environ.get('TWEEPY_ACCESS_TOKEN')
+    access_secret = os.environ.get('TWEEPY_ACCESS_SECRET')
+   
+
+    auth = tweepy.auth.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_secret)
 
     api = tweepy.API(auth)
     return api 
