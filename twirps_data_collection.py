@@ -28,36 +28,15 @@ def authorize_twitter():
     api = tweepy.API(auth)
     return api 
 
-
-def return_twitter_list():
-    '''Returns a list of tuples, each containing an MPs OfficialId and Twitter handle'''
-
-    arch = Archipelago()
-    arch.get_twitter_users()
-
-    return [ ( mp["o_id"], mp["handle"] ) for mp in arch.get_twitter_users() ]
-
-def return_skip_list():
-    '''Returns a list of tuples, each containing OfficialId and Twitter handle for 
-Twirps that have already been collected'''
-
-    with sqlite3.connect('twirpy.db') as connection:
-        cur = connection.cursor()
-        cur.execute('SELECT OfficialId, Handle FROM TwirpData')
-        tuplelist = cur.fetchall()
-    return tuplelist
-
-
 def get_Twirp_from_twitter(api, handle, official_id):
     '''Feeding in the session, a handle and it's mp's official id, this queries the
 the twitter API, instantiates Twirp class with the data and populates the database 
 with that record'''
-
     twitter_user = api.get_user(screen_name=handle)
     twirp = Twirp(twitter_user, 'twitter')
     twirp.official_id = official_id
     
-    print unicode(twirp)
+    #print unicode(twirp)
     return twirp
 
 
@@ -115,23 +94,27 @@ def return_list_for_tweet_scan():
 
 
 def get_twirps_main(api):
-    complete_mp_list = return_twitter_list()
-    fetched_mp_list = return_skip_list()
-
-    remaining_mp_list = list(set(complete_mp_list)-set(fetched_mp_list))
-
-    # print remaining_mp_list 
     db_handler = TDBHandler()
+    stored_mps = db_handler.get_stored_mps_names()
 
-    for mp_tuple in remaining_mp_list:
-        # try:
+    arch = Archipelago()
+    complete_mp_list = arch.get_twitter_users()
+
+    print stored_mps
+
+    mps_to_fetch = filter(lambda x: x["name"] not in set(stored_mps), complete_mp_list)
+
+    for mp in mps_to_fetch:
+        try:
         
-        mp_twirp = get_Twirp_from_twitter(api, mp_tuple[1], mp_tuple[0])
-        #set name here for mp_tuple
-        db_handler.add_Twirp_to_database( mp_twirp )
+            mp_twirp = get_Twirp_from_twitter(api, mp["handle"], mp["o_id"])
+            mp_twirp.name = mp["name"]
+            db_handler.add_Twirp_to_database( mp_twirp )
 
-        # except Exception, e:
-        #     print e
+        except tweepy.error.TweepError, e:
+            print "ERROR: %s: for %s -> %s" % (e.message[0]["message"],
+                                                mp["handle"],
+                                                mp["name"])
 
 def get_tweets_main_():
     
