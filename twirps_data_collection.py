@@ -54,12 +54,10 @@ def authorize_twitter():
 def return_twitter_list():
     '''Returns a list of tuples, each containing an MPs OfficialId and Twitter handle'''
 
-    with sqlite3.connect('./parl.db') as connection:
-        cur = connection.cursor()
-        cur.execute('SELECT OfficialId, Address FROM Addresses WHERE AddressType="twitter"')
-        tuplelist = cur.fetchall()
-    complete_mp_list = [(o_id, handle[20:]) for o_id, handle in tuplelist]
-    return complete_mp_list
+    arch = Archipelago()
+    arch.get_twitter_users()
+
+    return [ ( mp["o_id"], mp["handle"] ) for mp in arch.get_twitter_users() ]
 
 def return_skip_list():
     '''Returns a list of tuples, each containing OfficialId and Twitter handle for 
@@ -146,10 +144,10 @@ def get_twirps_main(api):
     print remaining_mp_list 
 
     for mp_tuple in remaining_mp_list:
-        try:
+        # try:
             collect_twirp_data(api, mp_tuple[1], mp_tuple[0])
-        except Exception, e:
-            print e
+        # except Exception, e:
+        #     print e
 
 def get_tweets_main_():
     

@@ -1,3 +1,5 @@
+import sqlite3
+
 class Tweet(object):
     def __init__(self, tweet, source):
         self.tweetid = 0

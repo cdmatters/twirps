@@ -1,3 +1,5 @@
+import sqlite3
+
 class Twirp(object):
     def __init__(self, user, source):
         self.statuses = 0
