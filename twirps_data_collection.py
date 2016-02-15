@@ -59,22 +59,17 @@ def get_twirps_main(api):
                                                 mp["handle"],
                                                 mp["name"])
 
-def collect_tweet_data(api, user_id, max_id=None, no_of_items=3200):
+def get_Tweets_from_twitter(api, user_id, max_id=None, no_of_items=3200):
     '''Feeding in the session, a user_id and possibly tweet id, this queries the 
-twitter API, instantiates a Tweet class with data and populates the database with 
-that tweet'''
+twitter API, and providesa a generator yielding instantiated a Tweet classes with that data '''
     for tweet_data in tweepy.Cursor(api.user_timeline, id=user_id, max_id=max_id).items(no_of_items):
 
         tweet = Tweet(tweet_data, 'twitter')
-        tweet.to_database()
-        try:
-            print tweet, '\n'
-        except:
-            continue
+        yield tweet
 
-def return_list_for_tweet_scan():
-    db_handler = TDBHandler()
-    stored_tweet_data =  db_handler.get_tweets_stored_from_mps()
+
+def return_list_for_tweet_scan(tdb_handler):
+    stored_tweet_data =  tdb_handler.get_tweets_stored_from_mps()
 
     to_do_list = []
 
@@ -88,18 +83,22 @@ def return_list_for_tweet_scan():
     return to_do_list
 
 def get_tweets_main():
+    db_handler = TDBHandler()
     while True:
         api = authorize_twitter()
         try:
-            to_do = return_list_for_tweet_scan()
+            to_do = return_list_for_tweet_scan(db_handler)
 
             for target in to_do:
                 print target
-                collect_tweet_data(api, target[0], no_of_items=target[1], max_id=target[2])
+                for Tweet in get_Tweets_from_twitter(api, target[0], no_of_items=target[1], max_id=target[2]):
+                    db_handler.add_Tweet_to_database(Tweet)
+                    print unicode(Tweet)
         except Exception, e:
             print e
             time.sleep(15*60)
             continue
+
 
 def lap_time():
     '"a glance at the wristwatch" since the program started'

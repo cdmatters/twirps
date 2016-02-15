@@ -45,6 +45,25 @@ class TDBHandler(object):
             cur.execute('INSERT OR REPLACE INTO TwirpData\
                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ', input_tuple)
 
+    def add_Tweet_to_database(self, Tweet):
+        input_tuple = (Tweet.userid, Tweet.handle,  Tweet.favourite_count, Tweet.retweet_count,
+            Tweet.content, Tweet.retweet,  Tweet.date, Tweet.tweetid )
+
+        with sqlite3.connect(self.db_name) as connection:
+            cur = connection.cursor()
+            cur.execute('INSERT OR REPLACE INTO TweetData\
+                        VALUES (?,?,?,?,?,?,?,?) ', input_tuple)
+            for h in Tweet.hashtags:
+                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
+                    (Tweet.tweetid, Tweet.userid, 'hashtag', h))
+            for u in Tweet.urls:
+                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
+                    (Tweet.tweetid, Tweet.userid, 'url', u))
+            for m in Tweet.mentions:
+                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,?,NULL)',
+                    (Tweet.tweetid, Tweet.userid, 'mention', m[1], m[0]))
+
+
     def get_stored_mps_names(self):
         with sqlite3.connect(self.db_name) as connection:
             cur = connection.cursor()

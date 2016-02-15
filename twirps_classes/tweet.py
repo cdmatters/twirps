@@ -53,20 +53,4 @@ class Tweet(object):
     def from_database(self, tweet):
         pass
 
-    def to_database(self):
-        input_tuple = (self.userid, self.handle,  self.favourite_count, self.retweet_count,
-            self.content, self.retweet,  self.date, self.tweetid )
-
-        with sqlite3.connect('twirpy.db') as connection:
-            cur = connection.cursor()
-            cur.execute('INSERT OR REPLACE INTO TweetData\
-                        VALUES (?,?,?,?,?,?,?,?) ', input_tuple)
-            for h in self.hashtags:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
-                    (self.tweetid, self.userid, 'hashtag', h))
-            for u in self.urls:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
-                    (self.tweetid, self.userid, 'url', u))
-            for m in self.mentions:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,?,NULL)',
-                    (self.tweetid, self.userid, 'mention', m[1], m[0]))
+    
