@@ -7,8 +7,6 @@ import twirps_data_collection as t_data_collect
 from twirps_classes import TDBHandler
 
 
-
-
 def load_tweepy_key():
     tweepy_help_1 = '''
     Twirps requires four API keys to collect data from twitter:
@@ -56,6 +54,7 @@ def build_parser():
     arg_parser = ArgumentParser( description )
     arg_parser.add_argument( '-r', '--reset',action='store_true', help="will completely reset the datebase")
     arg_parser.add_argument( '-t', '--twirps',action='store_true', help="get twirps")
+    arg_parser.add_argument( '-d', '--data',action='store_true', help="get data")
 
 
     return arg_parser
@@ -69,6 +68,9 @@ def execute( options ):
     if options.twirps:
         session_api = t_data_collect.authorize_twitter()
         t_data_collect.get_twirps_main(session_api)
+
+    if options.data:
+        t_data_collect.get_tweets_main()
 
 
 

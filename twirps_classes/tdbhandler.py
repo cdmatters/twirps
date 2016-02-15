@@ -39,7 +39,7 @@ class TDBHandler(object):
                         Twirp.friends_count, Twirp.statuses, Twirp.retweet_count, 
                         Twirp.been_retweet_count, Twirp.favourite_hashtag,
                         Twirp.hashtag_count, Twirp.official_id)
-        print Twirp.name
+
         with sqlite3.connect(self.db_name) as connection:
             cur = connection.cursor()
             cur.execute('INSERT OR REPLACE INTO TwirpData\
@@ -51,4 +51,28 @@ class TDBHandler(object):
             cur.execute('SELECT  Name  FROM TwirpData')
 
         return [ name[0] for name in cur.fetchall() ]
+
+    def get_tweets_stored_from_mps(self):
+        to_do_list = []
+        with sqlite3.connect(self.db_name) as connection:
+            cur = connection.cursor()
+            cur.execute('''SELECT COUNT(tweet.TwitterID), MIN(tweet.TwitterID), 
+                                twirp.UserID, twirp.Name, twirp.Handle, twirp.TweetCount 
+                            FROM TwirpData AS twirp
+                            LEFT JOIN  TweetData AS tweet
+                            ON twirp.UserID=tweet.UserID
+                            GROUP BY twirp.Name
+                            ''')
+        return [ 
+                    {
+                        "name": r[3] ,
+                        "handle": r[4] , 
+                        "no_tweets": r[5],
+                        "earliest": r[1],
+                        'no_collected': r[0], 
+                        "u_id": r[2]
+
+                    } for r in cur.fetchall()
+                ]
+
 
