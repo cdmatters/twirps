@@ -67,37 +67,44 @@ twitter API, and providesa a generator yielding instantiated a Tweet classes wit
         tweet = Tweet(tweet_data, 'twitter')
         yield tweet
 
-
-def return_list_for_tweet_scan(tdb_handler):
-    stored_tweet_data =  tdb_handler.get_tweets_stored_from_mps()
-
-    to_do_list = []
-
-    for twirp in stored_tweet_data:
-
-        if (twirp["no_tweets"]-twirp["no_collected"] >30) and twirp["no_collected"]<3100:
-            remaining = 3200 - twirp["no_collected"]
-            to_do = ( twirp["u_id"], remaining, twirp["earliest"] )
-            to_do_list.append( to_do )
-
-    return to_do_list
-
-def get_tweets_main():
+def get_tweets_main(max_tweets=3200, tweet_buffer=30):
     db_handler = TDBHandler()
+
+    def _is_to_be_collected(twirp):
+        return ( (twirp["no_tweets"]-twirp["no_collected"])  < tweet_buffer  
+                    and twirp["no_collected"] > (max_tweets - tweet_buffer) )
+
     while True:
         api = authorize_twitter()
+        
         try:
-            to_do = return_list_for_tweet_scan(db_handler)
+            stored_tweet_data = db_handler.get_tweets_stored_from_mps()
 
-            for target in to_do:
-                print target
-                for Tweet in get_Tweets_from_twitter(api, target[0], no_of_items=target[1], max_id=target[2]):
-                    db_handler.add_Tweet_to_database(Tweet)
-                    print unicode(Tweet)
-        except Exception, e:
-            print e
-            time.sleep(15*60)
+            for twirp in stored_tweet_data:
+                if _is_to_be_collected(twirp):
+                    remaining_tweets = max_tweets - twirp["no_collected"]
+                    
+                    for Tweet in get_Tweets_from_twitter(api, twirp["u_id"],
+                                            remaining_tweets, twirp["earliest"]):
+                        db_handler.add_Tweet_to_database(Tweet)
+                        print unicode(Tweet)
+                else:
+                    continue
+
+        except tweepy.error.TweepError, e:
+            print e.message[0], e.reason, e 
+            print "Sleeping for 15 mins"
+            lap_time()
+            time.sleep(60*15)
             continue
+
+
+        
+
+        # except Exception, e:
+        #     print e
+        #     time.sleep(15*60)
+            
 
 
 def lap_time():
@@ -115,9 +122,6 @@ def main():
         get_twirps_main(session_api)
     elif words[1]=='get_tweets':
         get_tweets_main()
-    elif words[1]=='to_do_list':
-        print return_list_for_tweet_scan()
-        lap_time()
     elif words[1]=='init_db':
         create_twirpy_db()
     else:
