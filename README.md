@@ -45,6 +45,6 @@ Future Work
 Screenshots
 -----------
 
-![all edges displayed](/screenshots/contact_all_edges10.png?raw=True)
+![all edges displayed](/historical/screenshots/contact_all_edges10.png?raw=True)
 
-![names & total no of tweets displayed](/screenshots/contact_names_tweets.png?raw=True)
+![names & total no of tweets displayed](/historical/screenshots/contact_names_tweets.png?raw=True)
