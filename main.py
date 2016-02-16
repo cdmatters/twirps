@@ -55,6 +55,7 @@ def build_parser():
     arg_parser.add_argument( '-r', '--reset',action='store_true', help="will completely reset the datebase")
     arg_parser.add_argument( '-t', '--twirps',action='store_true', help="get twirps")
     arg_parser.add_argument( '-d', '--data',action='store_true', help="get data")
+    arg_parser.add_argument( '-u', '--update',action='store_true', help="get data")
 
 
     return arg_parser
@@ -72,6 +73,8 @@ def execute( options ):
     if options.data:
         t_data_collect.get_tweets_main()
 
+    if options.update:
+        t_data_collect.get_tweets_update()
 
 
 

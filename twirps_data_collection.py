@@ -74,11 +74,11 @@ twitter API, and providesa a generator yielding instantiated a Tweet classes wit
         yield tweet
 
 
-def get_tweets_main(max_tweets=1000, tweet_buffer=30):
+def get_tweets_main(max_tweets=100, tweet_buffer=30):
     db_handler = TDBHandler()
 
     api = authorize_twitter()
-    stored_tweet_data = db_handler.get_tweets_stored_from_mps()
+    stored_tweet_data = db_handler.get_oldest_tweets_stored_from_mps()
 
     def _is_to_be_collected(twirp):
         return ( (twirp["no_tweets"]-twirp["no_collected"])  > tweet_buffer  
@@ -91,7 +91,7 @@ def get_tweets_main(max_tweets=1000, tweet_buffer=30):
                 
                 pbar_description = "Getting %s -> %s" %(twirp["name"], twirp["handle"])
                 for Tweet in tqdm( get_Tweets_from_twitter(api, twirp["u_id"],
-                                                           twirp["earliest"], remaining_tweets),
+                                                           twirp["oldest"], remaining_tweets),
                                     nested=True, desc=pbar_description):
                     #print unicode(Tweet)
                     db_handler.add_Tweet_to_database(Tweet)
@@ -105,6 +105,32 @@ def get_tweets_main(max_tweets=1000, tweet_buffer=30):
             api = authorize_twitter()
             continue
 
+
+def get_twirps_update():
+    pass
+
+def get_tweets_update(max_tweets=10):
+    db_handler = TDBHandler()
+    stored_tweet_data = db_handler.get_newest_tweets_from_mps()
+
+    api = authorize_twitter()
+    for twirp in stored_tweet_data:
+        try:
+            current_tweet = twirp["newest"]
+            no_collected = 0
+            tweet_generator = get_Tweets_from_twitter(api, twirp["u_id"], None, max_tweets)
+            while no_collected < max_tweets and current_tweet >= twirp['newest']:
+                Tweet = tweet_generator.next()
+                db_handler.add_Tweet_to_database(Tweet)
+                no_collected += 1
+                current_tweet = Tweet.tweetid
+                print unicode(Tweet)
+        except tweepy.error.TweepError, e:
+            print "Rate Limit Exceeded: Sleeping for 15 mins", datetime.datetime.utcnow()
+            time.sleep(60*15)
+
+            api = authorize_twitter()
+            continue 
 
 def lap_time():
     '"a glance at the wristwatch" since the program started'

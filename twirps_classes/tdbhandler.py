@@ -71,8 +71,7 @@ class TDBHandler(object):
 
         return [ name[0] for name in cur.fetchall() ]
 
-    def get_tweets_stored_from_mps(self):
-        to_do_list = []
+    def get_oldest_tweets_stored_from_mps(self):
         with sqlite3.connect(self.db_name) as connection:
             cur = connection.cursor()
             cur.execute('''SELECT COUNT(tweet.TwitterID), MIN(tweet.TwitterID), 
@@ -89,11 +88,35 @@ class TDBHandler(object):
                         "name": r[3] ,
                         "handle": r[4] , 
                         "no_tweets": r[5],
-                        "earliest": r[1],
+                        "oldest": r[1],
                         'no_collected': r[0], 
                         "u_id": r[2]
 
                     } for r in cur.fetchall()
                 ]
+
+    def get_newest_tweets_from_mps(self):
+        with sqlite3.connect(self.db_name) as connection:
+            cur = connection.cursor()
+            cur.execute('''SELECT COUNT(tweet.TwitterID), MAX(tweet.TwitterID), 
+                                twirp.UserID, twirp.Name, twirp.Handle, twirp.TweetCount 
+                            FROM TwirpData AS twirp
+                            LEFT JOIN  TweetData AS tweet
+                            ON twirp.UserID=tweet.UserID
+                            GROUP BY twirp.Name
+                            ORDER BY twirp.Name
+                            ''')
+        return [ 
+                    {
+                        "name": r[3] ,
+                        "handle": r[4] , 
+                        "no_tweets": r[5],
+                        "newest": r[1],
+                        'no_collected': r[0], 
+                        "u_id": r[2]
+
+                    } for r in cur.fetchall()
+                ]
+
 
 
