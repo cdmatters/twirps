@@ -81,7 +81,9 @@ class TDBHandler(object):
                             LEFT JOIN  TweetData AS tweet
                             ON twirp.UserID=tweet.UserID
                             GROUP BY twirp.Name
+                            ORDER BY twirp.Name
                             ''')
+    
         return [ 
                     {
                         "name": r[3] ,

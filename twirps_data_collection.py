@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from archipelago import Archipelago
 import sqlite3
 import requests
-import time, json, os, sys
+import datetime, json, os, sys, time
 import tweepy
 from tqdm import tqdm
 
@@ -21,7 +21,6 @@ def authorize_twitter():
     consumer_secret = os.environ.get('TWEEPY_CONSUMER_SECRET')
     access_token =  os.environ.get('TWEEPY_ACCESS_TOKEN')
     access_secret = os.environ.get('TWEEPY_ACCESS_SECRET')
-   
 
     auth = tweepy.auth.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_secret)
@@ -42,6 +41,8 @@ def get_twirps_main(api):
     db_handler = TDBHandler()
     stored_mps = db_handler.get_stored_mps_names()
 
+    # NOTE: only place Archipelago called in collection. 
+    # Can sub in for custom twitter users json, with new TDB?
     arch = Archipelago()
     complete_mp_list = arch.get_twitter_users()
 
@@ -54,6 +55,11 @@ def get_twirps_main(api):
             mp_twirp.name = mp["name"]
             db_handler.add_Twirp_to_database( mp_twirp )
 
+        except tweepy.error.RateLimitError, e:
+            print "Twitter API usage rate exceeded. Waiting 15 mins..."
+            time.sleep(60*15)
+            continue
+
         except tweepy.error.TweepError, e:
             print "ERROR: %s: for %s -> %s" % (e.message[0]["message"],
                                                 mp["handle"],
@@ -62,49 +68,42 @@ def get_twirps_main(api):
 def get_Tweets_from_twitter(api, user_id, max_id=None, no_of_items=3200):
     '''Feeding in the session, a user_id and possibly tweet id, this queries the 
 twitter API, and providesa a generator yielding instantiated a Tweet classes with that data '''
-    for tweet_data in tweepy.Cursor(api.user_timeline, id=user_id, max_id=max_id).items(no_of_items):
 
+    for tweet_data in tweepy.Cursor(api.user_timeline, id=user_id, max_id=max_id).items(no_of_items):   
         tweet = Tweet(tweet_data, 'twitter')
         yield tweet
 
-def get_tweets_main(max_tweets=3200, tweet_buffer=30):
+
+def get_tweets_main(max_tweets=1000, tweet_buffer=30):
     db_handler = TDBHandler()
 
+    api = authorize_twitter()
+    stored_tweet_data = db_handler.get_tweets_stored_from_mps()
+
     def _is_to_be_collected(twirp):
-        return ( (twirp["no_tweets"]-twirp["no_collected"])  < tweet_buffer  
-                    and twirp["no_collected"] > (max_tweets - tweet_buffer) )
+        return ( (twirp["no_tweets"]-twirp["no_collected"])  > tweet_buffer  
+                    and twirp["no_collected"] < (max_tweets - tweet_buffer) )
 
-    while True:
-        api = authorize_twitter()
-        
+    for twirp in tqdm(stored_tweet_data):
         try:
-            stored_tweet_data = db_handler.get_tweets_stored_from_mps()
-
-            for twirp in stored_tweet_data:
-                if _is_to_be_collected(twirp):
-                    remaining_tweets = max_tweets - twirp["no_collected"]
-                    
-                    for Tweet in get_Tweets_from_twitter(api, twirp["u_id"],
-                                            remaining_tweets, twirp["earliest"]):
-                        db_handler.add_Tweet_to_database(Tweet)
-                        print unicode(Tweet)
-                else:
-                    continue
+            if _is_to_be_collected(twirp):
+                remaining_tweets = max_tweets - twirp["no_collected"]
+                
+                pbar_description = "Getting %s -> %s" %(twirp["name"], twirp["handle"])
+                for Tweet in tqdm( get_Tweets_from_twitter(api, twirp["u_id"],
+                                                           twirp["earliest"], remaining_tweets),
+                                    nested=True, desc=pbar_description):
+                    #print unicode(Tweet)
+                    db_handler.add_Tweet_to_database(Tweet)
+            else:
+                continue
 
         except tweepy.error.TweepError, e:
-            print e.message[0], e.reason, e 
-            print "Sleeping for 15 mins"
-            lap_time()
+            print "Rate Limit Exceeded: Sleeping for 15 mins", datetime.datetime.utcnow()
             time.sleep(60*15)
+
+            api = authorize_twitter()
             continue
-
-
-        
-
-        # except Exception, e:
-        #     print e
-        #     time.sleep(15*60)
-            
 
 
 def lap_time():
@@ -112,35 +111,5 @@ def lap_time():
     lap = time.time()
     print '---%s s ---' %(START_TIME-lap)
     return time.time()
-
-def main():
-    words = sys.argv
-    if len(words) ==1:
-        print 'print arg: [get_twirps, get_tweets]'
-    elif words[1]=='get_twirps':
-        session_api = authorize_twitter()
-        get_twirps_main(session_api)
-    elif words[1]=='get_tweets':
-        get_tweets_main()
-    elif words[1]=='init_db':
-        create_twirpy_db()
-    else:
-        print 'bad arguments'
-
-if __name__ == '__main__':
-    main()
-
-
-
-# def pull_tweets_from_user(api, handle):
-#     print handle
-#     mp = api.get_user(screen_name=handle)
-#     for status in tweepy.Cursor(api.user_timeline, id=mp.id).items(1000):
-#         tweet_parser(status)
-
-#         for mention in status.entities['user_mentions']:
-#             print i, mention['screen_name'], '\t', status.text
-    
-#     time.sleep(45)
 
 
