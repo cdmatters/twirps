@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
 import os, sys
 from argparse import ArgumentParser
+import logging
 
 from archipelago import Archipelago, setup
 import twirps_data_collection as t_data_collect
 from twirps_classes import TDBHandler
 
+LOGGER = logging.getLogger('twirps.main')
 
 def load_tweepy_key():
     tweepy_help_1 = '''
@@ -28,15 +30,18 @@ def load_tweepy_key():
     if not (consumer_key or consumer_secret or access_secret or access_secret):
         env_vars = []
         if os.path.isfile('tweepy.key'):
+            LOGGER.debug('Found tweepy key')
             with open('tweepy.key', 'r') as f:
                 for line in  f.read().splitlines():
                     env_vars.append(line)
         else:
+            LOGGER.debug('No tweepy key found. Gettin raw input...')
             env_vars.append( raw_input( tweepy_help_1 ) ) 
             env_vars.append( raw_input( tweepy_help_2 ) ) 
             env_vars.append( raw_input( tweepy_help_3 ) ) 
             env_vars.append( raw_input( tweepy_help_4 ) ) 
             with open('tweepy.key', 'w') as f:
+                LOGGER.debug('Writing tweepy key')
                 for var in env_vars:
                     f.write( var + "\n" )
 
@@ -44,6 +49,7 @@ def load_tweepy_key():
         os.environ["TWEEPY_CONSUMER_SECRET"] = env_vars[1]
         os.environ["TWEEPY_ACCESS_TOKEN"] = env_vars[2]
         os.environ["TWEEPY_ACCESS_SECRET"] = env_vars[3]
+        LOGGER.debug('ENV variables set.')
 
 
 def build_parser():
@@ -62,31 +68,67 @@ def build_parser():
 
 def execute( options ):
     if options.reset:
+        LOGGER.info("Rebooting database")
         db_handler = TDBHandler()
         db_handler.complete_reboot()
 
 
     if options.twirps:
+        LOGGER.info("Collecting Twirps")
         session_api = t_data_collect.authorize_twitter()
         t_data_collect.get_twirps_main(session_api)
 
+
     if options.data:
+        LOGGER.info("Collecting Data // Bulk Tweets")
         t_data_collect.get_tweets_main()
 
+
     if options.update:
+        LOGGER.info("Updating most recent tweets")
         t_data_collect.get_tweets_update()
 
+def set_up_logging():
+    log_format = '%(asctime)s | %(lineno)-d  %(name)-40s   %(levelname)8s  %(message)s'
+    formatter = logging.Formatter(log_format,"%H:%M:%S.%f %d/%m/%Y")
+    cons_format = '%(asctime)s  %(filename)-14s l%(lineno)-d %(levelname)-8s  %(message)s'
+    formatter_cons = logging.Formatter(cons_format,"%H:%M %d/%m")
 
+
+    fh_twirp = logging.FileHandler('tmp/twirps.log', mode='w')
+    fh_twirp.setLevel(logging.DEBUG)
+    fh_twirp.setFormatter(formatter)
+    
+    fh_total = logging.FileHandler('tmp/twirps.verbose.log', mode='w')
+    fh_total.setLevel(logging.DEBUG)
+    fh_total.setFormatter(formatter)
+    
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(formatter_cons)
+
+    root_logger = logging.getLogger('')
+    root_logger.setLevel(logging.DEBUG)
+    root_logger.addHandler(fh_total)
+    
+    logger = logging.getLogger('twirps')
+    logger.addHandler(fh_twirp)
+    logger.addHandler(ch)
 
 if __name__ == "__main__":
+    set_up_logging()
+
     load_tweepy_key()
     if not setup.is_arch_setup():
         setup.setup_archipelago()
-    
+
     arg_parser = build_parser()
     opts = arg_parser.parse_args( sys.argv[1:] )
 
     execute( opts )
+
+    LOGGER.info("Shutting down.")
+    logging.shutdown()
 
    
 
