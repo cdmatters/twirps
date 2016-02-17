@@ -4,8 +4,8 @@ from argparse import ArgumentParser
 import logging
 
 from archipelago import Archipelago, setup
-import twirps_data_collection as t_data_collect
-from twirps_classes import TDBHandler
+from twirps import data_collection
+from twirps.classes import TDBHandler
 
 LOGGER = logging.getLogger('twirps.main')
 
@@ -75,18 +75,18 @@ def execute( options ):
 
     if options.twirps:
         LOGGER.info("Collecting Twirps")
-        session_api = t_data_collect.authorize_twitter()
-        t_data_collect.get_twirps_main(session_api)
+        session_api = data_collection.authorize_twitter()
+        data_collection.get_twirps_main(session_api)
 
 
     if options.data:
         LOGGER.info("Collecting Data // Bulk Tweets")
-        t_data_collect.get_tweets_main()
+        data_collection.get_tweets_main()
 
 
     if options.update:
         LOGGER.info("Updating most recent tweets")
-        t_data_collect.get_tweets_update()
+        data_collection.get_tweets_update()
 
 def set_up_logging():
     log_format = '%(asctime)s | %(lineno)-d  %(name)-40s   %(levelname)8s  %(message)s'
@@ -95,11 +95,11 @@ def set_up_logging():
     formatter_cons = logging.Formatter(cons_format,"%H:%M %d/%m")
 
 
-    fh_twirp = logging.FileHandler('tmp/twirps.log', mode='w')
+    fh_twirp = logging.FileHandler('temp/twirps.log', mode='w')
     fh_twirp.setLevel(logging.DEBUG)
     fh_twirp.setFormatter(formatter)
     
-    fh_total = logging.FileHandler('tmp/twirps.verbose.log', mode='w')
+    fh_total = logging.FileHandler('temp/twirps.verbose.log', mode='w')
     fh_total.setLevel(logging.DEBUG)
     fh_total.setFormatter(formatter)
     

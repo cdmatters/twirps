@@ -13,3 +13,6 @@ tweepy_key.py
 
 # venv
 venv/
+
+#logfiles
+*.log

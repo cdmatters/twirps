@@ -10,7 +10,7 @@ import datetime, json, os, sys, time
 import tweepy
 from tqdm import tqdm
 
-from twirps_classes import Twirp, Tweet, TDBHandler
+from classes import Twirp, Tweet, TDBHandler
 
 START_TIME = time.time()
 
