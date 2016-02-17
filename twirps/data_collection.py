@@ -8,11 +8,13 @@ import sqlite3
 import requests
 import datetime, json, os, sys, time
 import tweepy
+import logging
 from tqdm import tqdm
 
 from classes import Twirp, Tweet, TDBHandler
 
 START_TIME = time.time()
+LOGGER = logging.getLogger(__name__)
 
 def authorize_twitter():
     '''Authorizes the session for access to twitter API'''

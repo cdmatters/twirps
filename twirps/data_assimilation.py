@@ -10,9 +10,12 @@ import urlparse, httplib
 import requests
 from multiprocessing import Pool
 from nltk.corpus import stopwords
+import logging
 
 START_TIME = time.time()
 
+
+LOGGER = logging.getLogger(__name__)
 ##########################################
 # HIGHER ORDER DATA ASSIMILATION METHODS  (Generate maps, etc...)
 ##########################################

@@ -4,6 +4,9 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import normalize 
 
 import json, sys , sets
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 np.set_printoptions(threshold=1e9)
 

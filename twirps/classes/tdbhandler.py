@@ -1,9 +1,15 @@
 import sqlite3
 import os
+import logging
+
+
+LOGGER = logging.getLogger(__name__)
 
 class TDBHandler(object):
     def __init__(self, db_name='twirpy.db'):
         self.db_name = db_name
+        LOGGER.debug("Create TDBHandler: %s" % self.db_name )
+
 
     def is_db_setup(self ):
         return os.path.isfile(self.db_name)
@@ -32,6 +38,7 @@ class TDBHandler(object):
 
             cur.execute('CREATE INDEX UserIDIndex ON TweetData (UserID)')
             cur.execute('CREATE INDEX UserIDEntityIndex ON TweetEntities (UserID)')
+        LOGGER.debug("Created twirpy database, name: %s" % self.db_name )
 
     def add_Twirp_to_database(self, Twirp):
 
