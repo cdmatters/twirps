@@ -89,9 +89,9 @@ def execute( options ):
         data_collection.get_tweets_update()
 
 def set_up_logging():
-    log_format = '%(asctime)s | %(lineno)-d  %(name)-40s   %(levelname)8s  %(message)s'
+    log_format = '%(asctime)s | %(lineno)-4d  %(name)-30s   %(levelname)8s  %(message)s'
     formatter = logging.Formatter(log_format,"%H:%M:%S.%f %d/%m/%Y")
-    cons_format = '%(asctime)s  %(filename)-14s l%(lineno)-d %(levelname)-8s  %(message)s'
+    cons_format = '%(asctime)s  %(filename)-20s l%(lineno)-d %(levelname)-8s  %(message)s'
     formatter_cons = logging.Formatter(cons_format,"%H:%M %d/%m")
 
 
@@ -104,7 +104,7 @@ def set_up_logging():
     fh_total.setFormatter(formatter)
     
     ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(logging.INFO)
     ch.setFormatter(formatter_cons)
 
     root_logger = logging.getLogger('')

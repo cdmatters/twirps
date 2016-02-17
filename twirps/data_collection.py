@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 def authorize_twitter():
     '''Authorizes the session for access to twitter API'''
-
+    LOGGER.info("Authorizing Twitter api...")
     consumer_key = os.environ.get('TWEEPY_CONSUMER_KEY')
     consumer_secret = os.environ.get('TWEEPY_CONSUMER_SECRET')
     access_token =  os.environ.get('TWEEPY_ACCESS_TOKEN')
@@ -31,8 +31,8 @@ def authorize_twitter():
     return api 
 
 def get_Twirp_from_twitter(api, handle, official_id):
-    '''Feeding in the session, a handle and it's mp's official id, this queries the
-the twitter API, instantiates Twirp class with the data and return it'''
+    '''Feeding in the session, a handle and it's mp's official id, this queries 
+    the twitter API, instantiates Twirp class with the data and return it'''
     twitter_user = api.get_user(screen_name=handle)
     twirp = Twirp(twitter_user, 'twitter')
     twirp.official_id = official_id
@@ -58,14 +58,17 @@ def get_twirps_main(api):
             db_handler.add_Twirp_to_database( mp_twirp )
 
         except tweepy.error.RateLimitError, e:
-            print "Twitter API usage rate exceeded. Waiting 15 mins..."
-            time.sleep(60*15)
+            LOGGER.warning("Twitter API usage rate exceeded. Waiting 15 mins...")
+            time.sleep(60*5)
+            LOGGER.info("10 mins remaining...")
+
+            api = authorize_twitter()
             continue
 
         except tweepy.error.TweepError, e:
-            print "ERROR: %s: for %s -> %s" % (e.message[0]["message"],
+            LOGGER.error( "ERROR: %s: for %s -> %s" % (e.message[0]["message"],
                                                 mp["handle"],
-                                                mp["name"])
+                                                mp["name"]))
 
 def get_Tweets_from_twitter(api, user_id, max_id=None, no_of_items=3200):
     '''Feeding in the session, a user_id and possibly tweet id, this queries the 
@@ -95,18 +98,20 @@ def get_tweets_main(max_tweets=100, tweet_buffer=30):
                 for Tweet in tqdm( get_Tweets_from_twitter(api, twirp["u_id"],
                                                            twirp["oldest"], remaining_tweets),
                                     nested=True, desc=pbar_description):
-                    #print unicode(Tweet)
+                    LOGGER.debug(unicode(Tweet))
                     db_handler.add_Tweet_to_database(Tweet)
             else:
                 continue
 
         except tweepy.error.TweepError, e:
-            print "Rate Limit Exceeded: Sleeping for 15 mins", datetime.datetime.utcnow()
-            time.sleep(60*15)
+            LOGGER.warning(e)
+            LOGGER.warning("Twitter API usage rate exceeded. Waiting 15 mins...")
+            time.sleep(60*10)
+            LOGGER.info("5 mins remaining...")
+            time.sleep(60*5)
 
             api = authorize_twitter()
             continue
-
 
 def get_twirps_update():
     pass
@@ -126,13 +131,17 @@ def get_tweets_update(max_tweets=10):
                 db_handler.add_Tweet_to_database(Tweet)
                 no_collected += 1
                 current_tweet = Tweet.tweetid
-                print unicode(Tweet)
+                LOGGER.debug(unicode(Tweet))
+        
         except tweepy.error.TweepError, e:
-            print "Rate Limit Exceeded: Sleeping for 15 mins", datetime.datetime.utcnow()
-            time.sleep(60*15)
+            LOGGER.warning(e)
+            LOGGER.warning("Twitter API usage rate exceeded. Waiting 15 mins...")
+            time.sleep(60*10)
+            LOGGER.info("5 mins remaining...")
+            time.sleep(60*5)
 
             api = authorize_twitter()
-            continue 
+            continue
 
 def lap_time():
     '"a glance at the wristwatch" since the program started'

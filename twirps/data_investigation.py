@@ -29,7 +29,7 @@ finally: run multiple times, and find ratio of sumsquare distances
 
 def naive_clustering(filename, k):
     """perform kmeans clustering on a single assimilated frequency json file. 
-output to json for d3 visual exploration"""
+    output to json for d3 visual exploration"""
 
     dv = DictVectorizer(sparse=True)
     
