@@ -11,7 +11,7 @@ import tweepy
 import logging
 from tqdm import tqdm
 
-from classes import Twirp, Tweet, TDBHandler
+from classes import Twirp, Tweet, TDBHandler, TweetStreamer
 
 START_TIME = time.time()
 LOGGER = logging.getLogger(__name__)
@@ -142,6 +142,16 @@ def get_tweets_update(max_tweets=10):
 
             api = authorize_twitter()
             continue
+
+def update_from_tweet_stream():
+    db_handler = TDBHandler()
+    api = authorize_twitter()
+
+    tweet_streamer = TweetStreamer(api)
+    myStream = tweepy.Stream(auth = api.auth, listener=tweet_streamer)
+    myStream.filter(follow=['130912287','80021045']) # async=True)
+    pass
+
 
 def lap_time():
     '"a glance at the wristwatch" since the program started'

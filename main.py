@@ -86,7 +86,7 @@ def execute( options ):
 
     if options.update:
         LOGGER.info("Updating most recent tweets")
-        data_collection.get_tweets_update()
+        data_collection.update_from_tweet_stream()
 
 def set_up_logging():
     log_format = '%(asctime)s | %(lineno)-4d  %(name)-30s   %(levelname)8s  %(message)s'
