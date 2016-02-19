@@ -147,9 +147,13 @@ def update_from_tweet_stream():
     db_handler = TDBHandler()
     api = authorize_twitter()
 
-    tweet_streamer = TweetStreamer(api)
+    user_ids = [ unicode(twirp["u_id"]) for twirp in db_handler.get_user_ids_from_handles()]
+
+    tweet_streamer = TweetStreamer(api, db_handler)
     myStream = tweepy.Stream(auth = api.auth, listener=tweet_streamer)
-    myStream.filter(follow=['130912287','80021045']) # async=True)
+    myStream.filter(follow=user_ids, async=True)
+    #does not only get statuses!!
+
     pass
 
 

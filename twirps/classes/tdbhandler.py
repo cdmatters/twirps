@@ -121,9 +121,29 @@ class TDBHandler(object):
                         "newest": r[1],
                         'no_collected': r[0], 
                         "u_id": r[2]
-
                     } for r in cur.fetchall()
                 ]
 
+    def get_user_ids_from_handles(self, handles=[]):
+        '''Return a dictionary of handles and user_ids for given list of handles.
+        Return all stored id's if handles is empty list'''
+        request_sql = '''SELECT UserID, Handle, Name 
+                            FROM TwirpData
+                       '''
+        if handles:
+            q_marks = ','.join('?'*len(handles))
+            request_sql += 'WHERE Handle IN (%s)' %q_marks
+
+        with sqlite3.connect(self.db_name) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql, handles)
+
+            return [
+                        {
+                            "u_id": r[0],
+                            "handle": r[1],
+                            "name":r[2]
+                        } for r in cur.fetchall()
+                    ]
 
 
