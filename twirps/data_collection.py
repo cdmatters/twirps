@@ -10,6 +10,7 @@ import datetime, json, os, sys, time
 import tweepy
 import logging
 from tqdm import tqdm
+from tweepy.error import RateLimitError, TweepError
 
 from classes import Twirp, Tweet, TDBHandler, TweetStreamer
 
@@ -57,7 +58,7 @@ def get_twirps_main(api):
             mp_twirp.name = mp["name"]
             db_handler.add_Twirp_to_database( mp_twirp )
 
-        except tweepy.error.RateLimitError, e:
+        except RateLimitError, e:
             LOGGER.warning("Twitter API usage rate exceeded. Waiting 15 mins...")
             time.sleep(60*5)
             LOGGER.info("10 mins remaining...")
@@ -147,14 +148,28 @@ def update_from_tweet_stream():
     db_handler = TDBHandler()
     api = authorize_twitter()
 
-    user_ids = [ unicode(twirp["u_id"]) for twirp in db_handler.get_user_ids_from_handles()]
+    currently_following =  set(api.friends_ids())
+  
+    for twirp in db_handler.get_user_ids_from_handles():
+
+        if twirp["u_id"] not in currently_following:
+            LOGGER.debug("following %s" % twirp["handle"])
+            try:
+                api.create_friendship(user_id=unicode(twirp["u_id"] ))
+            except tweepy.error.TweepError, e:
+                LOGGER.error( "ERROR: %s: for %s -> %s" % (e.message[0]["message"],
+                                                twirp["handle"],
+                                                twirp["name"]))
+                if "You've already requested to follow" in e.message[0]["message"]:
+                    continue
+                else: 
+                    time.sleep(5*60)
+                continue
 
     tweet_streamer = TweetStreamer(api, db_handler)
     myStream = tweepy.Stream(auth = api.auth, listener=tweet_streamer)
-    myStream.filter(follow=user_ids, async=True)
-    #does not only get statuses!!
+    myStream.userstream(replies='all')
 
-    pass
 
 
 def lap_time():
