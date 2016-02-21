@@ -4,14 +4,14 @@ from tweet import Tweet
 import logging
 
 LOGGER = logging.getLogger(__name__)
-LOGGER_RESOLUTION = 5
+LOGGER_RESOLUTION = 1
 
 class TweetStreamer(tweepy.StreamListener):
     def __init__(self, api, db_handler):
         self.api = api
         self.db_handler = db_handler
         self.counter = 0
-        LOGGER.info("Instatiated TweetStreamer")
+        LOGGER.info("Instantiated TweetStreamer")
         pass
         
     def on_status(self, status):
