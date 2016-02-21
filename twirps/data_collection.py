@@ -152,12 +152,12 @@ def get_tweets_update(max_tweets=10):
             continue
 
 
-def update_from_tweet_stream():
+def subscribe_friends_from_twirps():
     db_handler = TDBHandler()
     api = authorize_twitter()
 
     currently_following =  set(api.friends_ids())
-  
+
     for twirp in db_handler.get_user_ids_from_handles():
 
         if twirp["u_id"] not in currently_following:
@@ -165,14 +165,16 @@ def update_from_tweet_stream():
             try:
                 api.create_friendship(user_id=unicode(twirp["u_id"]))
             except tweepy.error.TweepError, e:
-                LOGGER.error( "ERROR: %s: for %s -> %s" % (e.message[0]["message"],
+                if "You've already requested to follow" in e.message[0]["message"]:
+                    LOGGER.error( "%s: for %s -> %s" % (e.message[0]["message"],
                                                 twirp["handle"],
                                                 twirp["name"]))
-                if "You've already requested to follow" in e.message[0]["message"]:
                     continue
                 else: 
-                    time.sleep(5*60)
-                continue
+                    LOGGER.error(e.message[0]["message"])
+                    LOGGER.error("Skipping %s -> %s and sleeping for 15mins" % (twirp["handle"], twirp["name"]))
+                    time.sleep(15*60)
+                    continue
 
 def start_stream():
     db_handler = TDBHandler()
@@ -189,11 +191,14 @@ def start_stream():
         LOGGER.info("Global stream already up.")
 
     
-def disconnect_tweet_stream():
+def stop_stream():
     global TWIRP_STREAM
     if TWIRP_STREAM:
         TWIRP_STREAM.disconnect()
-        LOGGER.info("Started Streaming thread.")
+        LOGGER.info("Stopped Streaming thread.")
+        TWIRP_STREAM = None
+    else:
+        LOGGER.info("No stream is up.")
 
 
 
