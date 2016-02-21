@@ -1,13 +1,26 @@
 from __future__ import unicode_literals
-import os, sys
+import os
+import sys
 from argparse import ArgumentParser
 import logging
 
+from flask import Flask, request, session, g, redirect, url_for, \
+    abort, render_template, flash
+
 from archipelago import Archipelago, setup
-from twirps import data_collection
+from twirps import data_collection, app
 from twirps.classes import TDBHandler
 
+
+
 LOGGER = logging.getLogger('twirps.main')
+
+DATABASE = '/twirpy.db'
+SECRET_KEY = 'development key'
+USERNAME = 'admin'
+PASSWORD = 'default'
+
+
 
 def load_tweepy_key():
     tweepy_help_1 = '''
@@ -78,28 +91,35 @@ def execute( options ):
         session_api = data_collection.authorize_twitter()
         data_collection.get_twirps_main(session_api)
 
-
     if options.data:
         LOGGER.info("Collecting Data // Bulk Tweets")
         data_collection.get_tweets_main()
-
 
     if options.update:
         LOGGER.info("Updating most recent tweets")
         data_collection.update_from_tweet_stream()
 
+    # 1. Collect twirps from ParlDB
+    # 2. Collect twirps from JSON sent in
+    # 3. Collect REST twirps data, with arguments
+    # 4. Add to stream/New users
+    # 5. Filter from stream users
+    # 6. Serve logs
+
+
+
 def set_up_logging():
     log_format = '%(asctime)s | %(lineno)-4d  %(name)-30s   %(levelname)8s  %(message)s'
-    formatter = logging.Formatter(log_format,"%H:%M:%S.%f %d/%m/%Y")
+    formatter = logging.Formatter(log_format,"%H:%M:%S %d/%m/%Y")
     cons_format = '%(asctime)s  %(filename)-20s l%(lineno)-d %(levelname)-8s  %(message)s'
     formatter_cons = logging.Formatter(cons_format,"%H:%M %d/%m")
 
 
-    fh_twirp = logging.FileHandler('temp/twirps.log', mode='w')
+    fh_twirp = logging.FileHandler('tmp/twirps.log', mode='w')
     fh_twirp.setLevel(logging.DEBUG)
     fh_twirp.setFormatter(formatter)
     
-    fh_total = logging.FileHandler('temp/twirps.verbose.log', mode='w')
+    fh_total = logging.FileHandler('tmp/twirps.verbose.log', mode='w')
     fh_total.setLevel(logging.DEBUG)
     fh_total.setFormatter(formatter)
     
@@ -115,6 +135,8 @@ def set_up_logging():
     logger.addHandler(fh_twirp)
     logger.addHandler(ch)
 
+
+
 if __name__ == "__main__":
     set_up_logging()
 
@@ -122,11 +144,17 @@ if __name__ == "__main__":
     if not setup.is_arch_setup():
         setup.setup_archipelago()
 
-    arg_parser = build_parser()
-    opts = arg_parser.parse_args( sys.argv[1:] )
+    app.config.from_object(__name__)
+    app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+    
+    LOGGER.info("Starting Flask app")
+    app.run()
 
-    execute( opts )
+    # arg_parser = build_parser()
+    # opts = arg_parser.parse_args( sys.argv[1:] )
+    # execute( opts )
 
+    data_collection.stop_stream() 
     LOGGER.info("Shutting down.")
     logging.shutdown()
 
