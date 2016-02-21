@@ -39,30 +39,25 @@ def requires_auth(f):
 ################################################################################
 
 def read_log():
+    ''' Use to render & parse if necc'''
     for line in  open('./tmp/twirps.log', "r"):
         yield line
 
 @app.route('/admin_login/', methods=['GET', 'POST'])
 @requires_auth
 def view_backend():
+    if request.method=='POST':
+        if request.form["submit"]== "start_stream":
+            LOGGER.info("Received start stream message")
+            data_collection.start_stream()
+        elif request.form["submit"]== "stop_stream":
+            LOGGER.info("Received stop stream message")
+            data_collection.stop_stream()
+        elif request.form["submit"]== "shutdown":
+            LOGGER.info("Received stop stream message")
+            shutdown_server()
+
     LOGGER.info("Loading backend")
-
-    return render_template('backend.html', rows=read_log())
-
-@app.route('/admin_login/start_stream', methods=['GET', 'POST'])
-@requires_auth
-def add_twirp():
-    LOGGER.info("Received start stream message")
-    
-    data_collection.start_stream()
-    return render_template('backend.html', rows=read_log())
-
-@app.route('/admin_login/stop_stream', methods=['GET','POST'])
-@requires_auth
-def stop_stream():
-    LOGGER.info("Received stop stream message")
-    
-    data_collection.stop_stream()
     return render_template('backend.html', rows=read_log())
 
 

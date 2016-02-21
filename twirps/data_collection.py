@@ -180,10 +180,10 @@ def start_stream():
     db_handler = TDBHandler()
     api = authorize_twitter()
 
-    tweet_streamer = TweetStreamer(api, db_handler)
-
     global TWIRP_STREAM
     if not TWIRP_STREAM:
+        tweet_streamer = TweetStreamer(api, db_handler)
+
         TWIRP_STREAM = tweepy.Stream(auth = api.auth, listener=tweet_streamer)
         TWIRP_STREAM.userstream(replies='all', async=True)
         LOGGER.info("Started Streaming thread.")
