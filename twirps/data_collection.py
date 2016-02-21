@@ -3,16 +3,23 @@
 #own twirpy.db for any extra data.
 
 from __future__ import unicode_literals
-from archipelago import Archipelago
-import sqlite3
-import requests
-import datetime, json, os, sys, time
-import tweepy
+import datetime
+import json
+import os
+import sys
+import time
 import logging
-from tqdm import tqdm
-from tweepy.error import RateLimitError, TweepError
+import sqlite3
 
+from tweepy.error import RateLimitError, TweepError
+from tqdm import tqdm
+import tweepy
+import requests
+
+from archipelago import Archipelago
 from classes import Twirp, Tweet, TDBHandler, TweetStreamer
+
+TWIRP_STREAM = None 
 
 START_TIME = time.time()
 LOGGER = logging.getLogger(__name__)
@@ -144,6 +151,7 @@ def get_tweets_update(max_tweets=10):
             api = authorize_twitter()
             continue
 
+
 def update_from_tweet_stream():
     db_handler = TDBHandler()
     api = authorize_twitter()
@@ -155,7 +163,7 @@ def update_from_tweet_stream():
         if twirp["u_id"] not in currently_following:
             LOGGER.debug("following %s" % twirp["handle"])
             try:
-                api.create_friendship(user_id=unicode(twirp["u_id"] ))
+                api.create_friendship(user_id=unicode(twirp["u_id"]))
             except tweepy.error.TweepError, e:
                 LOGGER.error( "ERROR: %s: for %s -> %s" % (e.message[0]["message"],
                                                 twirp["handle"],
@@ -166,9 +174,26 @@ def update_from_tweet_stream():
                     time.sleep(5*60)
                 continue
 
+def start_stream():
+    db_handler = TDBHandler()
+    api = authorize_twitter()
+
     tweet_streamer = TweetStreamer(api, db_handler)
-    myStream = tweepy.Stream(auth = api.auth, listener=tweet_streamer)
-    myStream.userstream(replies='all')
+
+    global TWIRP_STREAM
+    if not TWIRP_STREAM:
+        TWIRP_STREAM = tweepy.Stream(auth = api.auth, listener=tweet_streamer)
+        TWIRP_STREAM.userstream(replies='all', async=True)
+        LOGGER.info("Started Streaming thread.")
+    else:
+        LOGGER.info("Global stream already up.")
+
+    
+def disconnect_tweet_stream():
+    global TWIRP_STREAM
+    if TWIRP_STREAM:
+        TWIRP_STREAM.disconnect()
+        LOGGER.info("Started Streaming thread.")
 
 
 
