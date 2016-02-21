@@ -188,7 +188,7 @@ def start_stream():
         TWIRP_STREAM.userstream(replies='all', async=True)
         LOGGER.info("Started Streaming thread.")
     else:
-        LOGGER.info("Global stream already up.")
+        LOGGER.warning("Global stream already up.")
 
     
 def stop_stream():
@@ -198,14 +198,7 @@ def stop_stream():
         LOGGER.info("Stopped Streaming thread.")
         TWIRP_STREAM = None
     else:
-        LOGGER.info("No stream is up.")
+        LOGGER.warning("No stream is up.")
 
-
-
-def lap_time():
-    '"a glance at the wristwatch" since the program started'
-    lap = time.time()
-    print '---%s s ---' %(START_TIME-lap)
-    return time.time()
 
 
