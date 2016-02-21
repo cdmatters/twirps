@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+import os
 import sqlite3
 import logging
 from functools import wraps
@@ -6,6 +8,7 @@ from flask import Blueprint, Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, Response
 
 from twirps import app, data_collection
+
 
 
 LOGGER = logging.getLogger(__name__)
@@ -41,9 +44,9 @@ def requires_auth(f):
 def read_log():
     ''' Use to render & parse if necc'''
     for line in  open('./tmp/twirps.log', "r"):
-        yield line
+        yield line.decode('utf-8').strip()
 
-@app.route('/admin_login/', methods=['GET', 'POST'])
+@app.route('/admin/', methods=['GET', 'POST'])
 @requires_auth
 def view_backend():
     if request.method=='POST':
@@ -56,9 +59,33 @@ def view_backend():
         elif request.form["submit"]== "shutdown":
             LOGGER.info("Received stop stream message")
             shutdown_server()
+        elif request.form["submit"]=="log_resolution":
+            LOGGER.info("Received change log resolution message")
+            new_res = request.form["resolution"]
+            data_collection.change_stream_resolution(int(new_res))
 
-    LOGGER.info("Loading backend")
-    return render_template('backend.html', rows=read_log())
+    res = data_collection.get_stream_resolution()
+    LOGGER.debug("Loading backend")
+    return render_template('backend.html', stream_res=res, rows=read_log())
+
+@app.route('/admin/db_edit', methods=['GET', 'POST'])
+@requires_auth
+def db_edit():
+    if request.method=='POST':
+        if request.form["submit"]== "start_stream":
+            LOGGER.info("Received start stream message")
+            data_collection.start_stream()
+        elif request.form["submit"]== "stop_stream":
+            LOGGER.info("Received stop stream message")
+            data_collection.stop_stream()
+        elif request.form["submit"]== "shutdown":
+            LOGGER.info("Received stop stream message")
+            shutdown_server()
+        elif request.form["submit"]=='log_resolution':
+            pass
+
+    LOGGER.debug("Loading backend")
+    return render_template('interact_database.html', response_data=[{1:2,3:4}])
 
 
 ################################################################################
@@ -72,7 +99,7 @@ def shutdown_server():
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
 
-@app.route('/admin_login/shutdown', methods=['GET','POST'])
+@app.route('/admin/shutdown', methods=['GET','POST'])
 def shutdown():
     shutdown_server()
     LOGGER.info( 'Server shutting down...')

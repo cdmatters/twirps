@@ -3,12 +3,16 @@
     <h2>Welcome to the backend baby!</h2>
     <p>We're gonna have a lot of fun</p>
 
-    <form action="/admin_login/" method="post">
-      <button type="submit" name="submit" value="start_stream">Start Stream</button>
-      <button type="submit" name="submit" value="stop_stream">Stop Stream</button>
-      <button type="submit" name="submit" value="refresh_logs">Refresh Logs</button>
-      <button type="submit" name="submit" value="shutdown">Shutdown</button>
+    <form action="{{ url_for('view_backend') }}" method="post">
+        <button type="submit" name="submit" value="start_stream">Start Stream</button>
+        <button type="submit" name="submit" value="stop_stream">Stop Stream</button>
+        <button type="submit" name="submit" value="refresh_logs">Refresh Logs</button>
+        <button type="submit" name="submit" value="shutdown">Shutdown</button>
+        <input type="text" name="resolution" value="{{ stream_res }}">
+        <button type="submit" name="submit" value="log_resolution">Change log resolution</button>
     </form>
+    <a href=/admin/db_edit >Edit Data</a>
+
  
   {% for row in rows %}
     <li>{{ row }}

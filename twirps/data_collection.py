@@ -19,7 +19,8 @@ import requests
 from archipelago import Archipelago
 from classes import Twirp, Tweet, TDBHandler, TweetStreamer
 
-TWIRP_STREAM = None 
+TWIRP_STREAM = None
+TWEET_STREAMER = None
 
 START_TIME = time.time()
 LOGGER = logging.getLogger(__name__)
@@ -181,12 +182,16 @@ def start_stream():
     api = authorize_twitter()
 
     global TWIRP_STREAM
-    if not TWIRP_STREAM:
-        tweet_streamer = TweetStreamer(api, db_handler)
+    global TWEET_STREAMER
 
-        TWIRP_STREAM = tweepy.Stream(auth = api.auth, listener=tweet_streamer)
+    if not TWEET_STREAMER:
+        TWEET_STREAMER = TweetStreamer(api, db_handler)
+        LOGGER.debug("Built TweetStreamer")
+    
+    if not TWIRP_STREAM:
+        TWIRP_STREAM = tweepy.Stream(auth = api.auth, listener=TWEET_STREAMER)
         TWIRP_STREAM.userstream(replies='all', async=True)
-        LOGGER.info("Started Streaming thread.")
+        LOGGER.debug("Started Streaming thread.")
     else:
         LOGGER.warning("Global stream already up.")
 
@@ -197,8 +202,24 @@ def stop_stream():
         TWIRP_STREAM.disconnect()
         LOGGER.info("Stopped Streaming thread.")
         TWIRP_STREAM = None
+        TWEET_STREAMER = None
     else:
         LOGGER.warning("No stream is up.")
 
+def change_stream_resolution(res):
+    global TWEET_STREAMER
+    if TWEET_STREAMER:
+        TWEET_STREAMER.set_stream_resolution(int(res))
+        new_res = TWEET_STREAMER.get_stream_resolution()
+        LOGGER.debug("Changed stream resolution to %s" % new_res)
+    else:
+        LOGGER.debug("No tweet streamer")
 
-
+def get_stream_resolution():
+    global TWEET_STREAMER
+    if TWEET_STREAMER:
+        res = TWEET_STREAMER.get_stream_resolution()
+        return res
+    else:
+        LOGGER.debug("No tweet streamer")
+        return  #impossible, implies ot streaming
