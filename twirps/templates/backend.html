@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block body %}
+    <h2>Welcome to the backend baby!</h2>
+    <p>We're gonna have a lot of fun</p>
+
+    <button type="button">Get Twirps</button>
+    <button type="button">Start streaming</button>
+    <button type="button">Stop streaming</button>
+    <button type="button"></button>
+    <button type="button">Click Me!</button>
+
+
+  
+  {% for row in rows %}
+    <li>{{ row }}
+  {% endfor %}
+{% endblock %}
