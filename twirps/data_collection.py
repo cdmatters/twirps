@@ -61,11 +61,8 @@ def get_twirps_main(api):
 
     for mp in tqdm(mps_to_fetch):
         try:
+            add_Twirp_to_Twirps(mp["name"], mp["handle"], mp["o_id"])
         
-            mp_twirp = get_Twirp_from_twitter(api, mp["handle"], mp["o_id"])
-            mp_twirp.name = mp["name"]
-            db_handler.add_Twirp_to_database( mp_twirp )
-
         except RateLimitError, e:
             LOGGER.warning("Twitter API usage rate exceeded. Waiting 15 mins...")
             time.sleep(60*5)
@@ -226,3 +223,22 @@ def get_stream_resolution():
 def get_user_data_from_identifiers(u_ids=[], handles=[], names=[], usernames=[]):
     db_handler = TDBHandler()
     return db_handler.get_user_data_from_identifiers(u_ids, handles, names, usernames)
+
+
+def add_Twirp_to_Twirps(name, handle, official_id=None):
+    api = authorize_twitter()
+    db_handler = TDBHandler()
+    mp_twirp = get_Twirp_from_twitter(api, handle, official_id)
+    mp_twirp.name = name
+    db_handler.add_Twirp_to_database( mp_twirp )
+
+def delete_Twirp(name, username, handle,u_id):
+    db_handler = TDBHandler()
+    effects = db_handler.delete_twirp(u_id, handle, name, username) 
+    LOGGER.info("Deleted %s result: %s->%s" % (effects,name,handle) )
+    return effects
+
+
+
+
+

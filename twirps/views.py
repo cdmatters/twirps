@@ -77,8 +77,6 @@ def db_edit():
     results = []
     if request.method=='POST':
         if request.form["submit"]== "get_twirps":
-            LOGGER.info(request.form.items)
-
             u_ids_string = request.form["u_ids"].split(',')
             handles_string = request.form["handles"].split(',')
             names_string = request.form["names"].split(',')
@@ -92,12 +90,33 @@ def db_edit():
             results =  data_collection.get_user_data_from_identifiers(
                                                 u_ids, handles, names, usernames)
             
-        elif request.form["submit"]== "stop_stream":
-            LOGGER.info("Received stop stream message")
-            data_collection.stop_stream()
-        elif request.form["submit"]== "shutdown":
-            LOGGER.info("Received stop stream message")
-            shutdown_server()
+        elif request.form["submit"]== "delete_twirp":
+            u_id = request.form["u_ids"]
+            handle = request.form["handles"]
+            name = request.form["names"]
+            username = request.form["usernames"]
+            
+            LOGGER.info("Attempting to delete %s %s %s %s:"% (name, username, handle, u_id))
+            success = data_collection.delete_Twirp(name, username, handle, u_id)
+            if success == 0:
+                results = ['Nothing deleted']
+            elif success == 1:
+                results = ['Success']
+            else:
+                results = ["Error"]
+            results.extend(data_collection.get_user_data_from_identifiers([], [handle], [name], []) )
+
+
+
+        elif request.form["submit"]== "add_twirp":
+            name = request.form["names"]
+            handle = request.form["handles"]
+            LOGGER.info("Adding %s->%s"%(name, handle))
+            if name != '' and handle != '':
+                data_collection.add_Twirp_to_Twirps(name, handle)
+                results =  data_collection.get_user_data_from_identifiers([], [handle], [name], [])
+            else:
+                results=['Please add both name and handle']
         elif request.form["submit"]=='log_resolution':
             pass
     
