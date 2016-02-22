@@ -8,8 +8,6 @@ LOGGER = logging.getLogger(__name__)
 class TDBHandler(object):
     def __init__(self, db_name='twirpy.db'):
         self.db_name = db_name
-        LOGGER.debug("Create TDBHandler: %s" % self.db_name )
-
 
     def is_db_setup(self ):
         return os.path.isfile(self.db_name)
@@ -124,7 +122,8 @@ class TDBHandler(object):
                     } for r in cur.fetchall()
                 ]
 
-    def get_user_ids_from_handles(self, handles=[]):
+
+    def get_user_data_from_handles(self, handles=[]):
         '''Return a dictionary of handles and user_ids for given list of handles.
         Return all stored id's if handles is empty list'''
         request_sql = '''SELECT UserID, Handle, Name 
@@ -145,5 +144,48 @@ class TDBHandler(object):
                             "name":r[2]
                         } for r in cur.fetchall()
                     ]
+
+    def get_user_data_from_identifiers(self, u_ids=[], handles=[], names=[], usernames=[]):
+        '''Return a dictionary of handles and user_ids for given list of u_ids.
+        Return all stored id's if u_ids is empty list'''
+        request_sql = '''SELECT UserID, Handle, Name, UserName 
+                            FROM TwirpData
+                       '''
+        filter_categories = []
+        filter_args = []
+        if u_ids:
+            q_marks = ','.join('?'*len(u_ids))
+            filter_categories.append('UserID IN (%s)' %q_marks)
+            filter_args.extend(u_ids)
+        if names:
+            q_marks = ','.join('?'*len(names))
+            filter_categories.append('Name IN (%s)' %q_marks)
+            filter_args.extend(names)
+        if handles:
+            q_marks = ','.join('?'*len(handles))
+            filter_categories.append('Handle IN (%s)' %q_marks)
+            filter_args.extend(handles)
+        if usernames:
+            q_marks = ','.join('?'*len(usernames))
+            filter_categories.append('UserName IN (%s)' %q_marks)
+            filter_args.extend(usernames)
+
+        if filter_categories:
+            request_sql += ' WHERE ' 
+            request_sql += ' OR '.join(filter_categories)
+
+        with sqlite3.connect(self.db_name) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql, filter_args)
+
+            return [
+                        {
+                            "u_id": r[0],
+                            "handle": r[1],
+                            "name":r[2],
+                            "username": r[3]
+                        } for r in cur.fetchall()
+                    ]
+
 
 

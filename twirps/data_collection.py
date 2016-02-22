@@ -194,7 +194,6 @@ def start_stream():
         LOGGER.debug("Started Streaming thread.")
     else:
         LOGGER.warning("Global stream already up.")
-
     
 def stop_stream():
     global TWIRP_STREAM
@@ -222,4 +221,8 @@ def get_stream_resolution():
         return res
     else:
         LOGGER.debug("No tweet streamer")
-        return  #impossible, implies ot streaming
+        #impossible, implies ot streaming
+
+def get_user_data_from_identifiers(u_ids=[], handles=[], names=[], usernames=[]):
+    db_handler = TDBHandler()
+    return db_handler.get_user_data_from_identifiers(u_ids, handles, names, usernames)

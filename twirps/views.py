@@ -2,12 +2,14 @@ from __future__ import unicode_literals
 import os
 import sqlite3
 import logging
+import json
 from functools import wraps
 
 from flask import Blueprint, Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, Response
 
 from twirps import app, data_collection
+
 
 
 
@@ -71,10 +73,25 @@ def view_backend():
 @app.route('/admin/db_edit', methods=['GET', 'POST'])
 @requires_auth
 def db_edit():
+
+    results = []
     if request.method=='POST':
-        if request.form["submit"]== "start_stream":
-            LOGGER.info("Received start stream message")
-            data_collection.start_stream()
+        if request.form["submit"]== "get_twirps":
+            LOGGER.info(request.form.items)
+
+            u_ids_string = request.form["u_ids"].split(',')
+            handles_string = request.form["handles"].split(',')
+            names_string = request.form["names"].split(',')
+            usernames_string = request.form["usernames"].split(',')
+
+            u_ids = [ u for u in u_ids_string ] if u_ids_string != u'' else []
+            handles = handles_string if handles_string != u'' else []
+            names = names_string if names_string != u'' else []
+            usernames = usernames_string if usernames_string != 'u' else []
+            
+            results =  data_collection.get_user_data_from_identifiers(
+                                                u_ids, handles, names, usernames)
+            
         elif request.form["submit"]== "stop_stream":
             LOGGER.info("Received stop stream message")
             data_collection.stop_stream()
@@ -83,9 +100,11 @@ def db_edit():
             shutdown_server()
         elif request.form["submit"]=='log_resolution':
             pass
+    
+    results
 
     LOGGER.debug("Loading backend")
-    return render_template('interact_database.html', response_data=[{1:2,3:4}])
+    return render_template('interact_database.html', results=results)
 
 
 ################################################################################

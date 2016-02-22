@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block body %}
+    <h2>Welcome to the backend, baby!</h2>
+    <p>Edit database deets here...</p>
+
+    <a href="{{ url_for('view_backend') }}" >Back to admin page</a>
+
+    <form action="{{ url_for('db_edit') }}" method="post">
+        User Ids
+        <input type="text" name="u_ids"></input>
+        Handles
+        <input type="text" name="handles"></input>
+        Names
+        <input type="text" name="names"></input>
+        UserNames
+        <input type="text" name="usernames"></input>
+        <button type="submit" name="submit" value="get_twirps">Get Twirps Data</button>
+        <button type="submit" name="submit" value="get_recent_tweets">Get Most Recent Tweets</button>
+
+    </form>
+
+    <form action="{{ url_for('db_edit') }}" method="post">
+        <input type="text" name="twirps" value="get_tweets">
+        <button type="submit" name="submit" value="shutdown">Shutdown</button>
+    </form>
+
+{% for row in results %}
+    <li>{{ row }}
+{% endfor %}
+
+{% endblock %}
