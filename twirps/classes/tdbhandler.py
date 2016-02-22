@@ -187,5 +187,20 @@ class TDBHandler(object):
                         } for r in cur.fetchall()
                     ]
 
+    def delete_twirp(self, u_id, handle, name, username):
+        '''Return a dictionary of handles and user_ids for given list of u_ids.
+        Return all stored id's if u_ids is empty list'''
+        request_sql = '''DELETE FROM TwirpData 
+                        WHERE UserID=?
+                            AND Handle =?
+                            AND Name=?
+                            AND UserName=?
+                       '''
 
+        with sqlite3.connect(self.db_name) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql, (u_id, handle, name, username))
+            cur.execute('SELECT changes() FROM TwirpData')
+
+            return cur.fetchall()[0][0]
 
