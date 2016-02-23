@@ -40,10 +40,12 @@ def authorize_twitter():
     return api 
 
 def get_Twirp_from_twitter(api, handle):
-    '''Return a Twirp object from twitter handle
+    '''Return a Twirp object from twitter handle.
 
     Feeding in the session, a handle and it's mp's official id, this queries 
-    the twitter API, instantiates Twirp class with the data and return it'''
+    the twitter API, instantiates Twirp class with the data and return it. 
+    It does not check if a user exists first.
+    '''
     twitter_user = api.get_user(screen_name=handle)
     twirp = Twirp(twitter_user, 'twitter')
 
@@ -176,6 +178,11 @@ def subscribe_friends_from_twirps():
                     continue
 
 def start_stream():
+    ''' Build the TweetStreamer and the Stream , and connect to add data to database
+    from Twitter.
+
+    Print to logs if no stream is up
+    '''
     db_handler = TDBHandler()
     api = authorize_twitter()
 
@@ -194,6 +201,10 @@ def start_stream():
         LOGGER.warning("Global stream already up.")
     
 def stop_stream():
+    ''' Destroy the TweetStreamer and disconnect the Stream if up and running.
+
+    Print to logs if no stream is up
+    '''
     global TWIRP_STREAM
     if TWIRP_STREAM:
         TWIRP_STREAM.disconnect()
@@ -204,6 +215,11 @@ def stop_stream():
         LOGGER.warning("No stream is up.")
 
 def change_stream_resolution(res):
+    '''Change resolution of tweets in logs from TweetStreamer.
+
+    Resolution: res -> (x mod res == 0 are printed to logs) 
+    Print to logs if no streamer.
+    '''
     global TWEET_STREAMER
     if TWEET_STREAMER:
         TWEET_STREAMER.set_stream_resolution(int(res))
@@ -213,6 +229,12 @@ def change_stream_resolution(res):
         LOGGER.debug("No tweet streamer")
 
 def get_stream_resolution():
+    '''Return resolution of tweets in logs from TweetStreamer.
+
+    Resolution: res -> (x mod res == 0 are printed to logs) 
+        Resolution: res -> (x mod res == 0 are printed to logs) 
+    Print to logs if no streamer.
+    '''
     global TWEET_STREAMER
     if TWEET_STREAMER:
         res = TWEET_STREAMER.get_stream_resolution()
@@ -222,11 +244,23 @@ def get_stream_resolution():
         #impossible, implies ot streaming
 
 def get_user_data_from_identifiers(u_ids=[], handles=[], names=[], usernames=[]):
+    '''Return a list of dicts of all basic twirp data {name, username, handle, u_id} 
+    for any Twirps matching any of the lists of u_ids, handles, names, usernames.
+
+    If none found return empty list. If empty args, return all results.
+    '''
+
     db_handler = TDBHandler()
-    return db_handler.get_user_data_from_identifiers(u_ids, handles, names, usernames)
+    return db_handler.get_user_data_from_identifiers(u_ids, handles,
+                                                     names, usernames)
 
 
 def add_Twirp_to_Twirps(name, handle, official_id=0):
+    ''' Take a name, handle and official id, and create a Twirp from twitter data
+    using the handle, and name and official id. Store this in the database.
+
+    WARNING: No error currently if handle is not valid.
+    '''
     api = authorize_twitter()
     db_handler = TDBHandler()
     mp_twirp = get_Twirp_from_twitter(api, handle)
