@@ -39,12 +39,13 @@ def authorize_twitter():
     api = tweepy.API(auth)
     return api 
 
-def get_Twirp_from_twitter(api, handle, official_id):
-    '''Feeding in the session, a handle and it's mp's official id, this queries 
+def get_Twirp_from_twitter(api, handle):
+    '''Return a Twirp object from twitter handle
+
+    Feeding in the session, a handle and it's mp's official id, this queries 
     the twitter API, instantiates Twirp class with the data and return it'''
     twitter_user = api.get_user(screen_name=handle)
     twirp = Twirp(twitter_user, 'twitter')
-    twirp.official_id = official_id
 
     return twirp
 
@@ -225,11 +226,14 @@ def get_user_data_from_identifiers(u_ids=[], handles=[], names=[], usernames=[])
     return db_handler.get_user_data_from_identifiers(u_ids, handles, names, usernames)
 
 
-def add_Twirp_to_Twirps(name, handle, official_id=None):
+def add_Twirp_to_Twirps(name, handle, official_id=0):
     api = authorize_twitter()
     db_handler = TDBHandler()
-    mp_twirp = get_Twirp_from_twitter(api, handle, official_id)
+    mp_twirp = get_Twirp_from_twitter(api, handle)
+
+    mp_twirp.official_id = official_id
     mp_twirp.name = name
+    
     db_handler.add_Twirp_to_database( mp_twirp )
 
 def delete_Twirp(name, username, handle,u_id):
