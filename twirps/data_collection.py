@@ -25,8 +25,14 @@ TWEET_STREAMER = None
 START_TIME = time.time()
 LOGGER = logging.getLogger(__name__)
 
+################################################################################
+#                             TWITTER METHODS                                  #
+################################################################################
+
+
 def authorize_twitter():
-    '''Authorizes the session for access to twitter API'''
+    '''Authorizes the session for access to twitter API
+    '''
     LOGGER.info("Authorizing Twitter api...")
     consumer_key = os.environ.get('TWEEPY_CONSUMER_KEY')
     consumer_secret = os.environ.get('TWEEPY_CONSUMER_SECRET')
@@ -51,7 +57,68 @@ def get_Twirp_from_twitter(api, handle):
 
     return twirp
 
-def get_twirps_main(api):
+def get_Tweets_from_twitter(api, user_id, max_id=None, no_of_items=3200):
+    '''A generator yielding Tweet objects, from newest to oldest, up to no_of_items,
+    starting at max_id. Takes a session and a user_id and uses the Twitter REST api.
+     '''
+    for tweet_data in tweepy.Cursor(api.user_timeline, id=user_id, max_id=max_id).items(no_of_items):   
+        tweet = Tweet(tweet_data, 'twitter')
+        yield tweet
+
+################################################################################
+#                            DB AUXILIARY METHODS                              #
+################################################################################
+
+
+
+def get_user_data_from_identifiers(u_ids=[], handles=[], names=[], usernames=[]):
+    '''Return a list of dicts of all basic twirp data {name, username, handle, u_id} 
+    for any Twirps matching any of the lists of u_ids, handles, names, usernames.
+
+    If none found return empty list. If empty args, return all results.
+    '''
+
+    db_handler = TDBHandler()
+    return db_handler.get_user_data_from_identifiers(u_ids, handles,
+                                                     names, usernames)
+
+
+def add_Twirp_to_Twirps(name, handle, official_id=0):
+    ''' Take a name, handle and official id, and create a Twirp from twitter data
+    using the handle, and name and official id. Store this in the database.
+
+    WARNING: No error currently if handle is not valid.
+    '''
+    api = authorize_twitter()
+    db_handler = TDBHandler()
+    mp_twirp = get_Twirp_from_twitter(api, handle)
+
+    mp_twirp.official_id = official_id
+    mp_twirp.name = name
+    
+    db_handler.add_Twirp_to_database( mp_twirp )
+
+def delete_Twirp(name, username, handle,u_id):
+    '''
+    Attempt to remove twirp from database, and return the number of rows affected.
+    All criteria (name, username, handle, u_id) must be accurate or deletion will
+    not happen.
+
+    Log a warning if no row is deleted.
+    '''
+    db_handler = TDBHandler()
+    effects = db_handler.delete_twirp(u_id, handle, name, username) 
+    if effects == 0:
+        LOGGER.warning("No item deleted: (Name) %s -> %s" % (name, handle) )
+    return effects
+
+
+################################################################################
+#                             BULK UPDATE METHODS                              #
+################################################################################
+
+
+def get_bulk_twirps_main(api):
     db_handler = TDBHandler()
     stored_mps = db_handler.get_stored_mps_names()
 
@@ -79,16 +146,7 @@ def get_twirps_main(api):
                                                 mp["handle"],
                                                 mp["name"]))
 
-def get_Tweets_from_twitter(api, user_id, max_id=None, no_of_items=3200):
-    '''Feeding in the session, a user_id and possibly tweet id, this queries the 
-twitter API, and providesa a generator yielding instantiated a Tweet classes with that data '''
-
-    for tweet_data in tweepy.Cursor(api.user_timeline, id=user_id, max_id=max_id).items(no_of_items):   
-        tweet = Tweet(tweet_data, 'twitter')
-        yield tweet
-
-
-def get_tweets_main(max_tweets=100, tweet_buffer=30):
+def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30):
     db_handler = TDBHandler()
 
     api = authorize_twitter()
@@ -122,10 +180,10 @@ def get_tweets_main(max_tweets=100, tweet_buffer=30):
             api = authorize_twitter()
             continue
 
-def get_twirps_update():
+def get_bulk_twirps_update():
     pass
 
-def get_tweets_update(max_tweets=10):
+def get_bulk_recent_tweet(max_tweets=10):
     db_handler = TDBHandler()
     stored_tweet_data = db_handler.get_newest_tweets_from_mps()
 
@@ -176,6 +234,11 @@ def subscribe_friends_from_twirps():
                     LOGGER.error("Skipping %s -> %s and sleeping for 15mins" % (twirp["handle"], twirp["name"]))
                     time.sleep(15*60)
                     continue
+
+################################################################################
+#                            STREAM UPATE METHODS  (see tweetstreamer.py)      #
+################################################################################
+
 
 def start_stream():
     ''' Build the TweetStreamer and the Stream , and connect to add data to database
@@ -241,41 +304,6 @@ def get_stream_resolution():
         return res
     else:
         LOGGER.debug("No tweet streamer")
-        #impossible, implies ot streaming
-
-def get_user_data_from_identifiers(u_ids=[], handles=[], names=[], usernames=[]):
-    '''Return a list of dicts of all basic twirp data {name, username, handle, u_id} 
-    for any Twirps matching any of the lists of u_ids, handles, names, usernames.
-
-    If none found return empty list. If empty args, return all results.
-    '''
-
-    db_handler = TDBHandler()
-    return db_handler.get_user_data_from_identifiers(u_ids, handles,
-                                                     names, usernames)
-
-
-def add_Twirp_to_Twirps(name, handle, official_id=0):
-    ''' Take a name, handle and official id, and create a Twirp from twitter data
-    using the handle, and name and official id. Store this in the database.
-
-    WARNING: No error currently if handle is not valid.
-    '''
-    api = authorize_twitter()
-    db_handler = TDBHandler()
-    mp_twirp = get_Twirp_from_twitter(api, handle)
-
-    mp_twirp.official_id = official_id
-    mp_twirp.name = name
-    
-    db_handler.add_Twirp_to_database( mp_twirp )
-
-def delete_Twirp(name, username, handle,u_id):
-    db_handler = TDBHandler()
-    effects = db_handler.delete_twirp(u_id, handle, name, username) 
-    LOGGER.info("Deleted %s result: %s->%s" % (effects,name,handle) )
-    return effects
-
 
 
 
