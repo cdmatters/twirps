@@ -82,10 +82,10 @@ def db_edit():
             names_string = request.form["names"].split(',')
             usernames_string = request.form["usernames"].split(',')
 
-            u_ids = [ u for u in u_ids_string ] if u_ids_string != u'' else []
-            handles = handles_string if handles_string != u'' else []
-            names = names_string if names_string != u'' else []
-            usernames = usernames_string if usernames_string != 'u' else []
+            u_ids = [ u for u in u_ids_string ] if u_ids_string != [u''] else []
+            handles = handles_string if handles_string != [u''] else []
+            names = names_string if names_string != [u''] else []
+            usernames = usernames_string if usernames_string != [u''] else []
             
             results =  data_collection.get_user_data_from_identifiers(
                                                 u_ids, handles, names, usernames)
