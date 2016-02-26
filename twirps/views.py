@@ -51,6 +51,9 @@ def read_log():
 @app.route('/admin/', methods=['GET', 'POST'])
 @requires_auth
 def view_backend():
+    if request.method=='GET':
+        LOGGER.debug("Loading admin panel")
+
     if request.method=='POST':
         if request.form["submit"]== "start_stream":
             LOGGER.info("Received start stream message")
@@ -67,16 +70,16 @@ def view_backend():
             data_collection.change_stream_resolution(int(new_res))
 
     res = data_collection.get_stream_resolution()
-    LOGGER.debug("Loading backend")
     return render_template('backend.html', stream_res=res, rows=read_log())
 
 @app.route('/admin/db_edit', methods=['GET', 'POST'])
 @requires_auth
 def db_edit():
 
+
     results = []
     if request.method=='POST':
-        if request.form["submit"]== "get_twirps":
+        if request.form["submit"] in  ["get_twirps", 'subscribe','unsubscribe']:
             u_ids_string = request.form["u_ids"].split(',')
             handles_string = request.form["handles"].split(',')
             names_string = request.form["names"].split(',')
@@ -89,6 +92,16 @@ def db_edit():
             
             results =  data_collection.get_user_data_from_identifiers(
                                                 u_ids, handles, names, usernames)
+
+            if request.form["submit"]=="subscribe":
+                for r in results:
+                    data_collection.subscribe_twirp_from_twitter(r["u_id"])
+            elif request.form["submit"]=="unsubscribe":
+                for r in results:
+                    data_collection.unsubscribe_twirp_from_twitter(r["u_id"])
+
+
+
             
         elif request.form["submit"]== "delete_twirp":
             u_id = request.form["u_ids"]
@@ -107,7 +120,6 @@ def db_edit():
             results.extend(data_collection.get_user_data_from_identifiers([], [handle], [name], []) )
 
 
-
         elif request.form["submit"]== "add_twirp":
             name = request.form["names"]
             handle = request.form["handles"]
@@ -120,9 +132,8 @@ def db_edit():
         elif request.form["submit"]=='log_resolution':
             pass
     
-    results
 
-    LOGGER.debug("Loading backend")
+
     return render_template('interact_database.html', results=results)
 
 

@@ -220,20 +220,45 @@ def subscribe_friends_from_twirps():
     for twirp in db_handler.get_user_ids_from_handles():
 
         if twirp["u_id"] not in currently_following:
-            LOGGER.debug("following %s" % twirp["handle"])
-            try:
-                api.create_friendship(user_id=unicode(twirp["u_id"]))
-            except tweepy.error.TweepError, e:
-                if "You've already requested to follow" in e.message[0]["message"]:
-                    LOGGER.error( "%s: for %s -> %s" % (e.message[0]["message"],
-                                                twirp["handle"],
-                                                twirp["name"]))
-                    continue
-                else: 
-                    LOGGER.error(e.message[0]["message"])
-                    LOGGER.error("Skipping %s -> %s and sleeping for 15mins" % (twirp["handle"], twirp["name"]))
-                    time.sleep(15*60)
-                    continue
+            subscribe_twirp_from_twitter(api, twirp["u_id"])
+
+def subscribe_twirp_from_twitter(twirp_id):
+    api = authorize_twitter()
+    try:
+        LOGGER.debug("Attempting to follow user no: %s" %twirp_id)
+        api.create_friendship(user_id=unicode(twirp_id))
+
+    except tweepy.error.TweepError, e:
+        if "You've already requested to follow" in e.message[0]["message"]:
+            LOGGER.error("%s" % e.message[0]["message"])
+            # LOGGER.error( "%s: for %s -> %s" % (e.message[0]["message"],
+            #                             twirp["handle"],
+            #                             twirp["name"]))
+            
+        else: 
+            LOGGER.error(e.message[0]["message"])
+            LOGGER.error("Skipping %s -> %s and sleeping for 15mins" % (twirp["handle"], twirp["name"]))
+            time.sleep(15*60)
+            
+def unsubscribe_twirp_from_twitter(twirp_id):
+    api = authorize_twitter()
+    try:
+        api.destroy_friendship(user_id=unicode(twirp_id))
+        LOGGER.debug("Attempting to unfollow user no: %s" %twirp_id)
+
+    except tweepy.error.TweepError, e:
+        if "You've already requested to unfollow" in e.message[0]["message"]:
+            LOGGER.error("%s" % e.message[0]["message"])
+            # LOGGER.error( "%s: for %s -> %s" % (e.message[0]["message"],
+            #                             twirp["handle"],
+            #                             twirp["name"]))
+            
+        else: 
+            LOGGER.error(e.message[0]["message"])
+            LOGGER.error("Skipping %s -> %s and sleeping for 15mins" % (twirp["handle"], twirp["name"]))
+            time.sleep(15*60)
+
+
 
 ################################################################################
 #                            STREAM UPATE METHODS  (see tweetstreamer.py)      #
@@ -244,7 +269,7 @@ def start_stream():
     ''' Build the TweetStreamer and the Stream , and connect to add data to database
     from Twitter.
 
-    Print to logs if no stream is up
+    Print to logs if no stream is up.
     '''
     db_handler = TDBHandler()
     api = authorize_twitter()
@@ -266,12 +291,12 @@ def start_stream():
 def stop_stream():
     ''' Destroy the TweetStreamer and disconnect the Stream if up and running.
 
-    Print to logs if no stream is up
+    Print to logs if no stream is up.
     '''
     global TWIRP_STREAM
     if TWIRP_STREAM:
         TWIRP_STREAM.disconnect()
-        LOGGER.info("Stopped Streaming thread.")
+        LOGGER.debug("Stopped Streaming thread.")
         TWIRP_STREAM = None
         TWEET_STREAMER = None
     else:
