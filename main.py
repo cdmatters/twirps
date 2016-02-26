@@ -4,12 +4,15 @@ import sys
 from argparse import ArgumentParser
 import logging
 
+
+from flask.ext.bootstrap import Bootstrap
 from flask import Flask, request, session, g, redirect, url_for, \
     abort, render_template, flash
 
 from archipelago import Archipelago, setup
 from twirps import data_collection, app
 from twirps.classes import TDBHandler
+
 
 
 
@@ -148,6 +151,8 @@ if __name__ == "__main__":
     app.config.from_envvar('FLASKR_SETTINGS', silent=True)
     
     LOGGER.info("Starting Flask app")
+    bootstrap = Bootstrap(app)
+
     app.run()
 
     # arg_parser = build_parser()

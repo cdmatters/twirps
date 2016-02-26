@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block body %}
+{% block content %}
     <h2>Welcome to the backend, baby!</h2>
     <p>Edit database deets here...</p>
 
@@ -18,7 +18,6 @@
         <button type="submit" name="submit" value="get_recent_tweets">Get Most Recent Tweets</button>
         <button type="submit" name="submit" value="delete_twirp">Delete Twirp</button>
     </form>
-
     <form action="{{ url_for('db_edit') }}" method="post">
         Name
         <input type="text" name="names"></input>
