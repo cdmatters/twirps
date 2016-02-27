@@ -45,7 +45,7 @@ class Tweet(object):
 
 
     def __str__(self):
-        return u'Tweet %d %s || RC: %d || FC: %d || RT: %s || @ %s || # %s || Url %s\nContent: %s' %(
+        return u'Tweet: %d %s || RC: %d || FC: %d || RT: %s || @ %s || # %s || Url %s\nContent: %s' %(
             self.tweetid, self.handle, self.retweet_count, self.favourite_count,
             self.retweet, len(self.mentions), len(self.hashtags), len(self.urls),
             unicode(self.content) )

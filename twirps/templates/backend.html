@@ -1,11 +1,16 @@
 {% extends "layout.html" %}
 {% block content %}
-    <h2>Welcome to the backend baby!</h2>
+
+    <h2>Welcome to the backend, baby!</h2>
     <p>We're gonna have a lot of fun</p>
 
     <form action="{{ url_for('view_backend') }}" method="post">
-        <button type="submit" name="submit" value="start_stream">Start Stream</button>
-        <button type="submit" name="submit" value="stop_stream">Stop Stream</button>
+        <button type="submit" name="submit" value="start_stream">
+            Start Stream
+        </button>
+        <button type="submit" name="submit" value="stop_stream">
+            Stop Stream
+        </button>
         <button type="submit" name="submit" value="refresh_logs">Refresh Logs</button>
         <button type="submit" name="submit" value="shutdown">Shutdown</button>
         <input type="text" name="resolution" value="{{ stream_res }}">
@@ -14,7 +19,12 @@
     <a href=/admin/db_edit >Edit Data</a>
 
  
-  {% for row in rows %}
-    <li>{{ row }}
-  {% endfor %}
+    {% for row in rows %} 
+        <li>
+        {% if row.startswith("Tweet:") or row.startswith("Content:") %}
+            <strong> {{ row }} </strong>
+        {% else %}
+            {{ row }}
+        {% endif %}
+    {% endfor %}
 {% endblock %}

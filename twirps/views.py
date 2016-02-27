@@ -100,8 +100,6 @@ def db_edit():
                 for r in results:
                     data_collection.unsubscribe_twirp_from_twitter(r["u_id"])
 
-
-
             
         elif request.form["submit"]== "delete_twirp":
             u_id = request.form["u_ids"]
