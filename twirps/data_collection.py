@@ -89,7 +89,7 @@ def subscribe_twirp_from_twitter(twirp_id, twirp_handle):
             LOGGER.error( "%s: for %s -> %s" % (e.message[0], twirp_id,
                                         twirp_handle) ) 
         else: 
-            LOGGER.error(e.message[0]["message"])
+            LOGGER.error(e.message[0])
         return False
             
 def unsubscribe_twirp_from_twitter(twirp_id, twirp_handle):
@@ -104,7 +104,7 @@ def unsubscribe_twirp_from_twitter(twirp_id, twirp_handle):
             LOGGER.error( "%s: for %s -> %s" % (e.message[0], twirp_id,
                                         twirp_handle) )
         else:
-            LOGGER.error(e.message[0]["message"])
+            LOGGER.error(e.message[0])
         return False
             
 
