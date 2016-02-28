@@ -1,20 +1,21 @@
 {% extends "layout.html" %}
 {% block content %}
 
+    {{ super() }}
     <h2>Welcome to the backend, baby!</h2>
     <p>We're gonna have a lot of fun</p>
 
     <form action="{{ url_for('view_backend') }}" method="post">
-        <button type="submit" name="submit" value="start_stream">
+        <button class="btn btn-sm btn-default" type="submit" name="submit" value="start_stream">
             Start Stream
         </button>
-        <button type="submit" name="submit" value="stop_stream">
+        <button class="btn btn-sm btn-default" ype="submit" name="submit" value="stop_stream">
             Stop Stream
         </button>
-        <button type="submit" name="submit" value="refresh_logs">Refresh Logs</button>
-        <button type="submit" name="submit" value="shutdown">Shutdown</button>
-        <input type="text" name="resolution" value="{{ stream_res }}">
-        <button type="submit" name="submit" value="log_resolution">Change log resolution</button>
+        <button class="btn btn-sm btn-default" type="submit" name="submit" value="refresh_logs">Refresh Logs</button>
+        <button class="btn btn-sm btn-danger" type="submit" name="submit" value="shutdown">Shutdown</button>
+        <input  type="text" name="resolution" value="{{ stream_res }}">
+        <button class="btn btn-sm btn-primary" type="submit" name="submit" value="log_resolution">Change log resolution</button>
     </form>
     <a href=/admin/db_edit >Edit Data</a>
 
