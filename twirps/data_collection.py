@@ -24,6 +24,7 @@ TWEET_STREAMER = None
 
 START_TIME = time.time()
 LOGGER = logging.getLogger(__name__)
+API = None
 
 ################################################################################
 #                             TWITTER METHODS                                  #
@@ -31,39 +32,81 @@ LOGGER = logging.getLogger(__name__)
 
 
 def authorize_twitter():
-    '''Authorizes the session for access to twitter API
+    '''Authorizes the session for access to twitter API, and sets to the global variable API. NEED TO IMPLEMENT IF TIMEOUT, REAUTH
     '''
-    LOGGER.info("Authorizing Twitter api...")
-    consumer_key = os.environ.get('TWEEPY_CONSUMER_KEY')
-    consumer_secret = os.environ.get('TWEEPY_CONSUMER_SECRET')
-    access_token =  os.environ.get('TWEEPY_ACCESS_TOKEN')
-    access_secret = os.environ.get('TWEEPY_ACCESS_SECRET')
+    global API
+    if not API:
+        LOGGER.debug("Authorizing Twitter api...")
+        consumer_key = os.environ.get('TWEEPY_CONSUMER_KEY')
+        consumer_secret = os.environ.get('TWEEPY_CONSUMER_SECRET')
+        access_token =  os.environ.get('TWEEPY_ACCESS_TOKEN')
+        access_secret = os.environ.get('TWEEPY_ACCESS_SECRET')
 
-    auth = tweepy.auth.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_secret)
+        auth = tweepy.auth.OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_token, access_secret)
 
-    api = tweepy.API(auth)
-    return api 
+        API = tweepy.API(auth, timeout=10, wait_on_rate_limit_notify=True, wait_on_rate_limit=True)
+        return API
+    else:
+        return API
 
-def get_Twirp_from_twitter(api, handle):
+def get_Twirp_from_twitter(handle):
     '''Return a Twirp object from twitter handle.
 
     Feeding in the session, a handle and it's mp's official id, this queries 
     the twitter API, instantiates Twirp class with the data and return it. 
     It does not check if a user exists first.
     '''
+    api = authorize_twitter()
     twitter_user = api.get_user(screen_name=handle)
     twirp = Twirp(twitter_user, 'twitter')
 
     return twirp
 
-def get_Tweets_from_twitter(api, user_id, max_id=None, no_of_items=3200):
+def get_Tweets_from_twitter(user_id, max_id=None, no_of_items=3200):
     '''A generator yielding Tweet objects, from newest to oldest, up to no_of_items,
     starting at max_id. Takes a session and a user_id and uses the Twitter REST api.
      '''
+    api = authorize_twitter()
     for tweet_data in tweepy.Cursor(api.user_timeline, id=user_id, max_id=max_id).items(no_of_items):   
         tweet = Tweet(tweet_data, 'twitter')
         yield tweet
+
+def get_subscribers_from_twitter():
+    '''Return a list of people currently subscribed from twitter'''
+    api = authorize_twitter()
+    return api.friends_ids()
+
+def subscribe_twirp_from_twitter(twirp_id, twirp_handle):
+    api = authorize_twitter()
+    try:
+        LOGGER.debug("Attempting to follow user no: %s" %twirp_id)
+        api.create_friendship(user_id=unicode(twirp_id))
+        return True
+
+    except tweepy.error.TweepError, e:
+        if "You've already requested to follow" in e.message[0]:
+            LOGGER.error( "%s: for %s -> %s" % (e.message[0], twirp_id,
+                                        twirp_handle) ) 
+        else: 
+            LOGGER.error(e.message[0]["message"])
+        return False
+            
+def unsubscribe_twirp_from_twitter(twirp_id, twirp_handle):
+    api = authorize_twitter()
+    try:
+        api.destroy_friendship(user_id=unicode(twirp_id))
+        LOGGER.debug("Attempting to unfollow user no: %s" %twirp_id)
+        return True
+
+    except tweepy.error.TweepError, e:
+        if "You've already requested to follow" in e.message[0]:
+            LOGGER.error( "%s: for %s -> %s" % (e.message[0], twirp_id,
+                                        twirp_handle) )
+        else:
+            LOGGER.error(e.message[0]["message"])
+        return False
+            
 
 ################################################################################
 #                            DB AUXILIARY METHODS                              #
@@ -91,7 +134,7 @@ def add_Twirp_to_Twirps(name, handle, official_id=0):
     '''
     api = authorize_twitter()
     db_handler = TDBHandler()
-    mp_twirp = get_Twirp_from_twitter(api, handle)
+    mp_twirp = get_Twirp_from_twitter(handle)
 
     mp_twirp.official_id = official_id
     mp_twirp.name = name
@@ -112,6 +155,24 @@ def delete_Twirp(name, username, handle,u_id):
         LOGGER.warning("No item deleted: (Name) %s -> %s" % (name, handle) )
     return effects
 
+
+def subscribe_Twirp(name, handle, u_id):
+    db_handler = TDBHandler()
+    res = subscribe_twirp_from_twitter(u_id, handle)
+    if res:
+        db_handler.mark_twirp_subscribed(u_id)
+        return 1
+    else:
+        return 0
+
+def unsubscribe_Twirp(name, handle, u_id):
+    db_handler = TDBHandler()
+    res = unsubscribe_twirp_from_twitter(u_id, handle)
+    if res:
+        db_handler.mark_twirp_unsubscribed(u_id)
+        return 1
+    else:
+        return 0
 
 ################################################################################
 #                             BULK UPDATE METHODS                              #
@@ -213,50 +274,14 @@ def get_bulk_recent_tweet(max_tweets=10):
 
 def subscribe_friends_from_twirps():
     db_handler = TDBHandler()
-    api = authorize_twitter()
-
-    currently_following =  set(api.friends_ids())
+    currently_following =  set(get_subscribers_from_twitter())
 
     for twirp in db_handler.get_user_ids_from_handles():
 
         if twirp["u_id"] not in currently_following:
-            subscribe_twirp_from_twitter(api, twirp["u_id"])
+            subscribe_twirp_from_twitter(twirp["u_id"])
 
-def subscribe_twirp_from_twitter(twirp_id):
-    api = authorize_twitter()
-    try:
-        LOGGER.debug("Attempting to follow user no: %s" %twirp_id)
-        api.create_friendship(user_id=unicode(twirp_id))
 
-    except tweepy.error.TweepError, e:
-        if "You've already requested to follow" in e.message[0]["message"]:
-            LOGGER.error("%s" % e.message[0]["message"])
-            # LOGGER.error( "%s: for %s -> %s" % (e.message[0]["message"],
-            #                             twirp["handle"],
-            #                             twirp["name"]))
-            
-        else: 
-            LOGGER.error(e.message[0]["message"])
-            LOGGER.error("Skipping %s -> %s and sleeping for 15mins" % (twirp["handle"], twirp["name"]))
-            time.sleep(15*60)
-            
-def unsubscribe_twirp_from_twitter(twirp_id):
-    api = authorize_twitter()
-    try:
-        api.destroy_friendship(user_id=unicode(twirp_id))
-        LOGGER.debug("Attempting to unfollow user no: %s" %twirp_id)
-
-    except tweepy.error.TweepError, e:
-        if "You've already requested to unfollow" in e.message[0]["message"]:
-            LOGGER.error("%s" % e.message[0]["message"])
-            # LOGGER.error( "%s: for %s -> %s" % (e.message[0]["message"],
-            #                             twirp["handle"],
-            #                             twirp["name"]))
-            
-        else: 
-            LOGGER.error(e.message[0]["message"])
-            LOGGER.error("Skipping %s -> %s and sleeping for 15mins" % (twirp["handle"], twirp["name"]))
-            time.sleep(15*60)
 
 
 

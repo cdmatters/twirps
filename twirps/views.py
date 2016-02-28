@@ -89,16 +89,31 @@ def db_edit():
             handles = handles_string if handles_string != [u''] else []
             names = names_string if names_string != [u''] else []
             usernames = usernames_string if usernames_string != [u''] else []
+
+            is_empty_input = not (u_ids or handles or names or usernames)
             
             results =  data_collection.get_user_data_from_identifiers(
                                                 u_ids, handles, names, usernames)
 
-            if request.form["submit"]=="subscribe":
+
+            if request.form["submit"]=="subscribe" and not is_empty_input:
+                subscribers = set(data_collection.get_subscribers_from_twitter())
                 for r in results:
-                    data_collection.subscribe_twirp_from_twitter(r["u_id"])
-            elif request.form["submit"]=="unsubscribe":
+                    if r["u_id"] not in subscribers:
+                        success = data_collection.subscribe_Twirp(r["name"], r["handle"], r["u_id"])
+                        if success:
+                            LOGGER.info("Subscribed to user %s" %r['handle'])
+                    else:
+                        LOGGER.warning("Already subscribed to user %s" %r['handle'])
+            elif request.form["submit"]=="unsubscribe" and not is_empty_input:
+                subscribers = set(data_collection.get_subscribers_from_twitter())
                 for r in results:
-                    data_collection.unsubscribe_twirp_from_twitter(r["u_id"])
+                    if r["u_id"] in subscribers:
+                        success = data_collection.unsubscribe_Twirp(r["name"], r["handle"], r["u_id"])
+                        if success:
+                            LOGGER.info("Unsubscribed to user %s" %r['handle'])
+                    else:
+                        LOGGER.warning("Already not following user %s" %r['handle'])
 
             
         elif request.form["submit"]== "delete_twirp":

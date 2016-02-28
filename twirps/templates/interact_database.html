@@ -32,13 +32,13 @@
                 <button type="submit"  class="btn btn-sm btn-danger" name="submit" value="delete_twirp">Delete Twirp</button>
                 <button type="submit"  class="btn btn-sm btn-warning" name="submit" value="subscribe">Subscribe</button>
                 <button type="submit"  class="btn btn-sm btn-warning" name="submit" value="unsubscribe">Unsubscribe</button>
-                <button type="submit" name="submit" class="btn btn-sm btn-success" value="FILL_IN">Add Twirp</button>
+                <button type="submit" name="submit" class="btn btn-sm btn-success" value="add_twirp">Add Twirp</button>
             </div>
             </div>
         </div>
     </form>
 
-    <form class="form-inline" action="{{ url_for('db_edit') }}" method="post" role="form">
+<!--     <form class="form-inline" action="{{ url_for('db_edit') }}" method="post" role="form">
         <div class="form-group row col-xs-12">
             <div class="col-xs-2">
                 <label for="formNamesInput">Names</label>
@@ -55,7 +55,7 @@
             </div>
         </div>
     </form>
-
+ -->
 
 
 {% for row in results %}

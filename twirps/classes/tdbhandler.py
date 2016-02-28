@@ -24,7 +24,7 @@ class TDBHandler(object):
             cur = connection.cursor()
             cur.execute('CREATE TABLE TweetData (UserID Number, UserHandle Text, FavouriteCount Number, \
                                                 RetweetCount Number, Content Text, Retweet Text, \
-                                                CreatedDate Text, TwitterID Number UNIQUE)')
+                                                CreatedDate Text, TwitterID Number UNIQUE, Subscribed Number default 0)')
             cur.execute('CREATE TABLE TwirpData (UserID Number UNIQUE, UserName Text, Name Text, Handle Text, \
                                                 FollowersCount Number, FriendsCount Number,\
                                                 TweetCount Number, RetweetCount Number, \
@@ -48,7 +48,7 @@ class TDBHandler(object):
         with sqlite3.connect(self.db_name) as connection:
             cur = connection.cursor()
             cur.execute('INSERT OR REPLACE INTO TwirpData\
-                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ', input_tuple)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0) ', input_tuple)
 
     def add_Tweet_to_database(self, Tweet):
         input_tuple = (Tweet.userid, Tweet.handle,  Tweet.favourite_count, Tweet.retweet_count,
@@ -148,7 +148,7 @@ class TDBHandler(object):
     def get_user_data_from_identifiers(self, u_ids=[], handles=[], names=[], usernames=[]):
         '''Return a dictionary of handles and user_ids for given list of u_ids.
         Return all stored id's if u_ids is empty list'''
-        request_sql = '''SELECT UserID, Handle, Name, UserName 
+        request_sql = '''SELECT UserID, Handle, Name, UserName, Subscribed 
                             FROM TwirpData
                        '''
         filter_categories = []
@@ -183,7 +183,8 @@ class TDBHandler(object):
                             "u_id": r[0],
                             "handle": r[1],
                             "name":r[2],
-                            "username": r[3]
+                            "username": r[3],
+                            "subscribed":r[4]
                         } for r in cur.fetchall()
                     ]
 
@@ -203,4 +204,30 @@ class TDBHandler(object):
             cur.execute('SELECT changes() FROM TwirpData')
 
             return cur.fetchall()[0][0]
+
+    def mark_twirp_subscribed(self, u_id):
+        request_sql = '''UPDATE  TwirpData 
+                        SET  Subscribed=1
+                        WHERE UserID=?
+                       '''
+        with sqlite3.connect(self.db_name) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql, (u_id,))
+            cur.execute('SELECT changes() FROM TwirpData')
+
+            return cur.fetchall()[0][0]
+
+
+    def mark_twirp_unsubscribed(self, u_id):
+        request_sql = '''UPDATE TwirpData 
+                        SET  Subscribed=0
+                        WHERE UserID=?
+                       '''
+        with sqlite3.connect(self.db_name) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql, (u_id,))
+            cur.execute('SELECT changes() FROM TwirpData')
+
+            return cur.fetchall()[0][0]
+
 
