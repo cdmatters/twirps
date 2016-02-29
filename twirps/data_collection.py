@@ -254,28 +254,17 @@ def get_bulk_recent_tweet(max_tweets=10):
     db_handler = TDBHandler()
     stored_tweet_data = db_handler.get_newest_tweets_from_mps()
 
-    api = authorize_twitter()
     for twirp in stored_tweet_data:
-        try:
-            current_tweet = twirp["newest"]
-            no_collected = 0
-            tweet_generator = get_Tweets_from_twitter(api, twirp["u_id"], None, max_tweets)
-            while no_collected < max_tweets and current_tweet >= twirp['newest']:
-                Tweet = tweet_generator.next()
-                db_handler.add_Tweet_to_database(Tweet)
-                no_collected += 1
-                current_tweet = Tweet.tweetid
-                LOGGER.debug(unicode(Tweet))
+        current_tweet = twirp["newest"]
+        no_collected = 0
+        tweet_generator = get_Tweets_from_twitter(twirp["u_id"], None, max_tweets)
+        while no_collected < max_tweets and current_tweet >= twirp['newest']:
+            Tweet = tweet_generator.next()
+            db_handler.add_Tweet_to_database(Tweet)
+            no_collected += 1
+            current_tweet = Tweet.tweetid
+            LOGGER.debug(unicode(Tweet))
         
-        except tweepy.error.TweepError, e:
-            LOGGER.warning(e)
-            LOGGER.warning("Twitter API usage rate exceeded. Waiting 15 mins...")
-            time.sleep(60*10)
-            LOGGER.info("5 mins remaining...")
-            time.sleep(60*5)
-
-            api = authorize_twitter()
-            continue
 
 @async
 def subscribe_friends_from_twirps():

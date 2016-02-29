@@ -53,9 +53,15 @@ def view_backend():
         elif request.form["submit"]=="bulk_twirps_collect":
             LOGGER.info("Received get bulk twirps message")
             data_collection.get_bulk_twirps_main()
-        elif request.form["submit"]=="bulk_tweets_collect":
+        elif request.form["submit"]=="bulk_hist_tweets_collect":
             LOGGER.info("Received get bulk tweets message")
-            data_collection.get_bulk_tweets_main(max_tweets=100, tweet_buffer=30)
+            max_tweets = int(request.form["bulk_hist_tweet_no"])
+            tweet_buffer = int(request.form["bulk_tweet_buffer"])
+            data_collection.get_bulk_tweets_main(max_tweets, tweet_buffer)
+        elif request.form["submit"]=="bulk_new_tweets_collect":
+            LOGGER.info("Received get bulk new tweets")
+            max_tweets = int(request.form["bulk_new_tweet_no"])
+            data_collection.get_bulk_recent_tweet(max_tweets)
 
 
 
