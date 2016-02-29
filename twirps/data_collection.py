@@ -16,6 +16,8 @@ from tqdm import tqdm
 import tweepy
 import requests
 
+from decorators import async
+
 from archipelago import Archipelago
 from classes import Twirp, Tweet, TDBHandler, TweetStreamer
 
@@ -178,7 +180,7 @@ def unsubscribe_Twirp(name, handle, u_id):
 #                             BULK UPDATE METHODS                              #
 ################################################################################
 
-
+@async
 def get_bulk_twirps_main():
     api = authorize_twitter()
 
@@ -209,6 +211,7 @@ def get_bulk_twirps_main():
                                                 mp["handle"],
                                                 mp["name"]))
 
+@async
 def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30):
     db_handler = TDBHandler()
 
@@ -246,6 +249,7 @@ def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30):
 def get_bulk_twirps_update():
     pass
 
+@async
 def get_bulk_recent_tweet(max_tweets=10):
     db_handler = TDBHandler()
     stored_tweet_data = db_handler.get_newest_tweets_from_mps()
@@ -273,7 +277,7 @@ def get_bulk_recent_tweet(max_tweets=10):
             api = authorize_twitter()
             continue
 
-
+@async
 def subscribe_friends_from_twirps():
     db_handler = TDBHandler()
     currently_following =  set(get_subscribers_from_twitter())
