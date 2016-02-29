@@ -68,6 +68,14 @@ def view_backend():
             LOGGER.info("Received change log resolution message")
             new_res = request.form["resolution"]
             data_collection.change_stream_resolution(int(new_res))
+        elif request.form["submit"]=="bulk_twirps_collect":
+            LOGGER.info("Received get bulk twirps message")
+            data_collection.get_bulk_twirps_main()
+        elif request.form["submit"]=="bulk_tweets_collect":
+            LOGGER.info("Received get bulk tweets message")
+            data_collection.get_bulk_tweets_main(max_tweets=100, tweet_buffer=30)
+
+
 
     res = data_collection.get_stream_resolution()
     return render_template('backend.html', stream_res=res, rows=read_log())

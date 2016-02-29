@@ -179,7 +179,9 @@ def unsubscribe_Twirp(name, handle, u_id):
 ################################################################################
 
 
-def get_bulk_twirps_main(api):
+def get_bulk_twirps_main():
+    api = authorize_twitter()
+
     db_handler = TDBHandler()
     stored_mps = db_handler.get_stored_mps_names()
 
@@ -223,7 +225,7 @@ def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30):
                 remaining_tweets = max_tweets - twirp["no_collected"]
                 
                 pbar_description = "Getting %s -> %s" %(twirp["name"], twirp["handle"])
-                for Tweet in tqdm( get_Tweets_from_twitter(api, twirp["u_id"],
+                for Tweet in tqdm( get_Tweets_from_twitter(twirp["u_id"],
                                                            twirp["oldest"], remaining_tweets),
                                     nested=True, desc=pbar_description):
                     LOGGER.debug(unicode(Tweet))

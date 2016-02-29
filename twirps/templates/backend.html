@@ -2,26 +2,42 @@
 {% block content %}
 
     {{ super() }}
-    <h2>Welcome to the backend, baby!</h2>
-    <p>We're gonna have a lot of fun</p>
-
-    <form action="{{ url_for('view_backend') }}" method="post">
-        <button class="btn btn-sm btn-default" type="submit" name="submit" value="start_stream">
-            Start Stream
-        </button>
-        <button class="btn btn-sm btn-default" ype="submit" name="submit" value="stop_stream">
-            Stop Stream
-        </button>
-        <button class="btn btn-sm btn-default" type="submit" name="submit" value="refresh_logs">Refresh Logs</button>
-        <button class="btn btn-sm btn-danger" type="submit" name="submit" value="shutdown">Shutdown</button>
-        <input  type="text" name="resolution" value="{{ stream_res }}">
-        <button class="btn btn-sm btn-primary" type="submit" name="submit" value="log_resolution">Change log resolution</button>
-    </form>
-    <a href=/admin/db_edit >Edit Data</a>
+    <div class="col-xs-12" >
+        <h2>Welcome to the backend, baby!</h2>
+        <p>We're gonna have a lot of fun</p>
+        <form class="form-inline" action="{{ url_for('view_backend') }}" method="post" role="form">
+            <div class="form-group row col-xs-12">
+                <button class="btn btn-sm btn-default" type="submit" name="submit" value="start_stream">
+                    Start Stream
+                </button>
+                <button class="btn btn-sm btn-default" ype="submit" name="submit" value="stop_stream">
+                    Stop Stream
+                </button>
+                <button class="btn btn-sm btn-default" type="submit" name="submit" value="refresh_logs">
+                    Refresh Logs
+                </button>
+                <button class="btn btn-sm btn-danger" type="submit" name="submit" value="shutdown">
+                    Shutdown
+                </button>
+                <input  type="text" name="resolution" value="{{ stream_res }}">
+                <button class="btn btn-sm btn-primary" type="submit" name="submit" value="log_resolution">Change log resolution</button>
+            </div>
+            <div class="form-group row col-xs-12">
+                <button class="btn btn-sm btn-default" ype="submit" name="submit" value="bulk_twirps_collect">
+                    Bulk Twirps Collection
+                </button>
+                <button class="btn btn-sm btn-default" type="submit" name="submit" value="bulk_tweets_collect">
+                    Bulk Tweets Collection
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <a class="col-xs-12" href=/admin/db_edit >Edit Data</a>
 
  
     {% for row in rows %} 
-        <li>
+        <li class="col-xs-12" >
         {% if row.startswith("Tweet:") or row.startswith("Content:") %}
             <strong> {{ row }} </strong>
         {% else %}
