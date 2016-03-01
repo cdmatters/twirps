@@ -143,12 +143,17 @@ def set_up_logging():
 if __name__ == "__main__":
     set_up_logging()
 
+
     load_tweepy_key()
     if not setup.is_arch_setup():
         setup.setup_archipelago()
+    
+    db_handler = TDBHandler()
+    if not db_handler.is_db_setup():
+        db_handler.complete_reboot()
 
     app.config.from_object(__name__)
-    app.config.from_pyfile('config.py')
+    app.config.from_pyfile('config.py', silent=True)
     
     LOGGER.info("Starting Flask app")
     bootstrap = Bootstrap(app)

@@ -7,7 +7,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 class TDBHandler(object):
-    def __init__(self, db_name=os.getenv('TWIRPS_DATABASE', '/twirpy.db')):
+    def __init__(self, db_name=os.getenv('TWIRPS_DATABASE', './twirpy.db')):
         self.db_name = db_name
 
     def is_db_setup(self ):
@@ -25,12 +25,13 @@ class TDBHandler(object):
             cur = connection.cursor()
             cur.execute('CREATE TABLE TweetData (UserID Number, UserHandle Text, FavouriteCount Number, \
                                                 RetweetCount Number, Content Text, Retweet Text, \
-                                                CreatedDate Text, TwitterID Number UNIQUE, Subscribed Number default 0)')
+                                                CreatedDate Text, TwitterID Number UNIQUE)')
             cur.execute('CREATE TABLE TwirpData (UserID Number UNIQUE, UserName Text, Name Text, Handle Text, \
                                                 FollowersCount Number, FriendsCount Number,\
                                                 TweetCount Number, RetweetCount Number, \
                                                 BeenRetweeted Number, FavouriteHashtag Text, \
-                                                HashtagCount Number, OfficialId Number)')
+                                                HashtagCount Number, OfficialId Number,\
+                                                Subscribed Number default 0)')
             cur.execute('CREATE TABLE TweetEntities (TweetID Number, UserID Number,\
                                                 EntityType Text, Entity Text, ToUser Number,\
                                                 UrlBase Text, UNIQUE(TweetID, UserID, EntityType, Entity) )')
