@@ -64,8 +64,10 @@ def view_backend():
             data_collection.get_bulk_recent_tweet(max_tweets)
 
 
-
-    res = data_collection.get_stream_resolution()
+    if request.method=='POST' and request.form["submit"]=="refresh_logs":
+        res = request.form["resolution"]
+    else:
+        res = data_collection.get_stream_resolution()
     return render_template('backend.html', stream_res=res, rows=read_log())
 
 @app.route('/admin/db_edit', methods=['GET', 'POST'])

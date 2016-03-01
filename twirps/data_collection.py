@@ -212,7 +212,7 @@ def get_bulk_twirps_main():
                                                 mp["name"]))
 
 @async
-def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30):
+def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30, tweet_resolution=1000):
     db_handler = TDBHandler()
 
     api = authorize_twitter()
@@ -222,6 +222,7 @@ def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30):
         return ( (twirp["no_tweets"]-twirp["no_collected"])  > tweet_buffer  
                     and twirp["no_collected"] < (max_tweets - tweet_buffer) )
 
+    counter = 0
     for twirp in tqdm(stored_tweet_data):
         try:
             if _is_to_be_collected(twirp):
@@ -231,8 +232,11 @@ def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30):
                 for Tweet in tqdm( get_Tweets_from_twitter(twirp["u_id"],
                                                            twirp["oldest"], remaining_tweets),
                                     nested=True, desc=pbar_description):
-                    LOGGER.debug(unicode(Tweet))
+                    
                     db_handler.add_Tweet_to_database(Tweet)
+                    if  counter % tweet_resolution == 0:
+                        LOGGER.debug("Collected bulk tweet no %s\n%s" % (counter, unicode(Tweet)))
+                    counter += 1
             else:
                 continue
 
@@ -263,7 +267,7 @@ def get_bulk_recent_tweet(max_tweets=10):
             db_handler.add_Tweet_to_database(Tweet)
             no_collected += 1
             current_tweet = Tweet.tweetid
-            LOGGER.debug(unicode(Tweet))
+        LOGGER.debug("Collected %s new tweets from %s\n%s" %(no_collected, twirp, unicode(Tweet)))
         
 
 @async
