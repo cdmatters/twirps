@@ -1,12 +1,13 @@
 from functools import wraps
 from threading import Thread 
+import os
 
-from flask import request
+from flask import request, Response
 
 
 
 def check_auth(username, password):
-    return username == "condnsdmatters" and password == 'password'
+    return username == os.environ['TWIRPS_ADMIN_NAME'] and password == os.environ['TWIRPS_PASSWORD']
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""

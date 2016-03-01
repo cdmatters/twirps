@@ -148,7 +148,7 @@ if __name__ == "__main__":
         setup.setup_archipelago()
 
     app.config.from_object(__name__)
-    app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+    app.config.from_pyfile('config.py')
     
     LOGGER.info("Starting Flask app")
     bootstrap = Bootstrap(app)

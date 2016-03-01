@@ -3,10 +3,11 @@ import os
 import logging
 
 
+
 LOGGER = logging.getLogger(__name__)
 
 class TDBHandler(object):
-    def __init__(self, db_name='twirpy.db'):
+    def __init__(self, db_name=os.getenv('TWIRPS_DATABASE', '/twirpy.db')):
         self.db_name = db_name
 
     def is_db_setup(self ):
