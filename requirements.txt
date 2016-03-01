@@ -1,28 +1,17 @@
-alembic==0.7.5.post1
--e git+https://github.com/condnsdmatters/archipelago.git@b92e3443085c4e85270334d4eee8fc9855a96aa1#egg=archipelago
-beautifulsoup4==4.3.2
 Flask==0.10.1
-GDAL==1.11.1
-gnureadline==6.3.3
-gunicorn==18.0
-ipython==3.0.0
-itsdangerous==0.24
+Flask-Bootstrap==3.3.5.7
 Jinja2==2.8
-lxml==3.5.0
-Mako==1.0.1
 MarkupSafe==0.23
-mercurial==3.3.2
-nodeenv==0.12.3
-nose2==0.5.0
+Werkzeug==0.11.4
+-e git+https://github.com/condnsdmatters/archipelago.git@b92e3443085c4e85270334d4eee8fc9855a96aa1#egg=archipelago-master
+dominate==2.1.17
+itsdangerous==0.24
+lxml==3.5.0
 oauthlib==1.0.3
-python-slugify==0.1.0
-PyYAML==3.11
 requests==2.9.1
 requests-oauthlib==0.6.1
 six==1.10.0
-SQLAlchemy==0.9.9
 tqdm==3.8.0
 tweepy==3.5.0
-Unidecode==0.4.17
-virtualenv==1.11.6
-Werkzeug==0.11.4
+visitor==0.1.2
+wsgiref==0.1.2
