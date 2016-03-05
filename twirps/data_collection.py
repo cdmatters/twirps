@@ -9,7 +9,6 @@ import os
 import sys
 import time
 import logging
-import sqlite3
 
 from tweepy.error import RateLimitError, TweepError
 from tqdm import tqdm

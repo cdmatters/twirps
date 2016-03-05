@@ -1,4 +1,3 @@
-import sqlite3
 import tweepy
 from tweet import Tweet
 import logging

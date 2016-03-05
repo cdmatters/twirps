@@ -1,5 +1,3 @@
-import sqlite3
-
 class Twirp(object):
     twirps_type={
         "MP":0,
