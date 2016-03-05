@@ -186,7 +186,7 @@ def get_bulk_twirps_main():
     api = authorize_twitter()
 
     db_handler = TDBHandler()
-    stored_mps = []#db_handler.get_stored_mps_names()
+    stored_mps = db_handler.get_stored_mps_names()
 
     # NOTE: only place Archipelago called in collection. 
     # Can sub in for custom twitter users json, with new TDB?

@@ -12,47 +12,47 @@ class TDBHandler(object):
         self.pg_database = os.getenv('PG_DATABASE_URL',None)
 
     def create_pg_tables(self):
-        sql_schema = '''CREATE TABLE TwirpData (  \
-                            UserID             BIGINT      NOT NULL  UNIQUE,\
-                            UserName           TEXT        NOT NULL,\
-                            Name               TEXT        NOT NULL,\
-                            Handle             TEXT        NOT NULL,\
-                            FollowersCount     INT,\
-                            FriendsCount       INT,\
-                            TweetCount         INT,\
-                            RetweetCount       INT,\
-                            BeenRetweetedCount INT,\
-                            FavouriteHashtag   TEXT,\
-                            HashtagCount       INT,\
-                            ArchipelagoID      INT,\
-                            TwirpsType         INT,\
-                            Subscribed         BOOLEAN  DEFAULT False,\
-                            PRIMARY KEY(UserID)\
-                        );\
-                        CREATE TABLE TweetData (\
-                            UserID             BIGINT      NOT NULL references TwirpData(UserID),\
-                            UserHandle         TEXT        NOT NULL references TwirpData(Handle),\
-                            FavouriteCount     INT,\
-                            RetweetCount       INT,\
-                            Content            TEXT,\
-                            Retweet            TEXT,\
-                            CreatedDate        TEXT,\
-                            TweetID            BIGINT      NOT NULL UNIQUE,\
+        sql_schema = '''CREATE TABLE TwirpData (  
+                            UserID             BIGINT      NOT NULL  UNIQUE,
+                            UserName           TEXT        NOT NULL,
+                            Name               TEXT        NOT NULL,
+                            Handle             TEXT        NOT NULL,
+                            FollowersCount     INT,
+                            FriendsCount       INT,
+                            TweetCount         INT,
+                            RetweetCount       INT,
+                            BeenRetweetedCount INT,
+                            FavouriteHashtag   TEXT,
+                            HashtagCount       INT,
+                            ArchipelagoID      INT,
+                            TwirpsType         INT,
+                            Subscribed         BOOLEAN  DEFAULT False,
+                            PRIMARY KEY(UserID)
+                        );
+                        CREATE TABLE TweetData (
+                            UserID             BIGINT      NOT NULL references TwirpData(UserID),
+                            UserHandle         TEXT        NOT NULL references TwirpData(Handle),
+                            FavouriteCount     INT,
+                            RetweetCount       INT,
+                            Content            TEXT,
+                            Retweet            TEXT,
+                            CreatedDate        TEXT,
+                            TweetID            BIGINT      NOT NULL UNIQUE,
                             PRIMARY KEY(TweetID)
-                        );\
-                        CREATE TABLE TweetEntities (\
-                            TweetID            BIGINT      NOT NULL references TweetData(TweetID),\
-                            UserID             BIGINT      NOT NULL references TwirpData(UserID),\
-                            EntityType         TEXT,\
-                            Entity             TEXT,\
-                            ToUser             INT,\
-                            UrlBase            TEXT,\
-                            PRIMARY KEY(TweetID, UserID, EntityType, Entity) \
-                        );\
-\
-                        CREATE INDEX UserIDIndex ON TweetData (UserID);\
-                        CREATE INDEX UserHandleIDIndex ON TweetData (UserHandle);\
-                        CREATE INDEX UserIDEntityIndex ON TweetEntities (UserID);\
+                        );
+                        CREATE TABLE TweetEntities (
+                            TweetID            BIGINT      NOT NULL references TweetData(TweetID),
+                            UserID             BIGINT      NOT NULL references TwirpData(UserID),
+                            EntityType         TEXT,
+                            Entity             TEXT,
+                            ToUser             BIGINT,
+                            UrlBase            TEXT,
+                            PRIMARY KEY(TweetID, UserID, EntityType, Entity) 
+                        );
+
+                        CREATE INDEX UserIDIndex ON TweetData (UserID);
+                        CREATE INDEX UserHandleIDIndex ON TweetData (UserHandle);
+                        CREATE INDEX UserIDEntityIndex ON TweetEntities (UserID);
                         '''
         with psycopg2.connect(self.pg_database) as connection: 
             cur = connection.cursor()
@@ -60,10 +60,10 @@ class TDBHandler(object):
         LOGGER.debug("Created PostGres tables, name at: %s" % self.pg_database )
 
     def drop_pg_tables(self):
-        sql_schema = ''' DROP TABLE TweetEntities;\
-                         DROP TABLE TweetData;\
-                         DROP TABLE TwirpData;\
+        sql_schema = ''' DROP TABLE TweetEntities;
+                         DROP TABLE TweetData;
                     '''
+                         # DROP TABLE TwirpData;
 
         with psycopg2.connect(self.pg_database) as connection: 
             cur = connection.cursor()
@@ -71,32 +71,32 @@ class TDBHandler(object):
         LOGGER.debug("Dropped postgres tables, at: %s" % self.pg_database )
 
     def add_Twirp_to_database(self, twirp):
-        sql_request = '''INSERT INTO TwirpData( \
-                            UserID, UserName, Name, Handle,\
-                            FollowersCount, FriendsCount,\
-                            TweetCount, RetweetCount, BeenRetweetedCount,\
-                            FavouriteHashtag,HashtagCount,\
-                            ArchipelagoID,\
-                            TwirpsType,\
+        sql_request = '''INSERT INTO TwirpData( 
+                            UserID, UserName, Name, Handle,
+                            FollowersCount, FriendsCount,
+                            TweetCount, RetweetCount, BeenRetweetedCount,
+                            FavouriteHashtag,HashtagCount,
+                            ArchipelagoID,
+                            TwirpsType,
                             Subscribed 
                         ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                        ON CONFLICT (UserID)\
-                            DO UPDATE SET (\
-                                UserName, Name, Handle,\
-                                FollowersCount, FriendsCount,\
-                                TweetCount, RetweetCount, BeenRetweetedCount,\
-                                FavouriteHashtag,HashtagCount,\
-                                ArchipelagoID,\
-                                TwirpsType,\
-                                Subscribed\
-                            ) = (\
-                                EXCLUDED.UserName, EXCLUDED.Name, EXCLUDED.Handle,\
-                                EXCLUDED.FollowersCount, EXCLUDED.FriendsCount,\
-                                EXCLUDED.TweetCount, EXCLUDED.RetweetCount, EXCLUDED.BeenRetweetedCount,\
-                                EXCLUDED.FavouriteHashtag,EXCLUDED.HashtagCount,\
-                                EXCLUDED.ArchipelagoID,\
-                                EXCLUDED.TwirpsType,\
-                                EXCLUDED.Subscribed\
+                        ON CONFLICT (UserID)
+                            DO UPDATE SET (
+                                UserName, Name, Handle,
+                                FollowersCount, FriendsCount,
+                                TweetCount, RetweetCount, BeenRetweetedCount,
+                                FavouriteHashtag,HashtagCount,
+                                ArchipelagoID,
+                                TwirpsType,
+                                Subscribed
+                            ) = (
+                                EXCLUDED.UserName, EXCLUDED.Name, EXCLUDED.Handle,
+                                EXCLUDED.FollowersCount, EXCLUDED.FriendsCount,
+                                EXCLUDED.TweetCount, EXCLUDED.RetweetCount, EXCLUDED.BeenRetweetedCount,
+                                EXCLUDED.FavouriteHashtag,EXCLUDED.HashtagCount,
+                                EXCLUDED.ArchipelagoID,
+                                EXCLUDED.TwirpsType,
+                                EXCLUDED.Subscribed
                             );
         '''
 
@@ -113,23 +113,59 @@ class TDBHandler(object):
             cur = connection.cursor()
             cur.execute(sql_request, input_tuple)
 
-    def add_Tweet_to_database(self, Tweet):
-        input_tuple = (Tweet.userid, Tweet.handle,  Tweet.favourite_count, Tweet.retweet_count,
-            Tweet.content, Tweet.retweet,  Tweet.date, Tweet.tweetid )
+    def add_Tweet_to_database(self, tweet):
+        add_tweet_sql= '''INSERT INTO TweetData(
+                            TweetID,
+                            UserID, UserHandle,
+                            Retweet,
+                            Content,
+                            FavouriteCount, RetweetCount,
+                            CreatedDate
+                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                        ON CONFLICT (TweetID)\
+                            DO UPDATE SET (
+                                UserID, UserHandle,
+                                Retweet,
+                                Content,
+                                FavouriteCount, RetweetCount,
+                                CreatedDate
+                            ) = (
+                                EXCLUDED.UserID, EXCLUDED.UserHandle,
+                                EXCLUDED.Retweet,
+                                EXCLUDED.Content,
+                                EXCLUDED.FavouriteCount, EXCLUDED.RetweetCount,
+                                EXCLUDED.CreatedDate
+                            );'''
+
+        add_entity_sql='''INSERT INTO TweetEntities(
+                            TweetID, UserID, EntityType, Entity, ToUser
+                        ) VALUES (%s,%s,%s,%s,%s)
+                        ON CONFLICT (TweetID, UserID, EntityType, Entity)
+                            DO UPDATE SET(
+                                TweetID, UserID, EntityType, 
+                                Entity, ToUser
+                            )= (
+                                EXCLUDED.TweetID, EXCLUDED.UserID, EXCLUDED.EntityType, 
+                                EXCLUDED.Entity, EXCLUDED.ToUser
+                            )'''
+
+        t = tweet
+        input_tuple = (t.tweetid,
+                       t.userid, t.handle,
+                       t.retweet,
+                       t.content,   
+                       t.favourite_count, t.retweet_count,
+                       t.date)
 
         with psycopg2.connect(self.pg_database) as connection:
             cur = connection.cursor()
-            cur.execute('INSERT OR REPLACE INTO TweetData\
-                        VALUES (?,?,?,?,?,?,?,?) ', input_tuple)
-            for h in Tweet.hashtags:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
-                    (Tweet.tweetid, Tweet.userid, 'hashtag', h))
-            for u in Tweet.urls:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
-                    (Tweet.tweetid, Tweet.userid, 'url', u))
-            for m in Tweet.mentions:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,?,NULL)',
-                    (Tweet.tweetid, Tweet.userid, 'mention', m[1], m[0]))
+            cur.execute(add_tweet_sql, input_tuple)
+            for h in t.hashtags:
+                cur.execute(add_entity_sql, (t.tweetid, t.userid, 'hashtag', h, 0))
+            for u in t.urls:
+                cur.execute(add_entity_sql, (t.tweetid, t.userid, 'url', u, 0))
+            for m in t.mentions:
+                cur.execute(add_entity_sql, (t.tweetid, t.userid, 'mention', m[1], m[0]))
 
 
     def get_stored_mps_names(self):
@@ -181,23 +217,23 @@ class TDBHandler(object):
     #         cur.execute('INSERT OR REPLACE INTO TwirpData\
     #                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0) ', input_tuple)
 
-    def _add_Tweet_to_database(self, Tweet):
-        input_tuple = (Tweet.userid, Tweet.handle,  Tweet.favourite_count, Tweet.retweet_count,
-            Tweet.content, Tweet.retweet,  Tweet.date, Tweet.tweetid )
+    # def _add_Tweet_to_database(self, Tweet):
+    #     input_tuple = (Tweet.userid, Tweet.handle,  Tweet.favourite_count, Tweet.retweet_count,
+    #         Tweet.content, Tweet.retweet,  Tweet.date, Tweet.tweetid )
 
-        with sqlite3.connect(self.db_name) as connection:
-            cur = connection.cursor()
-            cur.execute('INSERT OR REPLACE INTO TweetData\
-                        VALUES (?,?,?,?,?,?,?,?) ', input_tuple)
-            for h in Tweet.hashtags:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
-                    (Tweet.tweetid, Tweet.userid, 'hashtag', h))
-            for u in Tweet.urls:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
-                    (Tweet.tweetid, Tweet.userid, 'url', u))
-            for m in Tweet.mentions:
-                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,?,NULL)',
-                    (Tweet.tweetid, Tweet.userid, 'mention', m[1], m[0]))
+    #     with sqlite3.connect(self.db_name) as connection:
+    #         cur = connection.cursor()
+    #         cur.execute('INSERT OR REPLACE INTO TweetData\
+    #                     VALUES (?,?,?,?,?,?,?,?) ', input_tuple)
+    #         for h in Tweet.hashtags:
+    #             cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
+    #                 (Tweet.tweetid, Tweet.userid, 'hashtag', h))
+    #         for u in Tweet.urls:
+    #             cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
+    #                 (Tweet.tweetid, Tweet.userid, 'url', u))
+    #         for m in Tweet.mentions:
+    #             cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,?,NULL)',
+    #                 (Tweet.tweetid, Tweet.userid, 'mention', m[1], m[0]))
 
 
     # def _get_stored_mps_names(self):

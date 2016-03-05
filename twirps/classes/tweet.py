@@ -7,7 +7,7 @@ class Tweet(object):
         self.handle = ''
         self.mentions = [] 
         self.content = ''
-        self.retweet = 'NULL'
+        self.retweet = None
         self.retweet_count = 0
         self.favourite_count = 0
         self.hashtags = []

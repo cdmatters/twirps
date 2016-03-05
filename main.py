@@ -101,11 +101,17 @@ def remove_pg_db():
     db_handler = TDBHandler()
     db_handler.drop_pg_tables()
 
+@manager.command
+def get_mps():
+    db_handler = TDBHandler()
+    print db_handler.get_stored_mps_names()
+
+
 
 
 if __name__ == "__main__":
     
-    #set_up_logging()
+    set_up_logging()
     load_tweepy_key()
     if not setup.is_arch_setup():
         setup.setup_archipelago()
