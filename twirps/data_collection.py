@@ -128,7 +128,7 @@ def get_user_data_from_identifiers(u_ids=[], handles=[], names=[], usernames=[])
                                                      names, usernames)
 
 
-def add_Twirp_to_Twirps(name, handle, official_id=0):
+def add_Twirp_to_Twirps(name, handle, twirp_type, archipelago_id=0):
     ''' Take a name, handle and official id, and create a Twirp from twitter data
     using the handle, and name and official id. Store this in the database.
 
@@ -136,12 +136,13 @@ def add_Twirp_to_Twirps(name, handle, official_id=0):
     '''
     api = authorize_twitter()
     db_handler = TDBHandler()
-    mp_twirp = get_Twirp_from_twitter(handle)
+    twirp = get_Twirp_from_twitter(handle)
 
-    mp_twirp.official_id = official_id
-    mp_twirp.name = name
+    twirp.name = name
+    twirp.twirp_type = twirp_type
+    twirp.archipelago_id = archipelago_id
     
-    db_handler.add_Twirp_to_database( mp_twirp )
+    db_handler.add_Twirp_to_database( twirp )
 
 def delete_Twirp(name, username, handle,u_id):
     '''
@@ -185,7 +186,7 @@ def get_bulk_twirps_main():
     api = authorize_twitter()
 
     db_handler = TDBHandler()
-    stored_mps = db_handler.get_stored_mps_names()
+    stored_mps = []#db_handler.get_stored_mps_names()
 
     # NOTE: only place Archipelago called in collection. 
     # Can sub in for custom twitter users json, with new TDB?
@@ -196,7 +197,7 @@ def get_bulk_twirps_main():
 
     for mp in tqdm(mps_to_fetch):
         try:
-            add_Twirp_to_Twirps(mp["name"], mp["handle"], mp["o_id"])
+            add_Twirp_to_Twirps(mp["name"], mp["handle"], 0, mp["o_id"])
         
         except RateLimitError, e:
             LOGGER.warning("Twitter API usage rate exceeded. Waiting 15 mins...")

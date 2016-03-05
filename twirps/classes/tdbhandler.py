@@ -13,40 +13,40 @@ class TDBHandler(object):
 
     def create_pg_tables(self):
         sql_schema = '''CREATE TABLE TwirpData (  \
-                            UserID            INT      NOT NULL  UNIQUE,\
-                            UserName          TEXT     NOT NULL,\
-                            Name              TEXT     NOT NULL,\
-                            Handle            TEXT     NOT NULL  UNIQUE,\
-                            FollowersCount    INT,\
-                            FriendsCount      INT,\
-                            TweetCount        INT,\
-                            RetweetCount      INT,\
-                            BeenRetweeted     INT,\
-                            FavouriteHashtag  TEXT,\
-                            HashtagCount      INT,\
-                            ArchipelagoID     INT,\
-                            TwirpsType        INT,\
-                            Subscribed        INT DEFAULT 0,\
+                            UserID             BIGINT      NOT NULL  UNIQUE,\
+                            UserName           TEXT        NOT NULL,\
+                            Name               TEXT        NOT NULL,\
+                            Handle             TEXT        NOT NULL,\
+                            FollowersCount     INT,\
+                            FriendsCount       INT,\
+                            TweetCount         INT,\
+                            RetweetCount       INT,\
+                            BeenRetweetedCount INT,\
+                            FavouriteHashtag   TEXT,\
+                            HashtagCount       INT,\
+                            ArchipelagoID      INT,\
+                            TwirpsType         INT,\
+                            Subscribed         BOOLEAN  DEFAULT False,\
                             PRIMARY KEY(UserID)\
                         );\
                         CREATE TABLE TweetData (\
-                            UserID            INT      NOT NULL references TwirpData(UserID),\
-                            UserHandle        TEXT     NOT NULL references TwirpData(Handle),\
-                            FavouriteCount    INT,\
-                            RetweetCount      INT,\
-                            Content           TEXT,\
-                            Retweet           TEXT,\
-                            CreatedDate       TEXT,\
-                            TweetID           INT      NOT NULL UNIQUE,\
+                            UserID             BIGINT      NOT NULL references TwirpData(UserID),\
+                            UserHandle         TEXT        NOT NULL references TwirpData(Handle),\
+                            FavouriteCount     INT,\
+                            RetweetCount       INT,\
+                            Content            TEXT,\
+                            Retweet            TEXT,\
+                            CreatedDate        TEXT,\
+                            TweetID            BIGINT      NOT NULL UNIQUE,\
                             PRIMARY KEY(TweetID)
                         );\
                         CREATE TABLE TweetEntities (\
-                            TweetID           INT      NOT NULL references TweetData(TweetID),\
-                            UserID            INT      NOT NULL references TwirpData(UserID),\
-                            EntityType        TEXT,\
-                            Entity            TEXT,\
-                            ToUser            INT,\
-                            UrlBase           TEXT,\
+                            TweetID            BIGINT      NOT NULL references TweetData(TweetID),\
+                            UserID             BIGINT      NOT NULL references TwirpData(UserID),\
+                            EntityType         TEXT,\
+                            Entity             TEXT,\
+                            ToUser             INT,\
+                            UrlBase            TEXT,\
                             PRIMARY KEY(TweetID, UserID, EntityType, Entity) \
                         );\
 \
@@ -70,6 +70,74 @@ class TDBHandler(object):
             cur.execute(sql_schema)                                       
         LOGGER.debug("Dropped postgres tables, at: %s" % self.pg_database )
 
+    def add_Twirp_to_database(self, twirp):
+        sql_request = '''INSERT INTO TwirpData( \
+                            UserID, UserName, Name, Handle,\
+                            FollowersCount, FriendsCount,\
+                            TweetCount, RetweetCount, BeenRetweetedCount,\
+                            FavouriteHashtag,HashtagCount,\
+                            ArchipelagoID,\
+                            TwirpsType,\
+                            Subscribed 
+                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                        ON CONFLICT (UserID)\
+                            DO UPDATE SET (\
+                                UserName, Name, Handle,\
+                                FollowersCount, FriendsCount,\
+                                TweetCount, RetweetCount, BeenRetweetedCount,\
+                                FavouriteHashtag,HashtagCount,\
+                                ArchipelagoID,\
+                                TwirpsType,\
+                                Subscribed\
+                            ) = (\
+                                EXCLUDED.UserName, EXCLUDED.Name, EXCLUDED.Handle,\
+                                EXCLUDED.FollowersCount, EXCLUDED.FriendsCount,\
+                                EXCLUDED.TweetCount, EXCLUDED.RetweetCount, EXCLUDED.BeenRetweetedCount,\
+                                EXCLUDED.FavouriteHashtag,EXCLUDED.HashtagCount,\
+                                EXCLUDED.ArchipelagoID,\
+                                EXCLUDED.TwirpsType,\
+                                EXCLUDED.Subscribed\
+                            );
+        '''
+
+        T=twirp
+        input_tuple =  (T.id, T.username, T.name, T.handle,
+                        T.followers_count, T.friends_count, 
+                        T.tweet_count, T.retweet_count, T.been_retweet_count,
+                        T.favourite_hashtag, T.hashtag_count, 
+                        T.archipelago_id, 
+                        T.twirps_type,
+                        T.subscribed)
+
+        with psycopg2.connect(self.pg_database) as connection:
+            cur = connection.cursor()
+            cur.execute(sql_request, input_tuple)
+
+    def add_Tweet_to_database(self, Tweet):
+        input_tuple = (Tweet.userid, Tweet.handle,  Tweet.favourite_count, Tweet.retweet_count,
+            Tweet.content, Tweet.retweet,  Tweet.date, Tweet.tweetid )
+
+        with psycopg2.connect(self.pg_database) as connection:
+            cur = connection.cursor()
+            cur.execute('INSERT OR REPLACE INTO TweetData\
+                        VALUES (?,?,?,?,?,?,?,?) ', input_tuple)
+            for h in Tweet.hashtags:
+                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
+                    (Tweet.tweetid, Tweet.userid, 'hashtag', h))
+            for u in Tweet.urls:
+                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,0,NULL)',
+                    (Tweet.tweetid, Tweet.userid, 'url', u))
+            for m in Tweet.mentions:
+                cur.execute('INSERT OR REPLACE INTO TweetEntities VALUES (?,?,?,?,?,NULL)',
+                    (Tweet.tweetid, Tweet.userid, 'mention', m[1], m[0]))
+
+
+    def get_stored_mps_names(self):
+        with psycopg2.connect(self.pg_database) as connection:
+            cur = connection.cursor()
+            cur.execute('SELECT  Name  FROM TwirpData')
+
+        return [ name[0] for name in cur.fetchall() ]
 
     def is_db_setup(self ):
         return os.path.isfile(self.db_name)
@@ -101,19 +169,19 @@ class TDBHandler(object):
             cur.execute('CREATE INDEX UserIDEntityIndex ON TweetEntities (UserID)')
         LOGGER.debug("Created twirpy database, name: %s" % self.db_name )
 
-    def add_Twirp_to_database(self, Twirp):
+    # def _add_Twirp_to_database(self, Twirp):
 
-        input_tuple =  (Twirp.id, Twirp.username, Twirp.name, Twirp.handle, Twirp.followers_count, 
-                        Twirp.friends_count, Twirp.statuses, Twirp.retweet_count, 
-                        Twirp.been_retweet_count, Twirp.favourite_hashtag,
-                        Twirp.hashtag_count, Twirp.official_id)
+    #     input_tuple =  (Twirp.id, Twirp.username, Twirp.name, Twirp.handle, Twirp.followers_count, 
+    #                     Twirp.friends_count, Twirp.tweet_count, Twirp.retweet_count, 
+    #                     Twirp.been_retweet_count, Twirp.favourite_hashtag,
+    #                     Twirp.hashtag_count, Twirp.official_id)
 
-        with sqlite3.connect(self.db_name) as connection:
-            cur = connection.cursor()
-            cur.execute('INSERT OR REPLACE INTO TwirpData\
-                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0) ', input_tuple)
+    #     with sqlite3.connect(self.db_name) as connection:
+    #         cur = connection.cursor()
+    #         cur.execute('INSERT OR REPLACE INTO TwirpData\
+    #                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0) ', input_tuple)
 
-    def add_Tweet_to_database(self, Tweet):
+    def _add_Tweet_to_database(self, Tweet):
         input_tuple = (Tweet.userid, Tweet.handle,  Tweet.favourite_count, Tweet.retweet_count,
             Tweet.content, Tweet.retweet,  Tweet.date, Tweet.tweetid )
 
@@ -132,12 +200,12 @@ class TDBHandler(object):
                     (Tweet.tweetid, Tweet.userid, 'mention', m[1], m[0]))
 
 
-    def get_stored_mps_names(self):
-        with sqlite3.connect(self.db_name) as connection:
-            cur = connection.cursor()
-            cur.execute('SELECT  Name  FROM TwirpData')
+    # def _get_stored_mps_names(self):
+    #     with sqlite3.connect(self.db_name) as connection:
+    #         cur = connection.cursor()
+    #         cur.execute('SELECT  Name  FROM TwirpData')
 
-        return [ name[0] for name in cur.fetchall() ]
+    #     return [ name[0] for name in cur.fetchall() ]
 
     def get_oldest_tweets_stored_from_mps(self):
         with sqlite3.connect(self.db_name) as connection:
