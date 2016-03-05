@@ -128,7 +128,7 @@ def get_user_data_from_identifiers(u_ids=[], handles=[], names=[], usernames=[])
                                                      names, usernames)
 
 
-def add_Twirp_to_Twirps(name, handle, twirp_type, archipelago_id=0):
+def add_Twirp_to_Twirps(name, handle, twirps_type, archipelago_id=0):
     ''' Take a name, handle and official id, and create a Twirp from twitter data
     using the handle, and name and official id. Store this in the database.
 
@@ -139,7 +139,7 @@ def add_Twirp_to_Twirps(name, handle, twirp_type, archipelago_id=0):
     twirp = get_Twirp_from_twitter(handle)
 
     twirp.name = name
-    twirp.twirp_type = twirp_type
+    twirp.twirps_type = twirps_type
     twirp.archipelago_id = archipelago_id
     
     db_handler.add_Twirp_to_database( twirp )

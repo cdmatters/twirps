@@ -213,17 +213,95 @@ class TDBHandler(object):
                     } for r in cur.fetchall()
                 ]
 
-
-
-
-
-
     def get_stored_mps_names(self):
         with psycopg2.connect(self.pg_database) as connection:
             cur = connection.cursor()
             cur.execute('SELECT  Name  FROM TwirpData')
 
         return [ name[0] for name in cur.fetchall() ]
+
+    def get_user_data_from_handles(self, handles=[]):
+        '''Return a dictionary of handles and user_ids for given list of handles.
+        Return all stored id's if handles is empty list'''
+        request_sql = '''SELECT UserID, Handle, Name 
+                            FROM TwirpData
+                       '''
+        if handles:
+            q_marks = ','.join(['%s']*len(handles))
+            request_sql += 'WHERE Handle IN (%s)' %q_marks
+
+        with psycopg2.connect(self.pg_database) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql, handles)
+
+            return [
+                        {
+                            "u_id": r[0],
+                            "handle": r[1],
+                            "name":r[2]
+                        } for r in cur.fetchall()
+                    ]
+
+    def get_user_data_from_identifiers(self, u_ids=[], handles=[], names=[], usernames=[]):
+        '''Return a dictionary of handles and user_ids for given list of u_ids.
+        Return all stored id's if u_ids is empty list'''
+        request_sql = '''SELECT UserID, Handle, Name, UserName, Subscribed 
+                            FROM TwirpData
+                       '''
+        filter_categories = []
+        filter_args = []
+        if u_ids:
+            q_marks = ','.join(['%s']*len(u_ids))
+            filter_categories.append('UserID IN (%s)' %q_marks)
+            filter_args.extend(u_ids)
+        if names:
+            q_marks = ','.join(['%s']*len(names))
+            filter_categories.append('Name IN (%s)' %q_marks)
+            filter_args.extend(names)
+        if handles:
+            q_marks = ','.join(['%s']*len(handles))
+            filter_categories.append('Handle IN (%s)' %q_marks)
+            filter_args.extend(handles)
+        if usernames:
+            q_marks = ','.join(['%s']*len(usernames))
+            filter_categories.append('UserName IN (%s)' %q_marks)
+            filter_args.extend(usernames)
+
+        if filter_categories:
+            request_sql += ' WHERE ' 
+            request_sql += ' OR '.join(filter_categories)
+
+        with psycopg2.connect(self.pg_database) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql, filter_args)
+
+            return [
+                        {
+                            "u_id": r[0],
+                            "handle": r[1],
+                            "name":r[2],
+                            "username": r[3],
+                            "subscribed":r[4]
+                        } for r in cur.fetchall()
+                    ]
+
+    def delete_twirp(self, u_id, handle, name, username):
+        '''Return a dictionary of handles and user_ids for given list of u_ids.
+        Return all stored id's if u_ids is empty list'''
+        request_sql = '''DELETE FROM TwirpData 
+                        WHERE UserID=%s
+                            AND Handle =%s
+                            AND Name=%s
+                            AND UserName=%s;
+                       '''
+
+        with psycopg2.connect(self.pg_database) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql, (u_id, handle, name, username))
+
+          
+            return cur.rowcount;
+
 
     def is_db_setup(self ):
         return os.path.isfile(self.db_name)
@@ -293,119 +371,121 @@ class TDBHandler(object):
 
     #     return [ name[0] for name in cur.fetchall() ]
 
-    def _get_oldest_tweets_stored_from_mps(self):
-        with sqlite3.connect(self.db_name) as connection:
-            cur = connection.cursor()
-            cur.execute('''SELECT COUNT(tweet.TwitterID), MIN(tweet.TwitterID), 
-                                twirp.UserID, twirp.Name, twirp.Handle, twirp.TweetCount 
-                            FROM TwirpData AS twirp
-                            LEFT JOIN  TweetData AS tweet
-                            ON twirp.UserID=tweet.UserID
-                            GROUP BY twirp.Name
-                            ORDER BY twirp.Name
-                            ''')
+    # def _get_oldest_tweets_stored_from_mps(self):
+    #     with sqlite3.connect(self.db_name) as connection:
+    #         cur = connection.cursor()
+    #         cur.execute('''SELECT COUNT(tweet.TwitterID), MIN(tweet.TwitterID), 
+    #                             twirp.UserID, twirp.Name, twirp.Handle, twirp.TweetCount 
+    #                         FROM TwirpData AS twirp
+    #                         LEFT JOIN  TweetData AS tweet
+    #                         ON twirp.UserID=tweet.UserID
+    #                         GROUP BY twirp.Name
+    #                         ORDER BY twirp.Name
+    #                         ''')
     
-        return [ 
-                    {
-                        "name": r[3] ,
-                        "handle": r[4] , 
-                        "no_tweets": r[5],
-                        "oldest": r[1],
-                        'no_collected': r[0], 
-                        "u_id": r[2]
+    #     return [ 
+    #                 {
+    #                     "name": r[3] ,
+    #                     "handle": r[4] , 
+    #                     "no_tweets": r[5],
+    #                     "oldest": r[1],
+    #                     'no_collected': r[0], 
+    #                     "u_id": r[2]
 
-                    } for r in cur.fetchall()
-                ]
+    #                 } for r in cur.fetchall()
+    #             ]
 
-    def _get_newest_tweets_from_mps(self):
-        with sqlite3.connect(self.db_name) as connection:
-            cur = connection.cursor()
-            cur.execute('''SELECT COUNT(tweet.TwitterID), MAX(tweet.TwitterID), 
-                                twirp.UserID, twirp.Name, twirp.Handle, twirp.TweetCount 
-                            FROM TwirpData AS twirp
-                            LEFT JOIN  TweetData AS tweet
-                            ON twirp.UserID=tweet.UserID
-                            GROUP BY twirp.Name
-                            ORDER BY twirp.Name
-                            ''')
-        return [ 
-                    {
-                        "name": r[3] ,
-                        "handle": r[4] , 
-                        "no_tweets": r[5],
-                        "newest": r[1],
-                        'no_collected': r[0], 
-                        "u_id": r[2]
-                    } for r in cur.fetchall()
-                ]
+    # def _get_newest_tweets_from_mps(self):
+    #     with sqlite3.connect(self.db_name) as connection:
+    #         cur = connection.cursor()
+    #         cur.execute('''SELECT COUNT(tweet.TwitterID), MAX(tweet.TwitterID), 
+    #                             twirp.UserID, twirp.Name, twirp.Handle, twirp.TweetCount 
+    #                         FROM TwirpData AS twirp
+    #                         LEFT JOIN  TweetData AS tweet
+    #                         ON twirp.UserID=tweet.UserID
+    #                         GROUP BY twirp.Name
+    #                         ORDER BY twirp.Name
+    #                         ''')
+    #     return [ 
+    #                 {
+    #                     "name": r[3] ,
+    #                     "handle": r[4] , 
+    #                     "no_tweets": r[5],
+    #                     "newest": r[1],
+    #                     'no_collected': r[0], 
+    #                     "u_id": r[2]
+    #                 } for r in cur.fetchall()
+    #             ]
 
 
-    def get_user_data_from_handles(self, handles=[]):
-        '''Return a dictionary of handles and user_ids for given list of handles.
-        Return all stored id's if handles is empty list'''
-        request_sql = '''SELECT UserID, Handle, Name 
-                            FROM TwirpData
-                       '''
-        if handles:
-            q_marks = ','.join('?'*len(handles))
-            request_sql += 'WHERE Handle IN (%s)' %q_marks
+    # def _get_user_data_from_handles(self, handles=[]):
+    #     '''Return a dictionary of handles and user_ids for given list of handles.
+    #     Return all stored id's if handles is empty list'''
+    #     request_sql = '''SELECT UserID, Handle, Name 
+    #                         FROM TwirpData
+    #                    '''
+    #     if handles:
+    #         q_marks = ','.join('?'*len(handles))
+    #         request_sql += 'WHERE Handle IN (%s)' %q_marks
 
-        with sqlite3.connect(self.db_name) as connection:
-            cur = connection.cursor()
-            cur.execute(request_sql, handles)
+    #     with sqlite3.connect(self.db_name) as connection:
+    #         cur = connection.cursor()
+    #         cur.execute(request_sql, handles)
 
-            return [
-                        {
-                            "u_id": r[0],
-                            "handle": r[1],
-                            "name":r[2]
-                        } for r in cur.fetchall()
-                    ]
+    #         return [
+    #                     {
+    #                         "u_id": r[0],
+    #                         "handle": r[1],
+    #                         "name":r[2]
+    #                     } for r in cur.fetchall()
+    #                 ]
 
-    def get_user_data_from_identifiers(self, u_ids=[], handles=[], names=[], usernames=[]):
-        '''Return a dictionary of handles and user_ids for given list of u_ids.
-        Return all stored id's if u_ids is empty list'''
-        request_sql = '''SELECT UserID, Handle, Name, UserName, Subscribed 
-                            FROM TwirpData
-                       '''
-        filter_categories = []
-        filter_args = []
-        if u_ids:
-            q_marks = ','.join('?'*len(u_ids))
-            filter_categories.append('UserID IN (%s)' %q_marks)
-            filter_args.extend(u_ids)
-        if names:
-            q_marks = ','.join('?'*len(names))
-            filter_categories.append('Name IN (%s)' %q_marks)
-            filter_args.extend(names)
-        if handles:
-            q_marks = ','.join('?'*len(handles))
-            filter_categories.append('Handle IN (%s)' %q_marks)
-            filter_args.extend(handles)
-        if usernames:
-            q_marks = ','.join('?'*len(usernames))
-            filter_categories.append('UserName IN (%s)' %q_marks)
-            filter_args.extend(usernames)
+    # def _get_user_data_from_identifiers(self, u_ids=[], handles=[], names=[], usernames=[]):
+    #     '''Return a dictionary of handles and user_ids for given list of u_ids.
+    #     Return all stored id's if u_ids is empty list'''
+    #     request_sql = '''SELECT UserID, Handle, Name, UserName, Subscribed 
+    #                         FROM TwirpData
+    #                    '''
+    #     filter_categories = []
+    #     filter_args = []
+    #     if u_ids:
+    #         q_marks = ','.join('?'*len(u_ids))
+    #         filter_categories.append('UserID IN (%s)' %q_marks)
+    #         filter_args.extend(u_ids)
+    #     if names:
+    #         q_marks = ','.join('?'*len(names))
+    #         filter_categories.append('Name IN (%s)' %q_marks)
+    #         filter_args.extend(names)
+    #     if handles:
+    #         q_marks = ','.join('?'*len(handles))
+    #         filter_categories.append('Handle IN (%s)' %q_marks)
+    #         filter_args.extend(handles)
+    #     if usernames:
+    #         q_marks = ','.join('?'*len(usernames))
+    #         filter_categories.append('UserName IN (%s)' %q_marks)
+    #         filter_args.extend(usernames)
 
-        if filter_categories:
-            request_sql += ' WHERE ' 
-            request_sql += ' OR '.join(filter_categories)
+    #     if filter_categories:
+    #         request_sql += ' WHERE ' 
+    #         request_sql += ' OR '.join(filter_categories)
 
-        with sqlite3.connect(self.db_name) as connection:
-            cur = connection.cursor()
-            cur.execute(request_sql, filter_args)
+    #     with sqlite3.connect(self.db_name) as connection:
+    #         cur = connection.cursor()
+    #         cur.execute(request_sql, filter_args)
 
-            return [
-                        {
-                            "u_id": r[0],
-                            "handle": r[1],
-                            "name":r[2],
-                            "username": r[3],
-                            "subscribed":r[4]
-                        } for r in cur.fetchall()
-                    ]
+    #         return [
+    #                     {
+    #                         "u_id": r[0],
+    #                         "handle": r[1],
+    #                         "name":r[2],
+    #                         "username": r[3],
+    #                         "subscribed":r[4]
+    #                     } for r in cur.fetchall()
+    #                 ]
 
-    def delete_twirp(self, u_id, handle, name, username):
+
+
+    def _delete_twirp(self, u_id, handle, name, username):
         '''Return a dictionary of handles and user_ids for given list of u_ids.
         Return all stored id's if u_ids is empty list'''
         request_sql = '''DELETE FROM TwirpData 

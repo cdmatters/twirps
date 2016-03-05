@@ -136,7 +136,7 @@ def db_edit():
             handle = request.form["handles"]
             LOGGER.info("Adding %s->%s"%(name, handle))
             if name != '' and handle != '':
-                data_collection.add_Twirp_to_Twirps(name, handle)
+                data_collection.add_Twirp_to_Twirps(name, handle,-1)
                 results =  data_collection.get_user_data_from_identifiers([], [handle], [name], [])
             else:
                 results=['Please add both name and handle']
