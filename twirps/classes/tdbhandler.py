@@ -1,7 +1,7 @@
 import sqlite3
 import os
 import logging
-
+import psycopg2
 
 
 LOGGER = logging.getLogger(__name__)
@@ -9,6 +9,67 @@ LOGGER = logging.getLogger(__name__)
 class TDBHandler(object):
     def __init__(self, db_name=os.getenv('TWIRPS_DATABASE', './twirpy.db')):
         self.db_name = db_name
+        self.pg_database = os.getenv('PG_DATABASE_URL',None)
+
+    def create_pg_tables(self):
+        sql_schema = '''CREATE TABLE TwirpData (  \
+                            UserID            INT      NOT NULL  UNIQUE,\
+                            UserName          TEXT     NOT NULL,\
+                            Name              TEXT     NOT NULL,\
+                            Handle            TEXT     NOT NULL  UNIQUE,\
+                            FollowersCount    INT,\
+                            FriendsCount      INT,\
+                            TweetCount        INT,\
+                            RetweetCount      INT,\
+                            BeenRetweeted     INT,\
+                            FavouriteHashtag  TEXT,\
+                            HashtagCount      INT,\
+                            ArchipelagoID     INT,\
+                            TwirpsType        INT,\
+                            Subscribed        INT DEFAULT 0,\
+                            PRIMARY KEY(UserID)\
+                        );\
+                        CREATE TABLE TweetData (\
+                            UserID            INT      NOT NULL references TwirpData(UserID),\
+                            UserHandle        TEXT     NOT NULL references TwirpData(Handle),\
+                            FavouriteCount    INT,\
+                            RetweetCount      INT,\
+                            Content           TEXT,\
+                            Retweet           TEXT,\
+                            CreatedDate       TEXT,\
+                            TweetID           INT      NOT NULL UNIQUE,\
+                            PRIMARY KEY(TweetID)
+                        );\
+                        CREATE TABLE TweetEntities (\
+                            TweetID           INT      NOT NULL references TweetData(TweetID),\
+                            UserID            INT      NOT NULL references TwirpData(UserID),\
+                            EntityType        TEXT,\
+                            Entity            TEXT,\
+                            ToUser            INT,\
+                            UrlBase           TEXT,\
+                            PRIMARY KEY(TweetID, UserID, EntityType, Entity) \
+                        );\
+\
+                        CREATE INDEX UserIDIndex ON TweetData (UserID);\
+                        CREATE INDEX UserHandleIDIndex ON TweetData (UserHandle);\
+                        CREATE INDEX UserIDEntityIndex ON TweetEntities (UserID);\
+                        '''
+        with psycopg2.connect(self.pg_database) as connection: 
+            cur = connection.cursor()
+            cur.execute(sql_schema)                                       
+        LOGGER.debug("Created PostGres tables, name at: %s" % self.pg_database )
+
+    def drop_pg_tables(self):
+        sql_schema = ''' DROP TABLE TweetEntities;\
+                         DROP TABLE TweetData;\
+                         DROP TABLE TwirpData;\
+                    '''
+
+        with psycopg2.connect(self.pg_database) as connection: 
+            cur = connection.cursor()
+            cur.execute(sql_schema)                                       
+        LOGGER.debug("Dropped postgres tables, at: %s" % self.pg_database )
+
 
     def is_db_setup(self ):
         return os.path.isfile(self.db_name)

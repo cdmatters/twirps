@@ -6,6 +6,8 @@ import logging
 
 
 from flask.ext.bootstrap import Bootstrap
+from flask.ext.script import Manager
+
 from flask import Flask, request, session, g, redirect, url_for, \
     abort, render_template, flash
 
@@ -13,17 +15,10 @@ from archipelago import Archipelago, setup
 from twirps import data_collection, app
 from twirps.classes import TDBHandler
 
-
-
-
 LOGGER = logging.getLogger('twirps.main')
 
-DATABASE = '/twirpy.db'
-SECRET_KEY = 'development key'
-USERNAME = 'admin'
-PASSWORD = 'default'
-
-
+bootstrap = Bootstrap(app)
+manager = Manager(app)
 
 def load_tweepy_key():
     tweepy_help_1 = '''
@@ -68,48 +63,6 @@ def load_tweepy_key():
         LOGGER.debug('ENV variables set.')
 
 
-def build_parser():
-    description = """
-    Twirps Description here.
-    """
-
-    arg_parser = ArgumentParser( description )
-    arg_parser.add_argument( '-r', '--reset',action='store_true', help="will completely reset the datebase")
-    arg_parser.add_argument( '-t', '--twirps',action='store_true', help="get twirps")
-    arg_parser.add_argument( '-d', '--data',action='store_true', help="get data")
-    arg_parser.add_argument( '-u', '--update',action='store_true', help="get data")
-
-
-    return arg_parser
-
-def execute( options ):
-    if options.reset:
-        LOGGER.info("Rebooting database")
-        db_handler = TDBHandler()
-        db_handler.complete_reboot()
-
-
-    if options.twirps:
-        LOGGER.info("Collecting Twirps")
-        session_api = data_collection.authorize_twitter()
-        data_collection.get_twirps_main(session_api)
-
-    if options.data:
-        LOGGER.info("Collecting Data // Bulk Tweets")
-        data_collection.get_tweets_main()
-
-    if options.update:
-        LOGGER.info("Updating most recent tweets")
-        data_collection.update_from_tweet_stream()
-
-    # 1. Collect twirps from ParlDB
-    # 2. Collect twirps from JSON sent in
-    # 3. Collect REST twirps data, with arguments
-    # 4. Add to stream/New users
-    # 5. Filter from stream users
-    # 6. Serve logs
-
-
 
 def set_up_logging():
     log_format = '%(asctime)s | %(lineno)-4d  %(name)-30s   %(levelname)8s  %(message)s'
@@ -138,27 +91,29 @@ def set_up_logging():
     logger.addHandler(fh_twirp)
     logger.addHandler(ch)
 
+@manager.command
+def init_pg_db():
+    db_handler = TDBHandler()
+    db_handler.create_pg_tables()
+
+@manager.command
+def remove_pg_db():
+    db_handler = TDBHandler()
+    db_handler.drop_pg_tables()
+
 
 
 if __name__ == "__main__":
-    set_up_logging()
-
-
+    
+    #set_up_logging()
     load_tweepy_key()
     if not setup.is_arch_setup():
         setup.setup_archipelago()
-    
-    db_handler = TDBHandler()
-    if not db_handler.is_db_setup():
-        db_handler.complete_reboot()
 
-    app.config.from_object(__name__)
     app.config.from_pyfile('config.py', silent=True)
     
     LOGGER.info("Starting Flask app")
-    bootstrap = Bootstrap(app)
-
-    app.run()
+    manager.run()
 
     # arg_parser = build_parser()
     # opts = arg_parser.parse_args( sys.argv[1:] )
