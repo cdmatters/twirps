@@ -1,3 +1,5 @@
+
+
 from __future__ import unicode_literals
 import os
 import sys
@@ -71,24 +73,24 @@ def set_up_logging():
     formatter_cons = logging.Formatter(cons_format,"%H:%M %d/%m")
 
 
-    fh_twirp = logging.FileHandler('tmp/twirps.log', mode='w')
-    fh_twirp.setLevel(logging.DEBUG)
-    fh_twirp.setFormatter(formatter)
+    # fh_twirp = logging.FileHandler('tmp/twirps.log', mode='w')
+    # fh_twirp.setLevel(logging.DEBUG)
+    # fh_twirp.setFormatter(formatter)
     
-    fh_total = logging.FileHandler('tmp/twirps.verbose.log', mode='w')
-    fh_total.setLevel(logging.DEBUG)
-    fh_total.setFormatter(formatter)
+    # fh_total = logging.FileHandler('tmp/twirps.verbose.log', mode='w')
+    # fh_total.setLevel(logging.DEBUG)
+    # fh_total.setFormatter(formatter)
     
     ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+    ch.setLevel(logging.DEBUG)
     ch.setFormatter(formatter_cons)
 
     root_logger = logging.getLogger('')
     root_logger.setLevel(logging.DEBUG)
-    root_logger.addHandler(fh_total)
+    # root_logger.addHandler(fh_total)
     
     logger = logging.getLogger('twirps')
-    logger.addHandler(fh_twirp)
+    # logger.addHandler(fh_twirp)
     logger.addHandler(ch)
 
 @manager.command
