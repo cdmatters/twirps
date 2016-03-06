@@ -207,7 +207,7 @@ def get_bulk_twirps_main():
             continue
 
         except tweepy.error.TweepError, e:
-            LOGGER.error( "ERROR: %s: for %s -> %s" % (e.message[0]["message"],
+            LOGGER.error( "ERROR: %s: for %s -> %s" % (e.message[0],
                                                 mp["handle"],
                                                 mp["name"]))
 
@@ -241,12 +241,9 @@ def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30, tweet_resolution=1000)
                 continue
 
         except tweepy.error.TweepError, e:
-            LOGGER.warning(e)
-            LOGGER.warning("Twitter API usage rate exceeded. Waiting 15 mins...")
-            time.sleep(60*10)
-            LOGGER.info("5 mins remaining...")
-            time.sleep(60*5)
-
+            LOGGER.error( "ERROR: %s: for %s -> %s" % (e.message[0],
+                                                twirp["handle"],
+                                                twirp["name"]))
             api = authorize_twitter()
             continue
 

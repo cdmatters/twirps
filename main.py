@@ -116,6 +116,12 @@ def remove_neo_db():
     db_handler = NeoDBHandler()
     db_handler.remove_constraints()
 
+@manager.command
+def init_dbs():
+    init_pg_db()
+    init_neo_db()
+
+
 
 
 if __name__ == "__main__":
