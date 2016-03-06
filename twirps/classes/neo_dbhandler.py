@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+
 import os
 from py2neo import Graph, Node, schema
-from twirp import Twirp
+
 
 import logging
 
@@ -52,4 +56,41 @@ class NeoDBHandler(object):
         graph.create(twirp_node)
 
     def add_Tweet_to_database(self, tweet):
-        pass
+        cypher_request = u'''
+            MATCH (a:Twirp { user_id: {twirp} }), (b:Twirp { user_id: {tweeted} })
+            MERGE (a)-[r:«type»]->(b)
+            ON CREATE SET
+                r.count = 1,
+                r.recent={tweet_id},
+                r.date={date}
+            ON MATCH SET
+                r.count = r.count + 1,
+                r.recent = {tweet_id},
+                r.date={date}
+        ''' 
+        requests = []
+
+
+        mentions_request_input = [{ 
+            "twirp" : tweet.userid,
+            "tweeted": mentioned[0],
+            "type": "REPLY",
+            "tweet_id": tweet.tweetid,
+            "date":tweet.date
+            } for mentioned in tweet.mentions]
+        requests.extend(mentions_request_input)
+
+        retweet_request_input = [{ 
+            "twirp" : tweet.userid,
+            "tweeted": tweet.retweet,
+            "type": "RETWEET",
+            "tweet_id": tweet.tweetid,
+            "date":tweet.date
+            }] if not tweet.retweet else []
+        requests.extend(retweet_request_input)
+        # LOGGER.info(requests)
+        graph = Graph(self.n4_database)
+        cypher = graph.cypher
+        for req in requests:
+            cypher.execute(cypher_request, req)
+

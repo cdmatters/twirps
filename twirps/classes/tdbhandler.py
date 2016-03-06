@@ -2,12 +2,15 @@ import os
 import logging
 import psycopg2
 
+from neo_dbhandler import NeoDBHandler
+
 
 LOGGER = logging.getLogger(__name__)
 
 class TDBHandler(object):
     def __init__(self, pg_database = os.getenv('PG_DATABASE_URL',None)):
         self.pg_database = pg_database
+        self.neo = NeoDBHandler()
 
     def create_pg_tables(self):
         sql_schema = '''CREATE TABLE TwirpData (  
@@ -69,6 +72,8 @@ class TDBHandler(object):
         LOGGER.debug("Dropped postgres tables, at: %s" % self.pg_database )
 
     def add_Twirp_to_database(self, twirp):
+        self.neo.add_Twirp_to_database(twirp)
+
         sql_request = '''INSERT INTO TwirpData( 
                             UserID, UserName, Name, Handle,
                             FollowersCount, FriendsCount,
@@ -111,7 +116,10 @@ class TDBHandler(object):
             cur = connection.cursor()
             cur.execute(sql_request, input_tuple)
 
+
     def add_Tweet_to_database(self, tweet):
+        self.neo.add_Tweet_to_database(tweet)
+
         add_tweet_sql= '''INSERT INTO TweetData(
                             TweetID,
                             UserID, UserHandle,

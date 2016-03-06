@@ -13,7 +13,7 @@ from flask import Flask, request, session, g, redirect, url_for, \
 
 from archipelago import Archipelago, setup
 from twirps import data_collection, app
-from twirps.classes import TDBHandler
+from twirps.classes import TDBHandler, NeoDBHandler
 
 LOGGER = logging.getLogger('twirps.main')
 
@@ -106,6 +106,15 @@ def get_mps():
     db_handler = TDBHandler()
     print db_handler.get_stored_mps_names()
 
+@manager.command
+def init_neo_db():
+    db_handler = NeoDBHandler()
+    db_handler.init_constraints()
+
+@manager.command
+def remove_neo_db():
+    db_handler = NeoDBHandler()
+    db_handler.remove_constraints()
 
 
 

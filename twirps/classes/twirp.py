@@ -1,9 +1,10 @@
 class Twirp(object):
-    twirps_type={
-        "MP":0,
-        "PartyOfficial":1,
-        "Media":2,
-        "ThinkTank":3,
+    twirps_enum={
+        0:"MP",
+        1:"PartyOfficial",
+        2:"Media",
+        3:"ThinkTank",
+        -1:"Other"
     }
 
     def __init__(self, twitter_user, source):
@@ -33,6 +34,9 @@ class Twirp(object):
         return u'||%s : %s\n||Id %d; Fol %d; Fri %d; Geo %s ' % (
             self.handle, self.name, self.id, 
             self.followers_count, self.friends_count, self.geo )
+
+    def twirps_type_str(self):
+        return self.twirps_enum[self.twirps_type]
 
     def from_twitter(self, twitter_user):
         self.id = twitter_user.id
