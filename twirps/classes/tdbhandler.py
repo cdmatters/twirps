@@ -63,8 +63,8 @@ class TDBHandler(object):
     def drop_pg_tables(self):
         sql_schema = ''' DROP TABLE TweetEntities;
                          DROP TABLE TweetData;
+                         DROP TABLE TwirpData;
                     '''
-                         # DROP TABLE TwirpData;
 
         with psycopg2.connect(self.pg_database) as connection: 
             cur = connection.cursor()
