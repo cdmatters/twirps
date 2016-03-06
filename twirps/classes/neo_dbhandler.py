@@ -56,6 +56,8 @@ class NeoDBHandler(object):
         graph.create(twirp_node)
 
     def add_Tweet_to_database(self, tweet):
+        if not tweet.mentions:
+            return
         cypher_request = u'''
             MATCH (a:Twirp { user_id: {twirp} }), (b:Twirp { user_id: {tweeted} })
             MERGE (a)-[r:«type»]->(b)
@@ -68,29 +70,31 @@ class NeoDBHandler(object):
                 r.recent = {tweet_id},
                 r.date={date}
         ''' 
+
         requests = []
-
-
+        
         mentions_request_input = [{ 
             "twirp" : tweet.userid,
             "tweeted": mentioned[0],
             "type": "REPLY",
             "tweet_id": tweet.tweetid,
             "date":tweet.date
-            } for mentioned in tweet.mentions]
+            } for mentioned in tweet.mentions if mentioned[1]!=tweet.retweet]
         requests.extend(mentions_request_input)
 
         retweet_request_input = [{ 
             "twirp" : tweet.userid,
-            "tweeted": tweet.retweet,
+            "tweeted": tweet.mentions[-1][0],
             "type": "RETWEET",
-            "tweet_id": tweet.tweetid,
+            "tweet_id": tweet.retweeted_uid,
             "date":tweet.date
-            }] if not tweet.retweet else []
+            }] if tweet.retweeted_uid else []
         requests.extend(retweet_request_input)
-        # LOGGER.info(requests)
+
         graph = Graph(self.n4_database)
-        cypher = graph.cypher
+        
+        transfer = graph.cypher.begin()
         for req in requests:
-            cypher.execute(cypher_request, req)
+            transfer.append(cypher_request, req)
+        transfer.commit()
 

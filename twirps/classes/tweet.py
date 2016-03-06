@@ -1,3 +1,7 @@
+import logging
+
+LOGGER = logging.getLogger(__name__)
+
 class Tweet(object):
     def __init__(self, tweet, source):
         self.tweetid = 0
@@ -6,6 +10,7 @@ class Tweet(object):
         self.mentions = [] 
         self.content = ''
         self.retweet = None
+        self.retweeted_uid=None
         self.retweet_count = 0
         self.favourite_count = 0
         self.hashtags = []
@@ -33,7 +38,9 @@ class Tweet(object):
         if hasattr(tweet, 'retweeted_status'):
             tweet = tweet.retweeted_status
             self.retweet = tweet.user.screen_name
+            self.retweeted_uid = tweet.user.id
             self.mentions.append((tweet.user.id, tweet.user.screen_name))
+
 
         self.content = tweet.text
         self.mentions = [ (ent['id'],ent['screen_name'] 
