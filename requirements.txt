@@ -6,6 +6,7 @@ MarkupSafe==0.23
 Werkzeug==0.11.4
 -e git+https://github.com/condnsdmatters/archipelago.git@b92e3443085c4e85270334d4eee8fc9855a96aa1#egg=archipelago-master
 dominate==2.1.17
+gunicorn==19.4.5
 itsdangerous==0.24
 lxml==3.5.0
 oauthlib==1.0.3
