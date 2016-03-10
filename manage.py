@@ -64,32 +64,32 @@ def load_tweepy_key():
 
 
 
-def set_up_logging():
+def set_up_logging(this_app):
     log_format = '%(asctime)s | %(lineno)-4d  %(name)-30s   %(levelname)8s  %(message)s'
     formatter = logging.Formatter(log_format,"%H:%M:%S %d/%m/%Y")
     cons_format = '%(asctime)s  %(filename)-20s l%(lineno)-d %(levelname)-8s  %(message)s'
     formatter_cons = logging.Formatter(cons_format,"%H:%M %d/%m")
 
 
-    fh_twirp = logging.FileHandler('tmp/twirps.log', mode='w')
+    fh_twirp = logging.FileHandler('twirps.log', mode='w')
     fh_twirp.setLevel(logging.DEBUG)
     fh_twirp.setFormatter(formatter)
     
-    fh_total = logging.FileHandler('tmp/twirps.verbose.log', mode='w')
+    fh_total = logging.FileHandler('twirps.verbose.log', mode='w')
     fh_total.setLevel(logging.DEBUG)
     fh_total.setFormatter(formatter)
     
     ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+    ch.setLevel(logging.DEBUG)
     ch.setFormatter(formatter_cons)
 
     root_logger = logging.getLogger('')
     root_logger.setLevel(logging.DEBUG)
     root_logger.addHandler(fh_total)
     
-    logger = logging.getLogger('twirps')
-    logger.addHandler(fh_twirp)
-    logger.addHandler(ch)
+    this_app.logger.addHandler(fh_twirp)
+    this_app.logger.addHandler(ch)
+
 
 @manager.command
 def init_pg_db():
@@ -122,11 +122,9 @@ def init_dbs():
     init_neo_db()
 
 
-
-
+set_up_logging(app)
 if __name__ == "__main__":
     
-    set_up_logging()
     load_tweepy_key()
     if not setup.is_arch_setup():
         setup.setup_archipelago()

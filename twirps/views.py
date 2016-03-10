@@ -27,7 +27,7 @@ LOGGER = logging.getLogger(__name__)
 
 def read_log():
     ''' Use to render & parse if necc'''
-    for line in  open('./tmp/twirps.log', "r"):
+    for line in  open('twirps.log', "r"):
         yield line.decode('utf-8').strip()
 
 @app.route('/admin/', methods=['GET', 'POST'])
