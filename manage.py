@@ -12,8 +12,9 @@ from flask import Flask, request, session, g, redirect, url_for, \
     abort, render_template, flash
 
 from archipelago import Archipelago, setup
-from twirps import data_collection, app
+from twirps import data_collection, app, commands as cmds
 from twirps.classes import TDBHandler, NeoDBHandler
+
 
 LOGGER = logging.getLogger('twirps.main')
 
@@ -120,6 +121,78 @@ def remove_neo_db():
 def init_dbs():
     init_pg_db()
     init_neo_db()
+
+@manager.command
+def initialise_databases():
+    cmds.initialise_databases()
+
+@manager.command
+def destroy_databases():
+    cmds.destroy_databases()
+
+@manager.command
+def start_streamer():
+    cmds.start_streamer()
+
+@manager.command
+def stop_streamer():
+    cmds.stop_streamer()
+
+@manager.command
+def start_bulk_historical_collection():
+    cmds.start_bulk_historical_collection()
+
+@manager.command
+def stop_bulk_historical_collection():
+    cmds.stop_bulk_historical_collection()
+
+@manager.command
+def load_passive_twirps_to_database_by_handle():
+    cmds.load_passive_twirps_to_database_by_handle()
+
+@manager.command
+def load_active_twirps_to_database_by_handle():
+    cmds.load_active_twirps_to_database_by_handle()
+
+@manager.command
+def load_mp_twirps_to_database():
+    cmds.load_mp_twirps_to_database()
+
+@manager.command
+def start_bulk_recent_collection():
+    cmds.start_bulk_recent_collection()
+
+@manager.command
+def storp_bulk_recent_collection():
+    cmds.storp_bulk_recent_collection()
+
+@manager.command
+def delete_data():
+    cmds.delete_data()
+
+@manager.command
+def initialise_postgres_db():
+    cmds.initialise_postgres_db()
+
+@manager.command
+def drop_postgres_db():
+    cmds.drop_postgres_db()
+
+@manager.command
+def initialise_neo_db():
+    cmds.initialise_neo_db()
+
+@manager.command
+def drop_neo_db():
+    cmds.drop_neo_db()
+
+@manager.command
+def sync_subscribers_from_twitter():
+    cmds.sync_subscribers_from_twitter()
+
+@manager.command
+def sync_subcribers_to_twitter():
+    cmds.sync_subcribers_to_twitter()
 
 
 set_up_logging(app)
