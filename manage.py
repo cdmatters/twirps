@@ -93,36 +93,6 @@ def set_up_logging(this_app):
 
 
 @manager.command
-def init_pg_db():
-    db_handler = TDBHandler()
-    db_handler.create_pg_tables()
-
-@manager.command
-def remove_pg_db():
-    db_handler = TDBHandler()
-    db_handler.drop_pg_tables()
-
-@manager.command
-def get_mps():
-    db_handler = TDBHandler()
-    print db_handler.get_stored_mps_names()
-
-@manager.command
-def init_neo_db():
-    db_handler = NeoDBHandler()
-    db_handler.init_constraints()
-
-@manager.command
-def remove_neo_db():
-    db_handler = NeoDBHandler()
-    db_handler.remove_constraints()
-
-@manager.command
-def init_dbs():
-    init_pg_db()
-    init_neo_db()
-
-@manager.command
 def initialise_databases():
     cmds.initialise_databases()
 
