@@ -9,7 +9,7 @@ class PgDBHandler(object):
         self.pg_database = pg_database
 
 
-    def create_pg_tables(self):
+    def create_tables(self):
         sql_schema = '''CREATE TABLE TwirpData (  
                             UserID             BIGINT      NOT NULL  UNIQUE,
                             UserName           TEXT        NOT NULL,
@@ -57,7 +57,7 @@ class PgDBHandler(object):
             cur.execute(sql_schema)                                       
         LOGGER.debug("Created PostGres tables, name at: %s" % self.pg_database )
 
-    def drop_pg_tables(self):
+    def drop_tables(self):
         sql_schema = ''' DROP TABLE TweetEntities;
                          DROP TABLE TweetData;
                          DROP TABLE TwirpData;

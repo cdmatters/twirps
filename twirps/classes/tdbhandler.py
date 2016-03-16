@@ -13,11 +13,18 @@ class TDBHandler(object):
         self.neo = NeoDBHandler()
         self.pg = PgDBHandler()
 
-    def create_pg_tables(self):
-        self.pg.create_pg_tables()
+    def initialise_pg_db(self):
+        self.pg.create_tables()
 
-    def drop_pg_tables(self):
-        self.pg.drop_pg_tables()
+    def drop_pg_db(self):
+        self.pg.drop_tables()
+
+    def initialise_neo_db(self):
+        self.neo.init_constraints()
+
+    def drop_neo_db(self):
+        self.neo.delete_graph_data()
+        self.neo.remove_constraints()
 
     def add_Twirp_to_database(self, twirp):
         self.neo.add_Twirp_to_database(twirp)

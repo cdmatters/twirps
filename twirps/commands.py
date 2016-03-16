@@ -15,10 +15,14 @@ from decorators import requires_auth
 LOGGER = logging.getLogger(__name__)
 
 def initialise_databases():
-    pass
+    db_handler = TDBHandler()
+    db_handler.initialise_neo_db()
+    db_handler.initialise_postgres_db()
 
 def destroy_databases():
-    pass
+    db_handler = TDBHandler()
+    db_handler.drop_pg_db()
+    db_handler.drop_neo_db()
 
 def start_streamer():
     pass
@@ -51,15 +55,21 @@ def delete_data():
     pass
 
 def initialise_postgres_db():
-    pass
+    db_handler = PgDBHandler()
+    db_handler.create_tables()
 
 def drop_postgres_db():
-    pass
+    db_handler = PgDBHandler()
+    db_handler.drop_tables()
 
 def initialise_neo_db():
-    pass
+    db_handler = NeoDBHandler()
+    db_handler.init_constraints()
 
 def drop_neo_db():
+    db_handler = NeoDBHandler()
+    db_handler.delete_graph_data()
+    db_handler.remove_constraints()
     pass
 
 def sync_subscribers_from_twitter():

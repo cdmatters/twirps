@@ -14,7 +14,6 @@ class NeoDBHandler(object):
     def __init__(self, n4_database = os.getenv('N4_DATABASE_URL',None)):
         self.n4_database = n4_database
 
-
     def test_graph(self):
         n4_graph = Graph(self.n4_database)
 
@@ -24,13 +23,11 @@ class NeoDBHandler(object):
         graph_schema.create_index("Twirp", "handle")
         graph_schema.create_index("Twirp", "user_id")
 
-
     def remove_constraints(self):
         n4_graph = Graph(self.n4_database)
         graph_schema = n4_graph.schema
         graph_schema.drop_index("Twirp", "handle")
         graph_schema.drop_index("Twirp", "user_id")
-
 
     def add_Twirp_to_database(self, twirp):
         t = twirp
@@ -103,6 +100,14 @@ class NeoDBHandler(object):
             MATCH (a)-[r]->(b) 
             WHERE r.count > 1
             RETURN a.name AS name, collect(b.name) as tweeted, collect(r.count) as count, collect(r.type) as type
+        '''
+
+        graph = Graph(self.n4_database)
+        return graph.cypher.execute(cypher_request)
+
+    def delete_graph_data(self):
+        cypher_request = u''' 
+            MATCH (n) DETACH DELETE n
         '''
 
         graph = Graph(self.n4_database)
