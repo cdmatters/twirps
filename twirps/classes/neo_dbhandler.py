@@ -20,13 +20,11 @@ class NeoDBHandler(object):
     def init_constraints(self):
         n4_graph = Graph(self.n4_database)
         graph_schema = n4_graph.schema
-        graph_schema.create_index("Twirp", "handle")
         graph_schema.create_index("Twirp", "user_id")
 
     def remove_constraints(self):
         n4_graph = Graph(self.n4_database)
         graph_schema = n4_graph.schema
-        graph_schema.drop_index("Twirp", "handle")
         graph_schema.drop_index("Twirp", "user_id")
 
     def add_Twirp_to_database(self, twirp):

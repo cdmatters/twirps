@@ -101,7 +101,7 @@ def unsubscribe_twirp_from_twitter(twirp_id, twirp_handle):
         return True
 
     except tweepy.error.TweepError, e:
-        if "You've already requested to follow" in e.message[0]:
+        if "You've already requested to unfollow" in e.message[0]:
             LOGGER.error( "%s: for %s -> %s" % (e.message[0], twirp_id,
                                         twirp_handle) )
         else:
@@ -180,7 +180,8 @@ def unsubscribe_Twirp(name, handle, u_id):
 #                             BULK UPDATE METHODS                              #
 ################################################################################
 
-@async
+
+
 def get_bulk_twirps_main():
     api = authorize_twitter()
 
@@ -211,7 +212,7 @@ def get_bulk_twirps_main():
                                                 mp["handle"],
                                                 mp["name"]))
 
-@async
+
 def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30, tweet_resolution=1000):
     db_handler = TDBHandler()
 
@@ -250,7 +251,7 @@ def get_bulk_tweets_main(max_tweets=100, tweet_buffer=30, tweet_resolution=1000)
 def get_bulk_twirps_update():
     pass
 
-@async
+
 def get_bulk_recent_tweet(max_tweets=10):
     db_handler = TDBHandler()
     stored_tweet_data = db_handler.get_newest_tweets_from_mps()
@@ -265,9 +266,7 @@ def get_bulk_recent_tweet(max_tweets=10):
             no_collected += 1
             current_tweet = Tweet.tweetid
         LOGGER.debug("Collected %s new tweets from %s\n%s" %(no_collected, twirp, unicode(Tweet)))
-        
 
-@async
 def subscribe_friends_from_twirps():
     db_handler = TDBHandler()
     currently_following =  set(get_subscribers_from_twitter())
@@ -278,7 +277,21 @@ def subscribe_friends_from_twirps():
             subscribe_twirp_from_twitter(twirp["u_id"])
 
 
+@async
+def get_bulk_twirps_main_async():
+    get_bulk_twirps_main()
 
+@async
+def get_bulk_tweets_main_async(max_tweets=100, tweet_buffer=30, tweet_resolution=1000):
+    get_bulk_tweets_main(max_tweets, tweet_buffer, tweet_resolution)
+
+@async
+def subscribe_friends_from_twirps_async():
+    subscribe_friends_from_twirps()    
+
+@async
+def get_bulk_recent_tweet_async(max_tweets=10):
+    get_bulk_recent_tweet(max_tweets)
 
 
 ################################################################################

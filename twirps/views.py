@@ -56,16 +56,16 @@ def view_backend():
             data_collection.change_stream_resolution(int(new_res))
         elif request.form["submit"]=="bulk_twirps_collect":
             LOGGER.info("Received get bulk twirps message")
-            data_collection.get_bulk_twirps_main()
+            data_collection.get_bulk_twirps_main_async()
         elif request.form["submit"]=="bulk_hist_tweets_collect":
             LOGGER.info("Received get bulk tweets message")
             max_tweets = int(request.form["bulk_hist_tweet_no"])
             tweet_buffer = int(request.form["bulk_tweet_buffer"])
-            data_collection.get_bulk_tweets_main(max_tweets, tweet_buffer)
+            data_collection.get_bulk_tweets_main_async(max_tweets, tweet_buffer)
         elif request.form["submit"]=="bulk_new_tweets_collect":
             LOGGER.info("Received get bulk new tweets")
             max_tweets = int(request.form["bulk_new_tweet_no"])
-            data_collection.get_bulk_recent_tweet(max_tweets)
+            data_collection.get_bulk_recent_tweet_async(max_tweets)
 
 
     if request.method=='POST' and request.form["submit"]=="refresh_logs":
