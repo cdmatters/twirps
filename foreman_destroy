@@ -1,0 +1,3 @@
+#! /bin/bash
+
+foreman run python manage.py destroy_databases
