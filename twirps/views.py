@@ -17,9 +17,13 @@ from decorators import requires_auth
 
 LOGGER = logging.getLogger(__name__)
 
-# @app.route('/', methods=['GET', 'POST'])
-# def index():
-#     pass
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    return render_template('index.html')
+
+@app.route('/string', methods=['GET'])
+def test_call():
+    return "A string is here"
 
 ################################################################################
 #                                ADMIN BACKEND                                 #
