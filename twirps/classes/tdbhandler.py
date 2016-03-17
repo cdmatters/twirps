@@ -58,3 +58,6 @@ class TDBHandler(object):
     def mark_twirp_unsubscribed(self, u_id):
         return self.pg.mark_twirp_unsubscribed(u_id)
 
+    def return_full_map(self, min_tweets, retweets_only=False, mentions_only=False):
+        return self.neo.get_all_nodes(min_tweets, retweets_only, mentions_only)
+

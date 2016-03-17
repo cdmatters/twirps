@@ -97,11 +97,14 @@ class NeoDBHandler(object):
             transfer.append(cypher_request, req)
         transfer.commit()
 
-    def get_all_nodes(self):
+    def get_all_nodes(self, min_tweets=5, retweets_only=False, mentions_only=False):
         cypher_request = u''' 
             MATCH (a)-[r]->(b) 
-            WHERE r.count > 1
-            RETURN a.name AS name, collect(b.name) as tweeted, collect(r.count) as count, collect(r.type) as type
+            WHERE r.count > 5
+            RETURN a.name AS name, 
+                    collect(b.name) as tweeted, 
+                    collect(r.count) as count,
+                    collect(r.type) as type
         '''
 
         graph = Graph(self.n4_database)

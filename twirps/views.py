@@ -8,7 +8,7 @@ from functools import wraps
 from flask import Blueprint, Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, Response, jsonify
 
-from twirps import app, data_collection
+from twirps import app, data_collection, data_assimilation
 
 from decorators import requires_auth
 
@@ -23,7 +23,7 @@ def index():
 
 @app.route('/string', methods=['GET'])
 def test_call():
-    return jsonify({"msg":"A string is here"})
+    return jsonify({"msg":str(data_assimilation.return_full_map())})
 
 ################################################################################
 #                                ADMIN BACKEND                                 #
