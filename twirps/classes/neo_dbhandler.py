@@ -20,12 +20,16 @@ class NeoDBHandler(object):
     def init_constraints(self):
         n4_graph = Graph(self.n4_database)
         graph_schema = n4_graph.schema
+        graph_schema.create_index("Twirp", "handle")
         graph_schema.create_index("Twirp", "user_id")
+        LOGGER.debug("Init' constraints, name at: %s" % self.n4_database )
 
     def remove_constraints(self):
         n4_graph = Graph(self.n4_database)
         graph_schema = n4_graph.schema
+        graph_schema.drop_index("Twirp", "handle")
         graph_schema.drop_index("Twirp", "user_id")
+        LOGGER.debug("Deleted all indices at: %s" % self.n4_database )
 
     def add_Twirp_to_database(self, twirp):
         t = twirp
@@ -109,6 +113,7 @@ class NeoDBHandler(object):
         '''
 
         graph = Graph(self.n4_database)
+        LOGGER.debug("Deleted all data at: %s" % self.n4_database )
         return graph.cypher.execute(cypher_request)
 
 

@@ -271,10 +271,10 @@ def subscribe_friends_from_twirps():
     db_handler = TDBHandler()
     currently_following =  set(get_subscribers_from_twitter())
 
-    for twirp in db_handler.get_user_ids_from_handles():
+    for twirp in db_handler.get_user_data_from_handles():
 
         if twirp["u_id"] not in currently_following:
-            subscribe_twirp_from_twitter(twirp["u_id"])
+            subscribe_twirp_from_twitter(twirp["u_id"], twirp["handle"])
 
 
 @async

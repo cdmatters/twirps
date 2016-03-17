@@ -80,7 +80,7 @@ def sync_subscribers_from_twitter():
 def sync_subcribers_to_twitter():
     pass
 
-def subscribe_all_twirps_to_twiter():
+def subscribe_all_twirps_to_twitter():
     data_collection.subscribe_friends_from_twirps()
 
 

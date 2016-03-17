@@ -2,4 +2,4 @@
 
 foreman run python manage.py initialise_databases && \
 foreman run python manage.py load_mp_twirps_to_database && \
-foreman run python manage.py subscribe_all_twirps_to_twiter 
+foreman run python manage.py subscribe_all_twirps_to_twitter 

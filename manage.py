@@ -164,6 +164,9 @@ def sync_subscribers_from_twitter():
 def sync_subcribers_to_twitter():
     cmds.sync_subcribers_to_twitter()
 
+@manager.command
+def subscribe_all_twirps_to_twitter():
+    cmds.subscribe_all_twirps_to_twitter()
 
 set_up_logging(app)
 if __name__ == "__main__":
