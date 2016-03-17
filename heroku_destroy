@@ -1,0 +1,9 @@
+#! /bin/bash
+
+runner='heroku'
+if [ $FOREMAN ];
+    then 
+        runner='foreman';
+fi;
+
+$runner run python manage.py destroy_databases
