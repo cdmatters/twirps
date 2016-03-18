@@ -25,6 +25,21 @@ def index():
 def test_call():
     return jsonify({"msg":str(data_assimilation.return_full_map())})
 
+# placeholder note for API
+@app.route('/mouthpiece/{userid}', methods=['GET', 'POST'])
+def mouthpiece():
+    return render_template('index.html')
+
+# placeholder note for API
+@app.route('/nodes/{userid}/{neighbours}/{tweets}/{retweet}', methods=['GET', 'POST'])
+def neighbours():
+    return render_template('index.html')
+
+# placeholder note for API
+@app.route('/committees/{userid}/{tweets}/{retweets}', methods=['GET', 'POST'])
+def committees():
+    return render_template('index.html')
+
 ################################################################################
 #                                ADMIN BACKEND                                 #
 ################################################################################

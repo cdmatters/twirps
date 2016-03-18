@@ -9,7 +9,19 @@ LOGGER = logging.getLogger(__name__)
 def return_full_map(min_tweets=5, retweets_only=False, mentions_only=False):
     db_handler = TDBHandler()
     result = db_handler.return_full_map(min_tweets, retweets_only, mentions_only)
-    return result
+    
+    twirp_map = {}
+    for r in result:
+        
+        retweeted= {}
+        mentions = {}
+        for i, t in enumerate(r.tweeted):
+            if r.tweet_type[i] == u'REPLY':
+                mentions.update({t:r.count[i]})
+            elif r.tweet_type[i] == u'RETWEET':
+                retweeted.update({t:r.count[i]})
+        twirp_map.update({r.name:{"mentions":mentions, "retweets":retweeted}})
+    return twirp_map
 # This module is used to assimilate and clean the data provided in the 
 # twirpy.db database. It is also used to isolate useful pieces of data and
 # turn them into useful json files
