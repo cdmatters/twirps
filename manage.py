@@ -11,7 +11,7 @@ from flask.ext.script import Manager
 from flask import Flask, request, session, g, redirect, url_for, \
     abort, render_template, flash
 
-from archipelago import Archipelago, setup
+
 from twirps import data_collection, app, commands as cmds
 from twirps.classes import TDBHandler, NeoDBHandler
 
@@ -172,8 +172,7 @@ set_up_logging(app)
 if __name__ == "__main__":
     
     load_tweepy_key()
-    if not setup.is_arch_setup():
-        setup.setup_archipelago()
+
 
     app.config.from_pyfile('config.py', silent=True)
     

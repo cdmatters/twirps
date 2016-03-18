@@ -17,7 +17,7 @@ import requests
 
 from decorators import async
 
-from archipelago import Archipelago
+from archipelago import Archipelago, setup
 from classes import Twirp, Tweet, TDBHandler, TweetStreamer
 
 TWIRP_STREAM = None
@@ -190,6 +190,10 @@ def get_bulk_twirps_main():
 
     # NOTE: only place Archipelago called in collection. 
     # Can sub in for custom twitter users json, with new TDB?
+
+    if not setup.is_arch_setup():
+        setup.setup_archipelago()
+
     arch = Archipelago()
     complete_mp_list = arch.get_twitter_users()
 
