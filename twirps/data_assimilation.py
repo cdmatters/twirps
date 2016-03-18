@@ -22,6 +22,21 @@ def return_full_map(min_tweets=5, retweets_only=False, mentions_only=False):
                 retweeted.update({t:r.count[i]})
         twirp_map.update({r.name:{"mentions":mentions, "retweets":retweeted}})
     return twirp_map
+
+
+def return_d3able_map():
+    graph = return_full_map()
+    
+    graph_names = list(graph.keys())
+    db_handler = TDBHandler()
+    personal_info = db_handler.get_user_data_from_identifiers(names=graph_names)
+
+    LOGGER.info(graph_names)
+    LOGGER.info(personal_info)
+
+    return graph
+
+
 # This module is used to assimilate and clean the data provided in the 
 # twirpy.db database. It is also used to isolate useful pieces of data and
 # turn them into useful json files

@@ -23,7 +23,7 @@ def index():
 
 @app.route('/string', methods=['GET'])
 def test_call():
-    return jsonify({"msg":str(data_assimilation.return_full_map())})
+    return jsonify({"msg":str(data_assimilation.return_d3able_map())})
 
 # placeholder note for API
 @app.route('/mouthpiece/{userid}', methods=['GET', 'POST'])

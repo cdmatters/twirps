@@ -1,5 +1,7 @@
 ;(function(){
 
+    var map_url=  $SCRIPT_ROOT + '/string';
+
     var width = 2000, 
         height =1200;
 
@@ -28,7 +30,7 @@
         toggle = {radius:false, highlight:false};
 
     
-    d3.json('map_d3_improved.json', function(error, map){
+    d3.json(map_url, function(error, map){
         
         displayedNodes = map.nodes.slice();
         displayedInvisibleNodes = displayedNodes.slice()
@@ -110,7 +112,7 @@
                   if (d.contact=='mentions'){
                     //console.log('hey')
                     return 'grey';}
-                  else {
+                  else{ 
                     return 'black';};
                    })
                 .style("stroke-opacity",0.5);
