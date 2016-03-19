@@ -97,20 +97,27 @@ class NeoDBHandler(object):
             transfer.append(cypher_request, req)
         transfer.commit()
 
-    def get_all_nodes(self, min_tweets=5, retweets_only=False, mentions_only=False):
+    def get_full_map(self, min_tweets=5):
         cypher_request = u''' 
-            MATCH (a)-[r]->(b) 
-            WHERE r.count > 5 
+            MATCH (a)-[r]-(b) 
+            WHERE r.count >= {min_tweets} 
                 AND a <> b
             RETURN a.name AS name, 
-                    collect(b.name) as tweeted, 
+                   a.handle AS handle,
+                   a.tweet_count AS tweets,
+                   a.friends_count AS friends, 
+                   a.followers_count AS followers,
+                   a.archipelago_id AS archipelago_id,
+                    collect(b.handle) as tweeted, 
                     collect(r.count) as count,
                     collect(type(r)) as tweet_type,
                     collect(r.recent) as recent
         '''
 
+        request_input = {'min_tweets':min_tweets}
+
         graph = Graph(self.n4_database)
-        return graph.cypher.execute(cypher_request)
+        return graph.cypher.execute(cypher_request, request_input)
 
     def delete_graph_data(self):
         cypher_request = u''' 

@@ -8,34 +8,38 @@ LOGGER = logging.getLogger(__name__)
 
 def return_full_map(min_tweets=5, retweets_only=False, mentions_only=False):
     db_handler = TDBHandler()
-    result = db_handler.return_full_map(min_tweets, retweets_only, mentions_only)
-    
-    twirp_map = {}
-    for r in result:
-        
+    result = db_handler.get_full_map(min_tweets)
+
+
+    return neo_to_d3map(result)
+
+def neo_to_d3map(neo_map):    
+    nodes = []
+    for neo_node in neo_map:
+        twirp = {
+            "name": neo_node.name,
+            "handle":neo_node.handle,
+            "tweets": neo_node.tweets,
+            "friends": neo_node.friends,
+            "followers": neo_node.followers,
+            "party": "",
+            "constituency": "",
+            "offices":[],
+            "o_id": neo_node.archipelago_id
+        }
+
         retweeted= {}
         mentions = {}
-        for i, t in enumerate(r.tweeted):
-            if r.tweet_type[i] == u'REPLY':
-                mentions.update({t:r.count[i]})
-            elif r.tweet_type[i] == u'RETWEET':
-                retweeted.update({t:r.count[i]})
-        twirp_map.update({r.name:{"mentions":mentions, "retweets":retweeted}})
-    return twirp_map
+        for i, t in enumerate(neo_node.tweeted):
+            if neo_node.tweet_type[i] == u'REPLY':
+                mentions.update({t:neo_node.count[i]})
+            elif neo_node.tweet_type[i] == u'RETWEET':
+                retweeted.update({t:neo_node.count[i]})
+        twirp.update({"mentions":mentions, "retweets":retweeted})
 
-
-def return_d3able_map():
-    graph = return_full_map()
-    
-    graph_names = list(graph.keys())
-    db_handler = TDBHandler()
-    personal_info = db_handler.get_user_data_from_identifiers(names=graph_names)
-
-    LOGGER.info(graph_names)
-    LOGGER.info(personal_info)
-
-    return graph
-
+        nodes.append(twirp)
+        LOGGER.info(nodes)
+    return {"nodes": nodes}
 
 # This module is used to assimilate and clean the data provided in the 
 # twirpy.db database. It is also used to isolate useful pieces of data and

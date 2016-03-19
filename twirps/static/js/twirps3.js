@@ -213,7 +213,7 @@
             };
         };
         function calculateEdges(clickedNode){
-
+            console.log("were here")
             updateDisplayedNodes()
             
             var cNode = d3.select(clickedNode).node();
@@ -240,7 +240,7 @@
 
                         var visibleEdge = {source:s, inter:i, target:t, contact:contact[j], value:cNode[contact[j]][mentionHandle]};
 
-                        if (visibleEdge.value>10 && s.handle!=t.handle){
+                        if (visibleEdge.value>0 && s.handle!=t.handle){
                             displayedInvisibleNodes.push(i);
                             displayedEdges.push(visibleEdge);
                             displayedInvisibleEdges.push(invisibleEdgeA);
