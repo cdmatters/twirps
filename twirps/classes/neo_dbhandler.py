@@ -63,32 +63,49 @@ class NeoDBHandler(object):
             ON CREATE SET
                 r.count = 1,
                 r.recent={tweet_id},
-                r.date={date}
+                r.date={date},
+                r.url={url}
             ON MATCH SET
                 r.count = r.count + 1,
                 r.recent = {tweet_id},
-                r.date={date}
+                r.date={date},
+                r.url={url}
         ''' 
 
         requests = []
         
+        _proxy="_BY_PROXY" if tweet.is_retweet else ""
+
         mentions_request_input = [{ 
-            "twirp" : tweet.userid,
+            "twirp" : tweet.user_id,
             "tweeted": mentioned[0],
-            "type": "REPLY",
-            "tweet_id": tweet.tweetid,
-            "date":tweet.date
-            } for mentioned in tweet.mentions if mentioned[1]!=tweet.retweet]
+            "type": "MENTION"+_proxy,
+            "tweet_id": str(tweet.tweet_id),
+            "date":tweet.date,
+            "url": tweet.website_link
+            } for mentioned in tweet.mentions if not tweet.is_reply or mentioned[0]!=tweet.in_reply_to_user[0]]
         requests.extend(mentions_request_input)
 
         retweet_request_input = [{ 
-            "twirp" : tweet.userid,
-            "tweeted": tweet.mentions[-1][0],
+            "twirp" : tweet.user_id,
+            "tweeted": tweet.retweeted_user[0],
             "type": "RETWEET",
-            "tweet_id": tweet.retweeted_uid,
-            "date":tweet.date
-            }] if tweet.retweeted_uid else []
+            "tweet_id": str(tweet.tweet_id),
+            "date":tweet.date,
+            "url": tweet.website_link
+            }] if tweet.is_retweet else []
         requests.extend(retweet_request_input)
+
+        reply_request_input = [{ 
+            "twirp" : tweet.user_id,
+            "tweeted": tweet.in_reply_to_user[0],
+            "type": "REPLY",
+            "tweet_id": str(tweet.in_reply_to_status_id),
+            "date":tweet.date,
+            "url": tweet.website_link
+            }] if tweet.is_reply else []
+        requests.extend(reply_request_input)
+
 
         graph = Graph(self.n4_database)
         

@@ -33,7 +33,8 @@ class PgDBHandler(object):
                             FavouriteCount     INT,
                             RetweetCount       INT,
                             Content            TEXT,
-                            Retweet            TEXT,
+                            Retweet            BOOLEAN,
+                            Reply              BOOLEAN,
                             CreatedDate        TEXT,
                             TweetID            BIGINT      NOT NULL UNIQUE,
                             PRIMARY KEY(TweetID)
@@ -43,7 +44,7 @@ class PgDBHandler(object):
                             UserID             BIGINT      NOT NULL references TwirpData(UserID),
                             EntityType         TEXT,
                             Entity             TEXT,
-                            ToUser             BIGINT,
+                            EntityToUserID           BIGINT,
                             UrlBase            TEXT,
                             PRIMARY KEY(TweetID, UserID, EntityType, Entity) 
                         );
@@ -116,42 +117,42 @@ class PgDBHandler(object):
         add_tweet_sql= '''INSERT INTO TweetData(
                             TweetID,
                             UserID, UserHandle,
-                            Retweet,
+                            Retweet, Reply,
                             Content,
                             FavouriteCount, RetweetCount,
                             CreatedDate
-                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
                         ON CONFLICT (TweetID)\
                             DO UPDATE SET (
                                 UserID, UserHandle,
-                                Retweet,
+                                Retweet, Reply,
                                 Content,
                                 FavouriteCount, RetweetCount,
                                 CreatedDate
                             ) = (
                                 EXCLUDED.UserID, EXCLUDED.UserHandle,
-                                EXCLUDED.Retweet,
+                                EXCLUDED.Retweet, EXCLUDED.Reply,
                                 EXCLUDED.Content,
                                 EXCLUDED.FavouriteCount, EXCLUDED.RetweetCount,
                                 EXCLUDED.CreatedDate
                             );'''
 
         add_entity_sql='''INSERT INTO TweetEntities(
-                            TweetID, UserID, EntityType, Entity, ToUser
+                            TweetID, UserID, EntityType, Entity, EntityToUserID
                         ) VALUES (%s,%s,%s,%s,%s)
                         ON CONFLICT (TweetID, UserID, EntityType, Entity)
                             DO UPDATE SET(
                                 TweetID, UserID, EntityType, 
-                                Entity, ToUser
+                                Entity, EntityToUserID
                             )= (
                                 EXCLUDED.TweetID, EXCLUDED.UserID, EXCLUDED.EntityType, 
-                                EXCLUDED.Entity, EXCLUDED.ToUser
+                                EXCLUDED.Entity, EXCLUDED.EntityToUserID
                             )'''
 
         T = tweet
-        input_tuple = (T.tweetid,
-                       T.userid, T.handle,
-                       T.retweet,
+        input_tuple = (T.tweet_id,
+                       T.user_id, T.handle,
+                       T.is_retweet, T.is_reply,
                        T.content,   
                        T.favourite_count, T.retweet_count,
                        T.date)
@@ -160,11 +161,16 @@ class PgDBHandler(object):
             cur = connection.cursor()
             cur.execute(add_tweet_sql, input_tuple)
             for h in T.hashtags:
-                cur.execute(add_entity_sql, (T.tweetid, T.userid, 'hashtag', h, 0))
+                cur.execute(add_entity_sql, (T.tweet_id, T.user_id, 'hashtag', h, 0))
             for u in T.urls:
-                cur.execute(add_entity_sql, (T.tweetid, T.userid, 'url', u, 0))
+                cur.execute(add_entity_sql, (T.tweet_id, T.user_id, 'url', u, 0))
             for m in T.mentions:
-                cur.execute(add_entity_sql, (T.tweetid, T.userid, 'mention', m[1], m[0]))
+                cur.execute(add_entity_sql, (T.tweet_id, T.user_id, 'mention', m[1], m[0]))
+            if T.is_retweet: 
+                cur.execute(add_entity_sql, (T.tweet_id, T.user_id, 'retweet', T.retweeted_user[1], T.retweeted_user[0]))
+            if T.is_reply:
+                cur.execute(add_entity_sql, (T.tweet_id, T.user_id, 'reply', T.in_reply_to_user[1], T.in_reply_to_user[0]))
+
 
     def get_oldest_tweets_stored_from_mps(self):
         with psycopg2.connect(self.pg_database) as connection:
