@@ -2,6 +2,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class Tweet(object):
     def __init__(self, tweet, source):
         self.tweetid = 0
@@ -9,13 +10,19 @@ class Tweet(object):
         self.handle = ''
         self.mentions = [] 
         self.content = ''
+        self.is_retweet = False
         self.retweet = None
-        self.retweeted_uid=None
+        self.retweet_id = 0
+        self.retweeted_user=None
         self.retweet_count = 0
         self.favourite_count = 0
         self.hashtags = []
         self.date = ''
         self.urls = []
+        self.in_reply_to_status_id = None
+        self.in_reply_to_user = None
+
+        self.website_link = None
 
         if source=='twitter':
             self.from_twitter(tweet)
@@ -30,16 +37,23 @@ class Tweet(object):
         self.date = tweet.created_at
         self.retweet_count = tweet.retweet_count
         self.favourite_count  = tweet.favorite_count
+
+        self.website_link=u'https://twitter.com/'+self.handle+u'/status/'+str(self.tweetid)
         
         if tweet.in_reply_to_user_id != None:
             #self.mentions.append((tweet.in_reply_to_user_id, tweet.in_reply_to_screen_name))
             self.retweet = 'REPLY'
+            self.in_reply_to_user = (tweet.in_reply_to_user_id,tweet.in_reply_to_screen_name)
+            self.in_reply_to_status_id = tweet.in_reply_to_status_id
 
         if hasattr(tweet, 'retweeted_status'):
             tweet = tweet.retweeted_status
             self.retweet = tweet.user.screen_name
-            self.retweeted_uid = tweet.user.id
-            self.mentions.append((tweet.user.id, tweet.user.screen_name))
+            self.retweeted_user = (tweet.user.id, tweet.user.screen_name)
+            self.is_retweet = True
+            self.retweet_id = tweet.id
+            # self.retweeted_uid = tweet.user.id
+            # self.mentions.append((tweet.user.id, tweet.user.screen_name))
 
 
         self.content = tweet.text
