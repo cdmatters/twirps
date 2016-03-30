@@ -7,5 +7,6 @@ if [ $FOREMAN ];
         runner='foreman';
 fi;
 $runner run python manage.py initialise_databases && \
+$runner run python manage.py refresh_archipelago && \
 $runner run python manage.py load_mp_twirps_to_database && \
 $runner run python manage.py subscribe_all_twirps_to_twitter 

@@ -157,6 +157,10 @@ def drop_neo_db():
     cmds.drop_neo_db()
 
 @manager.command
+def refresh_archipelago():
+    cmds.refresh_archipelago()
+
+@manager.command
 def sync_subscribers_from_twitter():
     cmds.sync_subscribers_from_twitter()
 

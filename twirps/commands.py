@@ -3,6 +3,7 @@ import json
 import logging
 import os
 
+from archipelago import archipelago, setup
 
 from flask import Blueprint, Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, Response
@@ -73,6 +74,9 @@ def drop_neo_db():
     db_handler.delete_graph_data()
     db_handler.remove_constraints()
     pass
+
+def refresh_archipelago():
+    setup.setup_archipelago(os.environ['ARCHIPELAGO_DB'])
 
 def sync_subscribers_from_twitter():
     pass
