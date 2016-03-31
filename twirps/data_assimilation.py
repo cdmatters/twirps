@@ -12,6 +12,12 @@ def return_full_map(min_tweets=0, retweets_only=False, mentions_only=False):
 
     return neo_to_d3map(result)
 
+def return_party_nodes(party):
+    db_handler = TDBHandler()
+    result = db_handler.get_party_nodes(party) 
+
+    return neo_to_d3map(result)
+
 # def return_neighbours():
 #     db_handler = TDBHandler()
 #     result = db_handler.get_neighbours()

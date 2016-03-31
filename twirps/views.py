@@ -8,37 +8,54 @@ from functools import wraps
 from flask import Blueprint, Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, Response, jsonify
 
+from werkzeug.routing import BaseConverter
+
 from twirps import app, data_collection, data_assimilation
 
 from decorators import requires_auth
 
-
+# Where should this go? 
+class RegexConverter(BaseConverter):
+    def __init__(self, url_map, *items):
+        super(RegexConverter, self).__init__(url_map)
+        self.regex = items[0]
 
 
 LOGGER = logging.getLogger(__name__)
 
+app.url_map.converters['regex'] = RegexConverter
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+    return render_template('index.html', endpoint='/string')
 
-@app.route('/string', methods=['GET'])
+@app.route('/data/string', methods=['GET'])
 def test_call():
     return jsonify(data_assimilation.return_full_map())
 
 # placeholder note for API
-@app.route('/mouthpiece/{userid}', methods=['GET', 'POST'])
+@app.route('/data/mouthpiece/{userid}', methods=['GET', 'POST'])
 def mouthpiece():
     return render_template('index.html')
 
 # placeholder note for API
-@app.route('/nodes/{userid}/{neighbours}/{tweets}/{retweet}', methods=['GET', 'POST'])
+@app.route('/data/nodes/{userid}/{neighbours}/{tweets}/{retweet}', methods=['GET', 'POST'])
 def neighbours():
     return render_template('index.html')
 
 # placeholder note for API
-@app.route('/committees/{userid}/{tweets}/{retweets}', methods=['GET', 'POST'])
+@app.route('/data/committees/{userid}/{tweets}/{retweets}', methods=['GET', 'POST'])
 def committees():
     return render_template('index.html')
+
+@app.route('/data/party/<regex("[a-zA-Z0-9_]{4,35}"):party>', methods=['GET'])
+def get_parties(party):
+    party = party.replace('_', ' ')
+    return jsonify(data_assimilation.return_party_nodes(party))
+
+@app.route('/party/<regex("[a-zA-Z0-9_]{4,35}"):party>', methods=['GET'])
+def redirect_get_parties(party):
+    return render_template('index.html', endpoint='/party/'+ party)
 
 ################################################################################
 #                                ADMIN BACKEND                                 #

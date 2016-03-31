@@ -64,3 +64,6 @@ class TDBHandler(object):
     def get_full_map(self, min_tweets=5):
         return self.neo.get_full_map(min_tweets)
 
+    def get_party_nodes(self, party):
+        return self.neo.get_party_nodes(party, party)
+

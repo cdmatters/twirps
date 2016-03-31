@@ -16,8 +16,10 @@
     window.d3 || document.write('<script src="{{url_for("static", filename="js/d3.min.js") }}">\x3C/script>')
 </script>
 
+
 <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+  $INITIAL_LOAD = '{{ endpoint }}';
 </script>
 
 {% endblock %}

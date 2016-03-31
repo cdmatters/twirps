@@ -1,6 +1,7 @@
 ;(function(){
 
-    var map_url=  $SCRIPT_ROOT + '/string';
+    var map_url=  $SCRIPT_ROOT +'/data'+$INITIAL_LOAD;
+    console.log(map_url)
 
     var width = 2000, 
         height =1200;

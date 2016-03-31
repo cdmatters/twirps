@@ -136,6 +136,29 @@ class NeoDBHandler(object):
         graph = Graph(self.n4_database)
         return graph.cypher.execute(cypher_request, request_input)
 
+    def get_party_nodes(self, partyA, partyB):
+        cypher_request = u''' 
+            MATCH (a)-[r]-(b) 
+            WHERE a.party ={node_partyA}
+                AND b.party = {node_partyB}  
+                AND a <> b
+            RETURN a.name AS name, 
+                   a.handle AS handle,
+                   a.tweet_count AS tweets,
+                   a.friends_count AS friends, 
+                   a.followers_count AS followers,
+                   a.archipelago_id AS archipelago_id,
+                    collect(b.handle) as tweeted, 
+                    collect(r.count) as count,
+                    collect(type(r)) as tweet_type,
+                    collect(r.recent) as recent
+                '''
+
+        request_input = {'node_partyA':partyA, 'node_partyB':partyB}
+
+        graph = Graph(self.n4_database)
+        return graph.cypher.execute(cypher_request, request_input)
+
     def delete_graph_data(self):
         cypher_request = u''' 
             MATCH (n) DETACH DELETE n
