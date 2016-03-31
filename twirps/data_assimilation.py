@@ -27,8 +27,6 @@ def return_party_nodes(party):
 def neo_to_d3map(neo_map): 
     offical_id_list = [node.archipelago_id for node in neo_map]
 
-    arch  = Archipelago()
-    mp_dict = {mp.OfficialId:mp for mp in arch.get_mps_by_official_id(offical_id_list)}
     nodes = []
     for neo_node in neo_map:
         twirp = {
@@ -37,9 +35,9 @@ def neo_to_d3map(neo_map):
             "tweets": neo_node.tweets,
             "friends": neo_node.friends,
             "followers": neo_node.followers,
-            "party": mp_dict[neo_node.archipelago_id].Party,
-            "constituency": mp_dict[neo_node.archipelago_id].Constituency,
-            "offices":[],
+            "party": neo_node.party,
+            "constituency": neo_node.constituency,
+            "offices": neo_node.offices,
             "o_id": neo_node.archipelago_id
         }
 

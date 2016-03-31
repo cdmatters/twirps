@@ -121,6 +121,9 @@ class NeoDBHandler(object):
                 AND a <> b
             RETURN a.name AS name, 
                    a.handle AS handle,
+                   a.party AS party,
+                   a.constituency AS constituency,
+                   a.offices AS offices,
                    a.tweet_count AS tweets,
                    a.friends_count AS friends, 
                    a.followers_count AS followers,
@@ -128,6 +131,7 @@ class NeoDBHandler(object):
                     collect(b.handle) as tweeted, 
                     collect(r.count) as count,
                     collect(type(r)) as tweet_type,
+                    collect(r.url) as recent_url,
                     collect(r.recent) as recent
         '''
 
@@ -138,12 +142,15 @@ class NeoDBHandler(object):
 
     def get_party_nodes(self, partyA, partyB):
         cypher_request = u''' 
-            MATCH (a)-[r]-(b) 
+            MATCH (a)-[r]->(b) 
             WHERE a.party ={node_partyA}
                 AND b.party = {node_partyB}  
                 AND a <> b
             RETURN a.name AS name, 
                    a.handle AS handle,
+                   a.party AS party,
+                   a.constituency AS constituency,
+                   a.offices AS offices,
                    a.tweet_count AS tweets,
                    a.friends_count AS friends, 
                    a.followers_count AS followers,
@@ -151,6 +158,7 @@ class NeoDBHandler(object):
                     collect(b.handle) as tweeted, 
                     collect(r.count) as count,
                     collect(type(r)) as tweet_type,
+                    collect(r.url) as recent_url,
                     collect(r.recent) as recent
                 '''
 
