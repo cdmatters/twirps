@@ -143,9 +143,10 @@ class NeoDBHandler(object):
     def get_party_nodes(self, partyA, partyB):
         cypher_request = u''' 
             MATCH (a)-[r]->(b) 
-            WHERE a.party ={node_partyA}
+            WHERE a.party = {node_partyA}
                 AND b.party = {node_partyB}  
                 AND a <> b
+                AND r.count >=1
             RETURN a.name AS name, 
                    a.handle AS handle,
                    a.party AS party,

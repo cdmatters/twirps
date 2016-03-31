@@ -57,6 +57,16 @@ def get_parties(party):
 def redirect_get_parties(party):
     return render_template('index.html', endpoint='/party/'+ party)
 
+@app.route('/data/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>', methods=['GET'])
+def get_crossparties(partyA, partyB):
+    partyA = partyA.replace('_', ' ')
+    partyB = partyB.replace('_', ' ')
+    return jsonify(data_assimilation.return_crossparty_nodes(partyA, partyB))
+
+@app.route('/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>', methods=['GET'])
+def redirect_get_crossparties(partyA, partyB):
+    return render_template('index.html', endpoint='/crossparty/'+ partyA+'/'+partyB)
+
 ################################################################################
 #                                ADMIN BACKEND                                 #
 ################################################################################

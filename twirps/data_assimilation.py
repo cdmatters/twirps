@@ -18,6 +18,12 @@ def return_party_nodes(party):
 
     return neo_to_d3map(result)
 
+def return_crossparty_nodes(partyA, partyB):
+    db_handler = TDBHandler()
+    result = db_handler.get_crossparty_nodes(partyA,partyB) 
+
+    return neo_to_d3map(result)
+
 # def return_neighbours():
 #     db_handler = TDBHandler()
 #     result = db_handler.get_neighbours()

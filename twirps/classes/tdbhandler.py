@@ -67,3 +67,9 @@ class TDBHandler(object):
     def get_party_nodes(self, party):
         return self.neo.get_party_nodes(party, party)
 
+    def get_crossparty_nodes(self, partyA,partyB):
+        first_set = [n for n in self.neo.get_party_nodes(partyA, partyB)]
+        second_set = [n for n in self.neo.get_party_nodes(partyB, partyA)]
+        return first_set + second_set
+
+
