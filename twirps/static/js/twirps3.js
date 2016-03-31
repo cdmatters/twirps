@@ -3,6 +3,7 @@
     var map_url=  $SCRIPT_ROOT +'/data'+$INITIAL_LOAD;
     console.log(map_url)
 
+            
     var width = 2000, 
         height =1200;
 
@@ -43,7 +44,8 @@
         
     var toggle = {
             radius:false, 
-            highlight:false
+            highlight:false,
+            pop_all:false,
         };
 
     
@@ -60,6 +62,10 @@
         
         updateDisplayedNodes();
         redrawMap();
+
+
+
+
         
 
 
@@ -83,6 +89,30 @@
             { 
                 toggle.highlight = (!toggle.highlight);
                 highlightTransition();
+            }
+            else if (key == 120 || key == 88){
+                toggle.pop_all = (!toggle.pop_all);
+
+                if (toggle.pop_all==true){
+
+                    var nodes = displayedNodes.slice();
+                    
+                    function _(initial, nodes){
+                        return function(){
+                            if (initial<nodes.length){
+                               addNode(nodes[initial]);
+                               initial+=1;
+                            }
+                        }
+                    }
+                    addNodeTimer = _(0, nodes);
+            
+                    toggle.popper=window.setInterval(addNodeTimer,1000);
+                } else {
+                    window.clearInterval(toggle.popper);
+                }
+                
+                
             }
         };
         
@@ -206,7 +236,8 @@
         };
 
         function addNode(clickedNode){
-            var cNode = d3.select(clickedNode).node() ;//why?? why not just clicked
+            var cNode = d3.select(clickedNode).node() ;
+            //why?? why not just clicked
             var contact = ['mentions', 'retweets'];
 
             for (var i=0; i<contact.length; i++){
@@ -230,11 +261,14 @@
                     };
                 };
             }
+            
 
-            click  = d3.select(this);
+            var click = d3.select($('#'+cNode.handle).first().children()[0]);
+
             lastCursor = click.node();
             highlightTransition() 
-            
+
+            console.log(click);
             if (click.attr("clicked") == 0){
                 clickedNodes.push(click[0][0].__data__.handle)
                 force.stop();

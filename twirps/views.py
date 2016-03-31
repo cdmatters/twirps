@@ -27,10 +27,10 @@ app.url_map.converters['regex'] = RegexConverter
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html', endpoint='/string')
+    return render_template('index.html', endpoint='/home')
 
-@app.route('/data/string', methods=['GET'])
-def test_call():
+@app.route('/data/home', methods=['GET'])
+def home_call():
     return jsonify(data_assimilation.return_full_map())
 
 # placeholder note for API
@@ -48,24 +48,26 @@ def neighbours():
 def committees():
     return render_template('index.html')
 
-@app.route('/data/party/<regex("[a-zA-Z0-9_]{4,35}"):party>', methods=['GET'])
-def get_parties(party):
-    party = party.replace('_', ' ')
-    return jsonify(data_assimilation.return_party_nodes(party))
-
+# IMPLEMENTED
 @app.route('/party/<regex("[a-zA-Z0-9_]{4,35}"):party>', methods=['GET'])
 def redirect_get_parties(party):
     return render_template('index.html', endpoint='/party/'+ party)
 
+@app.route('/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>', methods=['GET'])
+def redirect_get_crossparties(partyA, partyB):
+    return render_template('index.html', endpoint='/crossparty/'+ partyA+'/'+partyB)
+
+# DATA VIEWS
 @app.route('/data/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>', methods=['GET'])
 def get_crossparties(partyA, partyB):
     partyA = partyA.replace('_', ' ')
     partyB = partyB.replace('_', ' ')
     return jsonify(data_assimilation.return_crossparty_nodes(partyA, partyB))
 
-@app.route('/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>', methods=['GET'])
-def redirect_get_crossparties(partyA, partyB):
-    return render_template('index.html', endpoint='/crossparty/'+ partyA+'/'+partyB)
+@app.route('/data/party/<regex("[a-zA-Z0-9_]{4,35}"):party>', methods=['GET'])
+def get_parties(party):
+    party = party.replace('_', ' ')
+    return jsonify(data_assimilation.return_party_nodes(party))
 
 ################################################################################
 #                                ADMIN BACKEND                                 #
