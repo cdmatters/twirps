@@ -295,6 +295,15 @@ def get_bulk_recent_tweet_async(max_tweets=10):
     get_bulk_recent_tweet(max_tweets)
 
 
+def sync_neo_with_arch():
+    arch = Archipelago()
+    mp_list = arch.get_all_tweeting_mps()
+    
+    db_handler = TDBHandler()
+
+    db_handler.update_neo_with_arch_mp_list(mp_list)
+
+
 ################################################################################
 #                            STREAM UPATE METHODS  (see tweetstreamer.py)      #
 ################################################################################

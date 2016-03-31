@@ -58,6 +58,9 @@ class TDBHandler(object):
     def mark_twirp_unsubscribed(self, u_id):
         return self.pg.mark_twirp_unsubscribed(u_id)
 
+    def update_neo_with_arch_mp_list(self, mp_list):
+        return self.neo.update_with_arch_mp_list(mp_list)
+
     def get_full_map(self, min_tweets=5):
         return self.neo.get_full_map(min_tweets)
 

@@ -5,7 +5,7 @@ Jinja2==2.8
 MarkupSafe==0.23
 SQLAlchemy==1.0.12
 Werkzeug==0.11.4
--e git+https://github.com/condnsdmatters/archipelago.git@d6b6e0a42f5b74d3b78cfbe30a367fd89e54fc4e#egg=archipelago-master
+-e git+https://github.com/condnsdmatters/archipelago.git@0ae7102b37345a787d1172c22681ebe92bde4655#egg=archipelago-master
 dominate==2.1.17
 gunicorn==19.4.5
 itsdangerous==0.24

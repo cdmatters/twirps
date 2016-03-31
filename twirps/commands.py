@@ -87,6 +87,9 @@ def sync_subcribers_to_twitter():
 def subscribe_all_twirps_to_twitter():
     data_collection.subscribe_friends_from_twirps()
 
+def sync_neo_with_arch():
+    data_collection.sync_neo_with_arch()
+
 
 
 

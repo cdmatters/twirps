@@ -172,6 +172,10 @@ def sync_subcribers_to_twitter():
 def subscribe_all_twirps_to_twitter():
     cmds.subscribe_all_twirps_to_twitter()
 
+@manager.command
+def sync_neo_with_arch():
+    cmds.sync_neo_with_arch()
+
 set_up_logging(app)
 if __name__ == "__main__":
     

@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 
 import os
-from py2neo import Graph, Node, schema
+from py2neo import Graph, Node, schema, batch
 
 
 import logging
@@ -144,5 +144,22 @@ class NeoDBHandler(object):
         graph = Graph(self.n4_database)
         LOGGER.debug("Deleted all data at: %s" % self.n4_database )
         return graph.cypher.execute(cypher_request)
+
+    def update_with_arch_mp_list(self, mp_list):
+        graph = Graph(self.n4_database)
+
+        node_batch =  batch.PushBatch(graph)
+        for mp in mp_list:
+            mp_node = graph.find_one('Twirp', 'archipelago_id', mp.OfficialId)
+            if mp_node:
+                mp_node.properties["party"] = mp.Party if mp.Party!='Labour/Co-operative' else 'Labour'
+                mp_node.properties["twirp_type"] = 1
+                mp_node.properties["constituency"] = mp.Constituency
+                mp_node.properties["committees"] = [ office.Office for office in mp.Offices] if mp.Offices else ['']
+                LOGGER.info(mp_node)
+                node_batch.append(mp_node)
+
+        node_batch.push()
+        
 
 
