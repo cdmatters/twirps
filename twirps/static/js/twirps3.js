@@ -5,18 +5,30 @@
     var width = 2000, 
         height =1200;
 
-    var parties_map= {"Conservative":"#0575c9", "Labour":"#ed1e0e",
-        "Liberal Democrat":"#fe8300", "UKIP":"#712f87", "Green":"#78c31e",
-        "Scottish National Party":"#EBC31C", "Social Democratic and Labour Party":"#65a966",
-        "DUP":"#c0153d", "Sinn Fein":"#00623f", "Alliance":"#e1c21e", "Respect":"#31b56a",
-        "Plaid Cymru":"#4e9f2f", "Independent":"#4e9f2f", "UUP":"#4e9f2f"
+    var parties_map = {
+            "Conservative":"#0575c9",
+            "Labour":"#ed1e0e",
+            "Liberal Democrat":"#fe8300",
+            "UKIP":"#712f87",
+            "Green":"#78c31e",
+            "Scottish National Party":"#EBC31C",
+            "Social Democratic and Labour Party":"#65a966",
+            "DUP":"#c0153d",
+            "Sinn Fein":"#00623f",
+            "Alliance":"#e1c21e",
+            "Respect":"#31b56a",
+            "Plaid Cymru":"#4e9f2f",
+            "Independent":"#4e9f2f",
+            "UUP":"#4e9f2f"
          };
+
 
     var force = d3.layout.force()
         .charge(-200)
         .gravity(.5)
         .linkDistance(10)
         .linkStrength(2)
+        .chargeDistance(1000)
         .size([width, height]);
 
     var svg; 
@@ -27,7 +39,11 @@
         displayedInvisibleNodes = [],
         clickedNodes =[],
         lastCursor;
-        toggle = {radius:false, highlight:false};
+        
+    var toggle = {
+            radius:false, 
+            highlight:false
+        };
 
     
     d3.json(map_url, function(error, map){
@@ -55,12 +71,18 @@
 
         function keyController(){
             var key = d3.event.keyCode;
+            console.log(key)
 
-            if (key == 116){ radiusTransition();}
-            else if (key == 32){ 
+            if (key == 119 || key == 87) // (w||W)
+            { 
+                radiusTransition();
+                toggle.radius = (!toggle.radius);
+            }
+            else if (key == 115 || key == 83) // (s||S)
+            { 
                 toggle.highlight = (!toggle.highlight);
                 highlightTransition();
-                }
+            }
         };
         
         function redrawMap(){
@@ -85,16 +107,21 @@
                 .attr("class", "link")
                 .style("stroke-width",  1)
                 .style("stroke-opacity", 0.5)
+                .style("fill", "none")
                 .style("stroke", function(d){
                  // console.log(d[3])
-                  if (d.contact=='mentions'){
-                    //console.log('hey')
-                    return 'grey';}
-                  else {
-                    return 'black';};
-                   })
+                  if (d.contact=='mentions')
+                  {
+                    return 'grey';
+                  }
+                  else 
+                  {
+                    return 'black';
+                  };
+                })
                 .style("marker-end", "url(#end)")
 
+            // arrow on line
             svg.append("defs").selectAll("marker")
                 .data(displayedEdges.map(function(d){return d.source.handle}))
               .enter().append("marker")
@@ -109,13 +136,15 @@
                 .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
                 .attr("class", function(d){return d})
                 .style("stroke", function(d){
-                 // console.log(d[3])
-                  if (d.contact=='mentions'){
-                    //console.log('hey')
-                    return 'grey';}
-                  else{ 
-                    return 'black';};
-                   })
+                  if (d.contact=='mentions')
+                  {
+                    return 'grey';
+                  }
+                  else
+                  { 
+                    return 'black';
+                  };
+                })
                 .style("stroke-opacity",0.5);
 
             node = svg.selectAll(".node")
@@ -213,8 +242,8 @@
                 d3.select('#'+cNode.handle).attr("clicked", 2);
             };
         };
+
         function calculateEdges(clickedNode){
-            console.log("were here")
             updateDisplayedNodes()
             
             var cNode = d3.select(clickedNode).node();
@@ -253,7 +282,8 @@
         };
         function radiusTransition(){
 
-            if (toggle.radius == false){
+            if (toggle.radius == false)
+            {
                 clickedNodes.forEach( function(handle){
                     d3.select("#"+handle).selectAll('circle')
                         .transition()
@@ -262,8 +292,9 @@
                     d3.select("#"+handle).selectAll('text')
                         .text(function(d){return d.name})
                 });
-                toggle.radius = true;
-            } else if (toggle.radius == true){
+            } 
+            else if (toggle.radius == true)
+            {
                 clickedNodes.forEach( function(handle){
                     d3.select("#"+handle).selectAll('circle')
                         .transition()
@@ -272,8 +303,6 @@
                 });
                 node.selectAll('text')
                     .text(function(){return;});
-
-                toggle.radius = false;
             };            
         };
 
