@@ -6,14 +6,23 @@ from classes import Twirp, Tweet, TDBHandler
 
 LOGGER = logging.getLogger(__name__)
 
-def return_full_map(min_tweets=5, retweets_only=False, mentions_only=False):
+def return_full_map(min_tweets=0, retweets_only=False, mentions_only=False):
     db_handler = TDBHandler()
     result = db_handler.get_full_map(min_tweets)
 
-
     return neo_to_d3map(result)
 
-def neo_to_d3map(neo_map):    
+# def return_neighbours():
+#     db_handler = TDBHandler()
+#     result = db_handler.get_neighbours()
+
+#     return neo_to_d3map(result)
+
+def neo_to_d3map(neo_map): 
+    offical_id_list = [node.archipelago_id for node in neo_map]
+
+    arch  = Archipelago()
+    mp_dict = {mp.OfficialId:mp for mp in arch.get_mps_by_official_id(offical_id_list)}
     nodes = []
     for neo_node in neo_map:
         twirp = {
@@ -22,8 +31,8 @@ def neo_to_d3map(neo_map):
             "tweets": neo_node.tweets,
             "friends": neo_node.friends,
             "followers": neo_node.followers,
-            "party": "",
-            "constituency": "",
+            "party": mp_dict[neo_node.archipelago_id].Party,
+            "constituency": mp_dict[neo_node.archipelago_id].Constituency,
             "offices":[],
             "o_id": neo_node.archipelago_id
         }
@@ -31,14 +40,15 @@ def neo_to_d3map(neo_map):
         retweeted= {}
         mentions = {}
         for i, t in enumerate(neo_node.tweeted):
-            if neo_node.tweet_type[i] == u'REPLY':
+            if neo_node.tweet_type[i] in {u'REPLY', u'MENTION',} :
                 mentions.update({t:neo_node.count[i]})
-            elif neo_node.tweet_type[i] == u'RETWEET':
+            elif neo_node.tweet_type[i] in {u'RETWEET', u'MENTION_BY_PROXY'}:
                 retweeted.update({t:neo_node.count[i]})
+
+
         twirp.update({"mentions":mentions, "retweets":retweeted})
 
         nodes.append(twirp)
-        LOGGER.info(nodes)
     return {"nodes": nodes}
 
 # This module is used to assimilate and clean the data provided in the 

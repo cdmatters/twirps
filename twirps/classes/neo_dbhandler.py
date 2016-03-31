@@ -114,9 +114,9 @@ class NeoDBHandler(object):
             transfer.append(cypher_request, req)
         transfer.commit()
 
-    def get_full_map(self, min_tweets=5):
+    def get_full_map(self, min_tweets=0):
         cypher_request = u''' 
-            MATCH (a)-[r]-(b) 
+            MATCH (a)-[r]->(b) 
             WHERE r.count >= {min_tweets} 
                 AND a <> b
             RETURN a.name AS name, 

@@ -74,6 +74,7 @@
                 .nodes(displayedInvisibleNodes)
                 .links(displayedInvisibleEdges)
                 .linkDistance(Math.sqrt(100000/displayedNodes.length))
+                .chargeDistance(10000)
                 .start();
 
 
