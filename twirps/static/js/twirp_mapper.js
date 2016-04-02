@@ -37,6 +37,10 @@
         allNodes = [],
         allEdges = [];
 
+    // used to generate links based on handles
+    // not place in node array.
+    var visibleNodesHandleMap = {};
+
     var clickedNodes=[];
     var lastClickedNode;
 
@@ -46,6 +50,28 @@
         pop_all:false
     };
 
+
+    function keyController(){
+        var key = d3.event.keyCode;
+
+        if  (key == 119 || key == 87 )
+        {
+            toggle.radius = (!toggle.radius);
+            radiusTransition();
+        } 
+        else if (key == 115 || key == 83)
+        {
+            toggle.highlight = (!toggle.highlight);
+            highlightTransition();
+        }
+        else if (key == 120 || key == 88)
+        {
+            // click all 
+            // then clck next
+            // then pop mode
+        }
+
+    }
 
     function requestMapToD3Map(backend_map){
         return { visibleNodes:backend_map.nodes,
@@ -61,16 +87,23 @@
         allNodes = map.visibleNodes.slice();
         allEdges = map.visibleEdges.slice();
 
+        visibleNodes.forEach(function(d){ 
+            visibleNodesHandleMap[d.handle] = visibleNodes.indexOf(d)
+        });
+        
+
         force = d3.layout.force()
             .charge(-200)
             .gravity(.5)
-            .linkDistance(10)
+            .linkDistance(Math.sqrt(100000/visibleNodes.length))
             .linkStrength(2)
             .chargeDistance(10000)
             .size([width, height])
             .start();
 
         redrawMap();
+
+        d3.select("body").on("keypress", keyController)
 
         force.on("tick", function(){
             moveItems();
@@ -95,7 +128,7 @@
 
         // draw nodes
         node = svg.selectAll(".node")
-             .data(allNodes)
+             .data(visibleNodes)
            .enter().append("g")
              .attr("class", "node")
              .attr("id", function(d){return d.handle})
@@ -116,11 +149,12 @@
 
         // draw links
         link = svg.selectAll(".link")
-              .data(allEdges)
+              .data(visibleEdges)
              .enter().append("path")
               .attr("class", "link")
               .style("stroke-width", 1)
               .style("stroke-opacity", 0.5)
+              .style("fill", "none")
               .style("stroke", function(d){return (d.contact=='mentions')?'grey':'black'})
               .style("marker-end", "url(#end)")
         
@@ -152,20 +186,64 @@
         //highlightTransition();
     } 
 
-    function clickNode(){
+    function clickNode(clickedNode){
+        console.log(clickedNode);
 
+        function addNodesBezierEdges(clickedNode){
+
+            for (contact in {mentions:'mentions', retweets:'retweets'}){
+
+                for ( targetHandle in clickedNode[contact]){
+
+                    var s_index = visibleNodesHandleMap[clickedNode.handle], 
+                        t_index = visibleNodesHandleMap[targetHandle];
+
+                    var s = visibleNodes[s_index],
+                        t = visibleNodes[t_index],
+                        i = {};
+
+                    var invisibleEdgeA = {source : s, target : i},
+                        invisibleEdgeB = {source : i, target : t};
+
+                    var visibleEdge = {
+                            source:s, inter:i, target:t,
+                            contact:contact, value:clickedNode[contact][targetHandle]
+                    }
+                    console.log(visibleEdge)
+                    if (s.handle != t.handle){
+                        invisibleNodes.push(i);
+                        invisibleEdges.push(invisibleEdgeA, invisibleEdgeB);
+
+                        visibleEdges.push(visibleEdge);
+
+                        allNodes.push(i)
+                        allEdges.push(invisibleEdgeA, invisibleEdgeB, visibleEdge)
+
+                        // node.push(i)
+                        // link.push(visibleEdge)
+                    }
+                
+                }
+
+            }
+        }
+
+        clickedNode.clicked=1
+        addNodesBezierEdges(clickedNode)
+        redrawMap()
+        //redraw() if "pop" toggle & just extend()
     }
 
 
     function moveItems(){
-        
+
         function border(z, axis ){
             var r = 5; 
             if (axis == 'x'){return Math.max(2*r, Math.min(width-2*r, z))}
             else if (axis == 'y'){return Math.max(2*r, Math.min(height-2*r, z))};
         }
 
-        function linkBezierPath(data){
+        function linkBezierPath(d){
             return  "M" + border(d.source.x,'x') + "," + border(d.source.y,'y')
                   + "S" + border(d.inter.x, 'x') + "," + border(d.inter.y, 'y')
                   + " " + border(d.target.x,'x') + "," + border(d.target.y,'y');
@@ -180,8 +258,31 @@
         node.attr("transform", nodeTranslate);
     }
 
+   function radiusTransition(){
+        if (toggle.radius==true){
+            node.selectAll('circle')
+                  .transition()
+                  .duration(2000)
+                  .attr("r", function(d){return d.clicked==1?5+ Math.sqrt(d.tweets/100):5;});
+            node.selectAll('text')
+                  .text(function(d){return d.clicked==1?d.name:''});
+        }
+        else if (toggle.radius ==false){
+            node.selectAll('circle')
+                  .transition()
+                  .duration(2000)
+                  .attr("r", function(d){return 5;});
+            node.selectAll('text')
+                  .text(function(d){return;})
+        }
+
+         
+
+   }
+
     
 
     d3.json(map_url, generateMap);
+
 
 })();
