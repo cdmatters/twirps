@@ -47,7 +47,7 @@
     var toggle = {
         radius:false,
         highlight:false,
-        pop_all:false
+        click_all:false
     };
 
 
@@ -66,16 +66,16 @@
         }
         else if (key == 120 || key == 88)
         {
-            // click all 
-            // then clck next
-            // then pop mode
+            toggle.click_all = (!toggle.click_all);
+            clickAllTransition();
         }
-
     }
 
     function requestMapToD3Map(backend_map){
-        return { visibleNodes:backend_map.nodes,
-                 visibleEdges:[]                }
+        return { 
+            visibleNodes:backend_map.nodes,
+            visibleEdges:[]
+        }
     }
 
     function generateMap(error, server_map){
@@ -90,14 +90,13 @@
         visibleNodes.forEach(function(d){ 
             visibleNodesHandleMap[d.handle] = visibleNodes.indexOf(d)
         });
-        
 
         force = d3.layout.force()
             .charge(-200)
             .gravity(.5)
             .linkDistance(Math.sqrt(100000/visibleNodes.length))
             .linkStrength(2)
-            .chargeDistance(10000)
+            .chargeDistance(1000)
             .size([width, height])
             .start();
 
@@ -183,18 +182,24 @@
         node.selectAll("text")
              .text(function(d){return (d.clicked==1 && toggle.radius==true)?d.name:undefined;})
     
-        //highlightTransition();
+        highlightTransition();
     } 
 
     function clickNode(clickedNode){
-        console.log(clickedNode);
+
 
         function addNodesBezierEdges(clickedNode){
 
             for (contact in {mentions:'mentions', retweets:'retweets'}){
 
                 for ( targetHandle in clickedNode[contact]){
-
+                    
+                    //  ERROR: if node not plotted, ignore & continue
+                    if  (visibleNodesHandleMap[targetHandle] == undefined){
+                        console.log("Missing node: "+targetHandle+" for "+clickedNode.handle);
+                        continue;
+                    }
+                    
                     var s_index = visibleNodesHandleMap[clickedNode.handle], 
                         t_index = visibleNodesHandleMap[targetHandle];
 
@@ -209,7 +214,7 @@
                             source:s, inter:i, target:t,
                             contact:contact, value:clickedNode[contact][targetHandle]
                     }
-                    console.log(visibleEdge)
+
                     if (s.handle != t.handle){
                         invisibleNodes.push(i);
                         invisibleEdges.push(invisibleEdgeA, invisibleEdgeB);
@@ -228,9 +233,17 @@
             }
         }
 
-        clickedNode.clicked=1
-        addNodesBezierEdges(clickedNode)
-        redrawMap()
+        lastClickedNode = clickedNode;
+        
+        if (clickedNode.clicked==1){
+            highlightTransition();
+            return; 
+        } else {
+            clickedNode.clicked=1;
+            addNodesBezierEdges(clickedNode);
+            redrawMap();
+        }
+
         //redraw() if "pop" toggle & just extend()
     }
 
@@ -266,8 +279,8 @@
                   .attr("r", function(d){return d.clicked==1?5+ Math.sqrt(d.tweets/100):5;});
             node.selectAll('text')
                   .text(function(d){return d.clicked==1?d.name:''});
-        }
-        else if (toggle.radius ==false){
+        
+        } else if (toggle.radius ==false){
             node.selectAll('circle')
                   .transition()
                   .duration(2000)
@@ -275,12 +288,81 @@
             node.selectAll('text')
                   .text(function(d){return;})
         }
+    }
 
-         
+    function highlightTransition(){
+        if (lastClickedNode == undefined){
+            // nothing to highlight
+            return;
+        }
 
-   }
+        if (toggle.highlight==true){
+            var highlightedNodes = [lastClickedNode.handle];
 
-    
+            visibleEdges.forEach(function(d){
+                if (d.source.handle==lastClickedNode.handle){
+                    highlightedNodes.push(d.target.handle)
+                }
+            });
+
+            node.selectAll("circle")
+                  .transition()
+                  .duration(1000)
+                  .attr('opacity', function(d){
+                      return (highlightedNodes.some(function(e){return d.handle==e;}))?1:0.1;
+                  });
+            node.selectAll("text")
+                  .transition()
+                  .duration(3000)
+                  .text(function(d){
+                      return (highlightedNodes.some(function(e){return d.handle==e;})&& toggle.radius==true)?d.name:undefined;
+                  });
+            
+            link.style("stroke-opacity", function(d){return (d.source.handle==lastClickedNode.handle)?1:0.05});
+            
+            svg.selectAll("marker").selectAll("path")
+                  .style("stroke-opacity",0.05)
+        
+        } else {
+            node.selectAll("circle")
+                  .transition("circle")
+                  .transition()
+                  .duration(1000)
+                  .attr('opacity', 1);
+
+            node.selectAll("text")
+                  .text(function(d){return (toggle.radius == true && d.clicked==1)?d.name:undefined;});
+
+            link.style('stroke-opacity', 0.5);
+
+            svg.selectAll("marker").selectAll("path")
+                  .style("stroke-opacity",0.5);
+        }
+
+    }
+
+    function clickAllTransition(){
+        if (toggle.click_all==true){
+
+            var nodes = visibleNodes.slice();
+
+            function clicker(initial, nodes){
+                return function(){
+                    if (initial<nodes.length){
+                        clickNode(nodes[initial]);
+                        initial+=1;
+                    }
+                }
+            }
+
+            clickNodeTimer = clicker(0, nodes);
+
+            toggle.clicker = window.setInterval(clickNodeTimer,1500);
+        
+        } else {
+            window.clearInterval(toggle.clicker);
+        }
+    }
 
     d3.json(map_url, generateMap);
 
