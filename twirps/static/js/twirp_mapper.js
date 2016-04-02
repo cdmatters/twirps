@@ -94,9 +94,9 @@
         force = d3.layout.force()
             .charge(-200)
             .gravity(.5)
-            .linkDistance(Math.sqrt(100000/visibleNodes.length))
+            .linkDistance(Math.sqrt(150000/visibleNodes.length))
             .linkStrength(2)
-            .chargeDistance(1000)
+            .chargeDistance(10000)
             .size([width, height])
             .start();
 
