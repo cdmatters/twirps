@@ -49,7 +49,8 @@
         highlight:false,
         click_all:false,
         cycle_focus:false,
-        cycle_count:0
+        cycle_count:0,
+        _start_BFS:false // non permanent
     };
 
 
@@ -90,6 +91,16 @@
         else if (key == 105 || key == 73) // (i|I)
         {
             clickFocusTransition();
+        }
+        else if (key == 98 || key == 66) // (b|B) - non permanent
+        {
+            toggle._start_BFS = (!toggle._start_BFS);
+            _crawlerBFS();
+        }
+        else if (key == 111 || key == 79) // (o|O) - non permanent
+        {
+            toggle._start_BFS = (!toggle._start_BFS);
+            _crawlerBFS(tombstone=true); // one layer
         }
 
     }
@@ -236,21 +247,20 @@
 
     function clickNode(clickedNode){
 
-        
         if (clickedNode.clicked==0){
             clickedNode.clicked=1;
             addNodesBezierEdges(clickedNode);
             redrawMap();
         }
 
-        clearFocusTransition();
+        clearFocusTransition(); // clear the black ring
         
         lastClickedNode = clickedNode;
         lastClickedNodeNeighbours = getLinkedNodes(clickedNode);
         
-        highlightTransition();
-        cycleFocusTransition(0)
-        //redraw() if "pop" toggle & just extend()
+        highlightTransition();   // apply the highlight
+        cycleFocusTransition(0)  // apply the black ring, but dont cycle it
+
     }
 
     function addNodesBezierEdges(clickedNode){
@@ -321,6 +331,12 @@
         link.attr("d", linkBezierPath);
         node.attr("transform", nodeTranslate);
     }
+
+
+    // ---------------------------------------- //
+    //               TRANSITIONS                //
+    // ---------------------------------------- //
+
 
     function radiusTransition(){
         if (toggle.radius==true){
@@ -416,7 +432,10 @@
     function cycleFocusTransition(increment){
         if (lastClickedNode==undefined){
             // ERROR: No nodes to cycle through
-            return;
+            return -1;
+        } else if (lastClickedNodeNeighbours.length == 0){
+            console.log("Error: node has no links, cant focus");
+            return -1;
         }
 
         selectedHandle = lastClickedNodeNeighbours[toggle.cycle_count]
@@ -437,7 +456,6 @@
             }           
 
             selectedHandle = lastClickedNodeNeighbours[toggle.cycle_count];
-            console.log(selectedHandle);
 
             d3.select('#'+selectedHandle).select('circle')
                // .transition()
@@ -460,7 +478,7 @@
                 .style("stroke-width", function(d){return (d.clicked==0)?3:1.5;})
     }
 
-    function clickFocusTransition(forward){
+    function clickFocusTransition(){
         if (toggle.cycle_focus){
             selectedHandle = lastClickedNodeNeighbours[toggle.cycle_count]
 
@@ -469,6 +487,45 @@
         }
     }
 
+    function _crawlerBFS(tombstone){
+        if (toggle._start_BFS){            
+            var queue = lastClickedNodeNeighbours.filter( 
+                    function(d){return visibleNodes[visibleNodesHandleMap[d]].clicked==0}
+            );
+            if (tombstone==true){
+                queue.push('STOP_BFS')
+            }
+            function _bfs(){
+                return function(){
+                        console.log('hey')
+                        if (queue.length!=0 && queue[0]!='STOP_BFS'){
+                            b_index = visibleNodesHandleMap[queue.shift()]
+                            clickNode(visibleNodes[b_index]);
+
+                            unclickedNeighbours = lastClickedNodeNeighbours.filter( 
+                                function(d){return visibleNodes[visibleNodesHandleMap[d]].clicked==0}
+                            );
+
+                            queue = queue.concat(unclickedNeighbours);
+                        } else {
+                            // clean up after yourself
+                            toggle._start_BFS=false;
+                            window.clearInterval(toggle._BFS);
+                        }
+                    }
+            }
+
+            bfs_closure = _bfs();
+            toggle._BFS = window.setInterval(bfs_closure, 1000)
+        } else {
+            window.clearInterval(toggle._BFS);
+        }
+
+    }
+
+
     d3.json(map_url, generateMap);
+
+
 
 })();
