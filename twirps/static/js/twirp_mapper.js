@@ -125,39 +125,21 @@
 
     function redrawMap(){
         d3.selectAll('svg').remove();
-        drawMap();
-    }
-
-    function drawMap(){
         svg = d3.select("body").append("svg")
                 .attr("width", width)
                 .attr("height", height);
       
+        drawMap();
+    }
+
+    function drawMap(){
+
         force
             .nodes(allNodes)
             .links(allEdges)
             .start()
-
-        // draw nodes
-        node = svg.selectAll(".node")
-             .data(visibleNodes)
-           .enter().append("g")
-             .attr("class", "node")
-             .attr("id", function(d){return d.handle})
-             .call(force.drag)
-        node.append("circle")
-             .attr("clicked", function(d){return d.clicked})
-             .attr("fill", function(d){ return parties_map[d.party]})
-             .attr("party", function(d){return d.party})
-             .style("stroke", "white")
-             .on("click", clickNode)
-        node.append("text")
-             .text(function(d){return })
-             .attr("dx", -25)
-             .attr("dy", 5)
-             .style("stroke", "black")
-        node.append("title")
-             .text(function(d){return d.name})
+        
+        // draw order: links under arrows under nodes
 
         // draw links
         link = svg.selectAll(".link")
@@ -187,11 +169,33 @@
               .style("stroke", function(d){ return (d.contact=='mentions')?'grey':'black'})
               .style("stroke-opacity", 0.5)
 
+        // draw nodes
+        node = svg.selectAll(".node")
+             .data(visibleNodes)
+           .enter().append("g")
+             .attr("class", "node")
+             .attr("id", function(d){return d.handle})
+             .call(force.drag)
+        node.append("circle")
+             .attr("clicked", function(d){return d.clicked})
+             .attr("fill", function(d){ return parties_map[d.party]})
+             .attr("party", function(d){return d.party})
+             .style("stroke", "white")
+             .on("click", clickNode)
+        node.append("text")
+             .text(function(d){return })
+             .attr("dx", -25)
+             .attr("dy", 5)
+             .style("stroke", "black")
+             .on("click", clickNode)
+        node.append("title")
+             .text(function(d){return d.name})
+
         // draw customiseable features
         node.selectAll("circle")
-             .attr("r", function(d){return (d.clicked==1 && toggle.radius==true)?5+Math.sqrt(d.tweets/100):5;})
              .style("stroke-opacity", function(d){return (d.clicked==0)?0.5:1;})
              .style("stroke-width", function(d){return (d.clicked==0)?3:1.5;})
+             .attr("r", function(d){return (d.clicked==1 && toggle.radius==true)?5+Math.sqrt(d.tweets/100):5;})
         node.selectAll("text")
              .text(function(d){return (d.clicked==1 && toggle.radius==true)?d.name:undefined;})
     

@@ -44,7 +44,8 @@ def neo_to_d3map(neo_map):
             "party": neo_node.party,
             "constituency": neo_node.constituency,
             "offices": neo_node.offices,
-            "o_id": neo_node.archipelago_id
+            "o_id": neo_node.archipelago_id,
+            "clicked":0
         }
 
         retweeted, mentions, replies, by_proxy = {}, {}, {}, {}
