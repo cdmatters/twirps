@@ -32,8 +32,8 @@ def start_streamer():
 def stop_streamer():
     pass
 
-def start_bulk_historical_collection():
-    data_collection.get_bulk_tweets_main(100, 5, 1000)
+def start_bulk_historical_collection(max_tweets=100, tweet_buffer=5, tweet_resolution=1000):
+    data_collection.get_bulk_tweets_main(max_tweets, tweet_buffer, tweet_resolution)
     pass
 
 def stop_bulk_historical_collection():

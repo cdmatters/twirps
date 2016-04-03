@@ -109,8 +109,8 @@ def stop_streamer():
     cmds.stop_streamer()
 
 @manager.command
-def start_bulk_historical_collection():
-    cmds.start_bulk_historical_collection()
+def start_bulk_historical_collection(max_tweets, buffer_tweets, logger_resolution):
+    cmds.start_bulk_historical_collection(int(max_tweets), int(buffer_tweets), int(logger_resolution))
 
 @manager.command
 def stop_bulk_historical_collection():
