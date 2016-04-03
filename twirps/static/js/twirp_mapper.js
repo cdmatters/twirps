@@ -72,6 +72,19 @@
     }
 
     function requestMapToD3Map(backend_map){
+        function filterTweetType(nodeList, passes){
+            return nodeList.forEach( function(node, index, array){
+                for (relationshipType in node.relationships){
+                    if (relationshipType != passes){
+                        delete node.relationships[relationshipType]
+                    }
+                }
+                array[index]=node
+            })
+        }
+        filterTweetType(backend_map.nodes, 'no_by_proxy');
+        console.log(backend_map.nodes)
+        
         return { 
             visibleNodes:backend_map.nodes,
             visibleEdges:[]
@@ -366,6 +379,10 @@
     }
 
     d3.json(map_url, generateMap);
+
+    function cycleFocus(){
+
+    }
 
 
 })();
