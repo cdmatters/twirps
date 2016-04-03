@@ -184,11 +184,11 @@ class NeoDBHandler(object):
         for mp in mp_list:
             mp_node = graph.find_one('Twirp', 'archipelago_id', mp.OfficialId)
             if mp_node:
-                mp_node.properties["party"] = mp.Party if mp.Party!='Labour/Co-operative' else 'Labour'
+                mp_node.properties["party"] = unicode(mp.Party) if mp.Party!='Labour/Co-operative' else 'Labour'
                 mp_node.properties["twirp_type"] = 1
-                mp_node.properties["constituency"] = mp.Constituency
-                mp_node.properties["committees"] = [ office.Office for office in mp.Offices] if mp.Offices else ['']
-                LOGGER.info(mp_node)
+                mp_node.properties["constituency"] = unicode(mp.Constituency)
+                mp_node.properties["offices"] = [ office.Office for office in mp.Offices] if mp.Offices else ['']
+             
                 node_batch.append(mp_node)
 
         node_batch.push()
