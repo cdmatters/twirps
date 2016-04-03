@@ -41,34 +41,57 @@
     // not place in node array.
     var visibleNodesHandleMap = {};
 
-    var clickedNodes=[];
     var lastClickedNode;
+    var lastClickedNodeNeighbours = [];
 
     var toggle = {
         radius:false,
         highlight:false,
-        click_all:false
+        click_all:false,
+        cycle_focus:false,
+        cycle_count:0
     };
 
 
     function keyController(){
         var key = d3.event.keyCode;
+        console.log(key)
 
-        if  (key == 119 || key == 87 )
+        if  (key == 119 || key == 87 ) // (w|W)
         {
             toggle.radius = (!toggle.radius);
             radiusTransition();
         } 
-        else if (key == 115 || key == 83)
+        else if (key == 115 || key == 83) // (s|S)
         {
             toggle.highlight = (!toggle.highlight);
             highlightTransition();
         }
-        else if (key == 120 || key == 88)
+        else if (key == 120 || key == 88) // (x|X)
         {
             toggle.click_all = (!toggle.click_all);
             clickAllTransition();
+        } 
+        else if (key == 106 || key == 74) // (j|J)
+        {
+            toggle.cycle_focus = true;
+            cycleFocusTransition(1);
         }
+        else if (key == 108 || key == 76) // (l|L)
+        {
+            toggle.cycle_focus = true;
+            cycleFocusTransition(-1);
+        }
+        else if (key == 107 || key == 75) // (k|K)
+        {
+            toggle.cycle_focus = false;
+            cycleFocusTransition(0);
+        }
+        else if (key == 105 || key == 73) // (i|I)
+        {
+            clickFocusTransition();
+        }
+
     }
 
     function requestMapToD3Map(backend_map){
@@ -83,8 +106,7 @@
             })
         }
         filterTweetType(backend_map.nodes, 'no_by_proxy');
-        console.log(backend_map.nodes)
-        
+
         return { 
             visibleNodes:backend_map.nodes,
             visibleEdges:[]
@@ -199,26 +221,37 @@
         node.selectAll("text")
              .text(function(d){return (d.clicked==1 && toggle.radius==true)?d.name:undefined;})
     
-        highlightTransition();
     } 
+
+    function getLinkedNodes(clickedNode){
+        handleArray = []
+        visibleEdges.forEach(function(d){
+            if (d.source.handle==clickedNode.handle){
+                handleArray.push(d.target.handle)
+                }
+        });
+
+        return handleArray; 
+    }
 
     function clickNode(clickedNode){
 
-
-        lastClickedNode = clickedNode;
         
-        if (clickedNode.clicked==1){
-            highlightTransition();
-            return; 
-        } else {
+        if (clickedNode.clicked==0){
             clickedNode.clicked=1;
             addNodesBezierEdges(clickedNode);
             redrawMap();
         }
 
+        clearFocusTransition();
+        
+        lastClickedNode = clickedNode;
+        lastClickedNodeNeighbours = getLinkedNodes(clickedNode);
+        
+        highlightTransition();
+        cycleFocusTransition(0)
         //redraw() if "pop" toggle & just extend()
     }
-
 
     function addNodesBezierEdges(clickedNode){
 
@@ -289,7 +322,7 @@
         node.attr("transform", nodeTranslate);
     }
 
-   function radiusTransition(){
+    function radiusTransition(){
         if (toggle.radius==true){
             node.selectAll('circle')
                   .transition()
@@ -315,13 +348,8 @@
         }
 
         if (toggle.highlight==true){
-            var highlightedNodes = [lastClickedNode.handle];
-
-            visibleEdges.forEach(function(d){
-                if (d.source.handle==lastClickedNode.handle){
-                    highlightedNodes.push(d.target.handle)
-                }
-            });
+            var highlightedNodes = getLinkedNodes(lastClickedNode)
+            highlightedNodes.push(lastClickedNode.handle);
 
             node.selectAll("circle")
                   .transition()
@@ -343,7 +371,6 @@
         
         } else {
             node.selectAll("circle")
-                  .transition("circle")
                   .transition()
                   .duration(1000)
                   .attr('opacity', 1);
@@ -374,7 +401,10 @@
             }
 
             clickNodeTimer = clicker(0, nodes);
-
+            
+            // click first node instantly
+            clickNodeTimer();
+            
             toggle.clicker = window.setInterval(clickNodeTimer,1500);
         
         } else {
@@ -382,11 +412,63 @@
         }
     }
 
-    d3.json(map_url, generateMap);
 
-    function cycleFocus(){
+    function cycleFocusTransition(increment){
+        if (lastClickedNode==undefined){
+            // ERROR: No nodes to cycle through
+            return;
+        }
 
+        selectedHandle = lastClickedNodeNeighbours[toggle.cycle_count]
+
+        d3.select('#'+selectedHandle).select('circle')
+                //.transition()
+                .style("stroke", "white")
+                .style("stroke-opacity", function(d){return (d.clicked==0)?0.5:1;})
+                .style("stroke-width", function(d){return (d.clicked==0)?3:1.5;})
+
+        if (toggle.cycle_focus){
+
+            toggle.cycle_count += increment;
+            toggle.cycle_count = toggle.cycle_count % lastClickedNodeNeighbours.length 
+            
+            if (toggle.cycle_count<0){ 
+                toggle.cycle_count += lastClickedNodeNeighbours.length
+            }           
+
+            selectedHandle = lastClickedNodeNeighbours[toggle.cycle_count];
+            console.log(selectedHandle);
+
+            d3.select('#'+selectedHandle).select('circle')
+               // .transition()
+                .style("stroke", "black")
+                .style("stroke-opacity", 1)
+                .style("stroke-width", 1)
+        }
+        else
+        {
+            toggle.cycle_count = 0;
+        }
     }
 
+    function clearFocusTransition(){
+        selectedHandle = lastClickedNodeNeighbours[toggle.cycle_count]
+
+        d3.select('#'+selectedHandle).select('circle')
+                .style("stroke", "white")
+                .style("stroke-opacity", function(d){return (d.clicked==0)?0.5:1;})
+                .style("stroke-width", function(d){return (d.clicked==0)?3:1.5;})
+    }
+
+    function clickFocusTransition(forward){
+        if (toggle.cycle_focus){
+            selectedHandle = lastClickedNodeNeighbours[toggle.cycle_count]
+
+            n_index = visibleNodesHandleMap[selectedHandle]
+            clickNode(visibleNodes[n_index])
+        }
+    }
+
+    d3.json(map_url, generateMap);
 
 })();
