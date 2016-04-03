@@ -47,16 +47,39 @@ def neo_to_d3map(neo_map):
             "o_id": neo_node.archipelago_id
         }
 
-        retweeted= {}
-        mentions = {}
+        retweeted, mentions, replies, by_proxy = {}, {}, {}, {}
+        all_tweets, no_by_proxy = {}, {}
+
         for i, t in enumerate(neo_node.tweeted):
-            if neo_node.tweet_type[i] in {u'REPLY', u'MENTION',} :
+            if t in all_tweets.keys():
+                all_tweets[t] += neo_node.count[i]
+            else:
+                all_tweets[t] = neo_node.count[i]
+
+            if neo_node.tweet_type[i] == u'MENTION':
                 mentions.update({t:neo_node.count[i]})
-            elif neo_node.tweet_type[i] in {u'RETWEET', u'MENTION_BY_PROXY'}:
+            elif neo_node.tweet_type[i] == u'REPLY':
+                replies.update({t:neo_node.count[i]})
+            elif neo_node.tweet_type[i] == u'RETWEET':
                 retweeted.update({t:neo_node.count[i]})
+            
+            if neo_node.tweet_type[i] == u'MENTION_BY_PROXY':
+                by_proxy.update({t:neo_node.count[i]})
+            elif t in no_by_proxy.keys():
+                no_by_proxy[t] += neo_node.count[i]
+            else:
+                no_by_proxy[t] = neo_node.count[i]
 
 
-        twirp.update({"mentions":mentions, "retweets":retweeted})
+        twirp.update( {"relationships":{
+                                "mentions":mentions,
+                                "retweets":retweeted,
+                                "replies":replies,
+                                "by_proxy":by_proxy,
+                                "all_tweets":all_tweets,
+                                "no_by_proxy":no_by_proxy
+                            }
+        })
 
         nodes.append(twirp)
     return {"nodes": nodes}

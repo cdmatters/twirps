@@ -188,51 +188,6 @@
     function clickNode(clickedNode){
 
 
-        function addNodesBezierEdges(clickedNode){
-
-            for (contact in {mentions:'mentions', retweets:'retweets'}){
-
-                for ( targetHandle in clickedNode[contact]){
-                    
-                    //  ERROR: if node not plotted, ignore & continue
-                    if  (visibleNodesHandleMap[targetHandle] == undefined){
-                        console.log("Missing node: "+targetHandle+" for "+clickedNode.handle);
-                        continue;
-                    }
-                    
-                    var s_index = visibleNodesHandleMap[clickedNode.handle], 
-                        t_index = visibleNodesHandleMap[targetHandle];
-
-                    var s = visibleNodes[s_index],
-                        t = visibleNodes[t_index],
-                        i = {};
-
-                    var invisibleEdgeA = {source : s, target : i},
-                        invisibleEdgeB = {source : i, target : t};
-
-                    var visibleEdge = {
-                            source:s, inter:i, target:t,
-                            contact:contact, value:clickedNode[contact][targetHandle]
-                    }
-
-                    if (s.handle != t.handle){
-                        invisibleNodes.push(i);
-                        invisibleEdges.push(invisibleEdgeA, invisibleEdgeB);
-
-                        visibleEdges.push(visibleEdge);
-
-                        allNodes.push(i)
-                        allEdges.push(invisibleEdgeA, invisibleEdgeB, visibleEdge)
-
-                        // node.push(i)
-                        // link.push(visibleEdge)
-                    }
-                
-                }
-
-            }
-        }
-
         lastClickedNode = clickedNode;
         
         if (clickedNode.clicked==1){
@@ -247,6 +202,52 @@
         //redraw() if "pop" toggle & just extend()
     }
 
+
+    function addNodesBezierEdges(clickedNode){
+
+        for (contactType in clickedNode.relationships){
+            var contacts = clickedNode.relationships[contactType]
+
+            for ( targetHandle in contacts){
+                
+                //  ERROR: if node not plotted, ignore & continue
+                if  (visibleNodesHandleMap[targetHandle] == undefined){
+                    console.log("Missing node: "+targetHandle+" for "+clickedNode.handle);
+                    continue;
+                }
+                
+                var s_index = visibleNodesHandleMap[clickedNode.handle], 
+                    t_index = visibleNodesHandleMap[targetHandle];
+
+                var s = visibleNodes[s_index],
+                    t = visibleNodes[t_index],
+                    i = {};
+
+                var invisibleEdgeA = {source : s, target : i},
+                    invisibleEdgeB = {source : i, target : t};
+
+                var visibleEdge = {
+                        source:s, inter:i, target:t,
+                        contactType:contactType, value:contacts[targetHandle]
+                }
+
+                if (s.handle != t.handle){
+                    invisibleNodes.push(i);
+                    invisibleEdges.push(invisibleEdgeA, invisibleEdgeB);
+
+                    visibleEdges.push(visibleEdge);
+
+                    allNodes.push(i)
+                    allEdges.push(invisibleEdgeA, invisibleEdgeB, visibleEdge)
+
+                    // node.push(i)
+                    // link.push(visibleEdge)
+                }
+            
+            }
+
+        }
+    }
 
     function moveItems(){
 
