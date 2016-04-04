@@ -116,7 +116,8 @@ class NeoDBHandler(object):
 
     def get_full_map(self, min_tweets=0):
         cypher_request = u''' 
-            MATCH (a)-[r]->(b) 
+            MATCH (a)
+            OPTIONAL MATCH (a)-[r]->(b) 
             WHERE r.count >= {min_tweets} 
                 AND a <> b
             RETURN a.name AS name, 
@@ -140,9 +141,36 @@ class NeoDBHandler(object):
         graph = Graph(self.n4_database)
         return graph.cypher.execute(cypher_request, request_input)
 
-    def get_party_nodes(self, partyA, partyB):
+    def get_party_nodes(self, partyA):
         cypher_request = u''' 
-            MATCH (a)-[r]->(b) 
+            MATCH (a {party:{node_partyA}})
+            OPTIONAL MATCH (a)-[r]->(b)
+            WHERE a.party = {node_partyA}
+                AND a <> b
+            RETURN a.name AS name, 
+                   a.handle AS handle,
+                   a.party AS party,
+                   a.constituency AS constituency,
+                   a.offices AS offices,
+                   a.tweet_count AS tweets,
+                   a.friends_count AS friends, 
+                   a.followers_count AS followers,
+                   a.archipelago_id AS archipelago_id,
+                    collect(b.handle) as tweeted, 
+                    collect(r.count) as count,
+                    collect(type(r)) as tweet_type,
+                    collect(r.url) as recent_url,
+                    collect(r.recent) as recent
+                '''
+
+        request_input = {'node_partyA':partyA}
+
+        graph = Graph(self.n4_database)
+        return graph.cypher.execute(cypher_request, request_input)
+
+    def get_cross_party_nodes(self, partyA, partyB):
+        cypher_request = u''' 
+            MATCH (a)-[r]->(b)
             WHERE a.party = {node_partyA}
                 AND b.party = {node_partyB}  
                 AND a <> b
