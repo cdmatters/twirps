@@ -31,7 +31,7 @@ class NeoDBHandler(object):
         graph_schema.drop_index("Twirp", "user_id")
         LOGGER.debug("Deleted all indices at: %s" % self.n4_database )
 
-    def add_Twirp_to_database(self, twirp):
+    def add_Twirp_to_database(self, twirp, is_test_mode=False):
         t = twirp
         twirp_node = Node(
             "Twirp",
@@ -50,6 +50,9 @@ class NeoDBHandler(object):
                 archipelago_id=t.archipelago_id,
                 subscribed=t.subscribed
             )
+
+        if is_test_mode:
+            twirp_node.labels.add("TEST")
 
         graph = Graph(self.n4_database)
         graph.create(twirp_node)

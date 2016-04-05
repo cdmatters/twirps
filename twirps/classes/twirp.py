@@ -23,6 +23,7 @@ class Twirp(object):
         self.twirps_type = 0
         self.subscribed = False
         self.geo = False
+        self.twirps_type = -1
 
         if source=='twitter':
             self.from_twitter(twitter_user)
