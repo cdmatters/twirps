@@ -35,33 +35,40 @@ class TestNeoDBHandler(unittest.TestCase):
                     "favourite_hashtag":"",
                     "hashtag_count":i*2,
                     "archipelago_id":i*1,
-                    "subscribed": True
+                    "subscribed": True,
+                    "constituency":"CB"+str(i),
+                    "offices":["office"+str(i), "sedge steward"],
             })
 
-        self.node_list[0].properties.update({"username":"MickeyBEyes", "name":"Michael Blue Eyes", "handle":"MBEyes", "favourite_hashtag":"#roth" })
-        self.node_list[1].properties.update({"username":"LittleRichy", "name":"Little Richard", "handle":"LRichy", "favourite_hashtag":"#rawls" })
-        self.node_list[2].properties.update({"username":"TheBoyWonder", "name":"The Boy Wonder", "handle":"tBW", "favourite_hashtag":"#richyfeynman" })
-        self.node_list[3].properties.update({"username":"TheKendawg", "name":"Kendog Lamar", "handle":"Kdog", "favourite_hashtag":"#kanye" })
-        self.node_list[4].properties.update({"username":"TinyHands", "name":"Tiny Hands", "handle":"tinyhands", "favourite_hashtag":"#ihavetinyhands" })
+        self.node_list[0].properties.update({"username":"MickeyBEyes", "name":"Michael Blue Eyes", "handle":"MBEyes", "favourite_hashtag":"#roth", "party":"DC" })
+        self.node_list[1].properties.update({"username":"LittleRichy", "name":"Little Richard", "handle":"LRichy", "favourite_hashtag":"#rawls", "party":"DC" })
+        self.node_list[2].properties.update({"username":"TheBoyWonder", "name":"The Boy Wonder", "handle":"tBW", "favourite_hashtag":"#richyfeynman", "party":"Marvel" })
+        self.node_list[3].properties.update({"username":"TheKendawg", "name":"Kendog Lamar", "handle":"Kdog", "favourite_hashtag":"#kanye", "party":"Marvel"})
+        self.node_list[4].properties.update({"username":"TinyHands", "name":"Tiny Hands", "handle":"tinyhands", "favourite_hashtag":"#ihavetinyhands", "party":"Beano" })
 
         # Relationships
         # --------------
-        # mbe -[MENTIONS]> lrich
+        # mbe -[MENTION]> lrich
         # mbe -[REPLIES]> ken 
         # lrich -[REPLIES]> mbe
-        # tbw  -[RETWEETS]> lrich
+        # tbw -[RETWEETS]> lrich
+        # tbw -[MENTIONS_BY_PROXY]> mbe
         # ken -!->
         # th  -!->
 
-        mbe1 = Relationship(self.node_list[0], "MENTIONS" ,self.node_list[1])
+        mbe1 = Relationship(self.node_list[0], "MENTION" ,self.node_list[1])
         mbe2 = Relationship(self.node_list[0], "REPLIES" ,self.node_list[3])
         lrich = Relationship(self.node_list[1], "REPLIES", self.node_list[0])
-        tbw = Relationship(self.node_list[2], "REPLIES", self.node_list[1])
+        tbw = Relationship(self.node_list[2], "RETWEETS", self.node_list[1])
+        tbw2 = Relationship(self.node_list[2], "MENTION_BY_PROXY", self.node_list[0])
 
-        mbe1.properties.update({"count":5, "recent":1000000, "date":"today", "url":"this_url"})
-        mbe2.properties.update({"count":10, "recent":2000000, "date":"tommorow", "url":"that_url"})
-        lrich.properties.update({"count":15, "recent":3000000, "date":"yesterday", "url":"a_url"})
-        tbw.properties.update({"count":20, "recent":4000000, "date":"thismorning", "url":"much_url"})
+
+        mbe1.properties.update({"count":5, "recent":"1000000", "date":"today", "url":"this_url"})
+        mbe2.properties.update({"count":10, "recent":"2000000", "date":"tommorow", "url":"that_url"})
+        lrich.properties.update({"count":15, "recent":"3000000", "date":"yesterday", "url":"a_url"})
+        tbw.properties.update({"count":20, "recent":"4000000", "date":"thismorning", "url":"much_url"})
+        tbw2.properties.update({"count":15, "recent":"3000000", "date":"yesterday", "url":"a_url"})
+
 
         for node in self.node_list:
             self.graph.create(node)
@@ -70,6 +77,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.graph.create(mbe2)
         self.graph.create(lrich)
         self.graph.create(tbw)
+        self.graph.create(tbw2)
 
         self.graph.push()
 
@@ -89,7 +97,55 @@ class TestNeoDBHandler(unittest.TestCase):
         ########################################################################
 
     def test_get_party_nodes(self):
-        pass
+        neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
+
+        test_reference = [
+           {
+                "name":"Kendog Lamar", 
+                "handle":"Kdog", 
+                "party":"Marvel",
+                "constituency":"CB3",
+                "offices":["office3", "sedge steward"],
+
+                "tweets": 30,
+                "friends": 150, 
+                "followers": 300,
+                "archipelago_id": 3,
+
+                "tweeted":[],
+                "count":[],
+                "tweet_type":[],
+                "recent_url":[],
+                "recent":[]
+           },
+           {
+                "name":"The Boy Wonder", 
+                "handle":"tBW", 
+                "party":"Marvel",
+                "constituency":"CB2",
+                "offices":["office2", "sedge steward"],
+
+                "tweets": 20,
+                "friends": 100, 
+                "followers": 200,
+                "archipelago_id": 2,
+
+                "tweeted":['MBEyes','LRichy'],
+                "count":[1,1],
+                "tweet_type":['MENTION_BY_PROXY','RETWEETS'],
+                "recent_url":['a_url', 'much_url'],
+                "recent":['300000','400000']
+           }
+        ]
+
+
+        results = [ _ for _ in neo_db_handler.get_party_nodes('Marvel') ]
+
+        self.assertEqual(len(results), 2)
+
+        for i in range(2):
+            for key in test_reference[i].keys():
+                self.assertEqual(results[i][key], test_reference[i][key] )
 
     def test_get_cross_party_nodes(self):
         pass
