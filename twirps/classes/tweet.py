@@ -68,7 +68,7 @@ class Tweet(object):
     def __str__(self):
         return u'Tweet: %d %s || RC: %d || FC: %d || RT: %s || @ %s || # %s || Url %s\nContent: %s' %(
             self.tweet_id, self.handle, self.retweet_count, self.favourite_count,
-            self.retweet, len(self.mentions), len(self.hashtags), len(self.urls),
+            self.is_retweet, len(self.mentions), len(self.hashtags), len(self.urls),
             unicode(self.content) )
 
     def from_database(self, tweet):

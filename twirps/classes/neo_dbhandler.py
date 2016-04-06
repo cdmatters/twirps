@@ -11,7 +11,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 class NeoDBHandler(object):
-    def __init__(self, n4_database = os.getenv('N4_DATABASE_URL',None)):
+    def __init__(self, n4_database = os.getenv('N4_DATABASE_URL', None) ):
         self.n4_database = n4_database
 
     def test_graph(self):
@@ -78,12 +78,13 @@ class NeoDBHandler(object):
         requests = []
         
         _proxy="_BY_PROXY" if tweet.is_retweet else ""
+        mention_tweet_id = tweet.tweet_id if not tweet.is_retweet else tweet.retweet_status_id
 
         mentions_request_input = [{ 
             "twirp" : tweet.user_id,
             "tweeted": mentioned[0],
             "type": "MENTION"+_proxy,
-            "tweet_id": str(tweet.tweet_id),
+            "tweet_id": str(mention_tweet_id),
             "date":tweet.date,
             "url": tweet.website_link
             } for mentioned in tweet.mentions if not tweet.is_reply or mentioned[0]!=tweet.in_reply_to_user[0]]
@@ -93,7 +94,7 @@ class NeoDBHandler(object):
             "twirp" : tweet.user_id,
             "tweeted": tweet.retweeted_user[0],
             "type": "RETWEET",
-            "tweet_id": str(tweet.tweet_id),
+            "tweet_id": str(tweet.retweet_status_id),
             "date":tweet.date,
             "url": tweet.website_link
             }] if tweet.is_retweet else []

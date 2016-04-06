@@ -1,4 +1,4 @@
-from twirps.classes  import Twirp, TDBHandler, NeoDBHandler, PgDBHandler
+from twirps.classes  import Twirp, Tweet, TDBHandler, NeoDBHandler, PgDBHandler
 
 import datetime
 
@@ -57,6 +57,8 @@ class TestNeoDBHandler(unittest.TestCase):
         lrich = Relationship(self.node_list[1], "REPLIES", self.node_list[0])
         tbw = Relationship(self.node_list[2], "REPLIES", self.node_list[1])
 
+
+
         mbe1.properties.update({"count":5, "recent":1000000, "date":"today", "url":"this_url"})
         mbe2.properties.update({"count":10, "recent":2000000, "date":"tommorow", "url":"that_url"})
         lrich.properties.update({"count":15, "recent":3000000, "date":"yesterday", "url":"a_url"})
@@ -79,9 +81,7 @@ class TestNeoDBHandler(unittest.TestCase):
         empty_list = [ _ for _ in self.graph.find('TEST') ]
         self.assertEqual( empty_list, [])
         
-
-
-    def test_add_twirp_to_db(self):
+    def test_add_Twirp_to_database(self):
         neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
 
         # Test Data
@@ -111,6 +111,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(len(results), 1)
         node = results[0][0]
 
+        # Interrogate Node
         self.assertEqual(node.get_labels(), [u'TEST', u'Twirp', u'Other'])
 
         self.assertEqual(node["user_id"],314150000000)
@@ -126,6 +127,186 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(node["hashtag_count"],70)
         self.assertEqual(node["archipelago_id"],80 )
         self.assertEqual(node["subscribed"],False)
+
+
+    def test_add_Tweet_to_database__mention(self):
+        neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
+
+        # Test Data
+        new_tweet = Tweet(None, 'test')
+
+        new_tweet.tweet_id = 1
+        new_tweet.user_id = 100000
+        new_tweet.handle = 'LRichy'
+        new_tweet.mentions = [(400000, 'tinyhands')] 
+        new_tweet.content = 'Generic tweet @tinyhands'  # not stored here
+        
+        new_tweet.is_retweet = False
+        new_tweet.retweeted_user = None
+        new_tweet.retweet_status_id = 0
+        
+        new_tweet.is_reply = False
+        new_tweet.in_reply_to_user = None
+        new_tweet.in_reply_to_status_id = None
+        
+        new_tweet.retweet_count = 3           # not stored here
+        new_tweet.favourite_count = 4         # not stored here
+        new_tweet.hashtags = ['clothes']      # not stored here
+        new_tweet.date = 'a date string'
+        new_tweet.urls = ['https://url.com']  # not stored here
+        new_tweet.website_link = 'twitter.com/status/madeupstatus1'
+
+        # Add to database
+        neo_db_handler.add_Tweet_to_database(new_tweet)
+
+        # Preliminary check 
+        results = [ _ for _ in self.graph.cypher.execute("MATCH (a {handle:'LRichy'})-[r]->(b {handle:'tinyhands'}) RETURN r")]        
+        self.assertEqual(len(results), 1)
+        relationship =  results[0][0]
+
+        # In depth check
+        self.assertEqual(relationship.type, u'MENTION')
+
+        self.assertEqual(relationship["count"], 1)
+        self.assertEqual(relationship["recent"],'1')
+        self.assertEqual(relationship["date"],'a date string')
+        self.assertEqual(relationship["url"],"twitter.com/status/madeupstatus1")
+
+    def test_add_Tweet_to_database__reply(self):
+        neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
+
+        # Test Data
+        new_tweet = Tweet(None, 'test')
+
+        new_tweet.tweet_id = 1
+        new_tweet.user_id = 100000
+        new_tweet.handle = 'LRichy'
+        new_tweet.mentions = [(400000, 'tinyhands'), (200000, 'tBW')] 
+        new_tweet.content = 'Generic tweet @tinyhands @tBW'  # not stored here      
+        
+        new_tweet.is_retweet = False
+        new_tweet.retweeted_user = None
+        new_tweet.retweet_status_id = 0
+        
+        new_tweet.is_reply = True
+        new_tweet.in_reply_to_user = (200000, 'tBW')
+        new_tweet.in_reply_to_status_id = 2
+        
+        new_tweet.retweet_count = 3              # not stored here   
+        new_tweet.favourite_count = 4            # not stored here
+        new_tweet.hashtags = ['clothes']         # not stored here
+        new_tweet.date = 'a date string'
+        new_tweet.urls = ['https://url.com/']    # not stored here
+        new_tweet.website_link = 'twitter.com/status/madeupstatus1'
+
+        # Add to database
+        neo_db_handler.add_Tweet_to_database(new_tweet) 
+
+        # Preliminary check
+        results = [ _ for _ in self.graph.cypher.execute(
+            "MATCH (a {handle:'LRichy'})-[r]->(b) WHERE b.handle<>'MBEyes' RETURN r, b.name ORDER BY b.name")]        
+        
+        self.assertEqual(len(results), 2)
+
+        # In depth check
+        self.assertEqual(results[0][0].type, u'REPLY')
+        self.assertEqual(results[0][1], 'The Boy Wonder')
+
+        self.assertEqual(results[0][0]["count"], 1)
+        self.assertEqual(results[0][0]["recent"],'2')  # replied tweet no
+        self.assertEqual(results[0][0]["date"],'a date string')
+        self.assertEqual(results[0][0]["url"],"twitter.com/status/madeupstatus1")
+
+        self.assertEqual(results[1][0].type, u'MENTION')
+        self.assertEqual(results[1][1], 'Tiny Hands')
+
+        self.assertEqual(results[1][0]["count"], 1)
+        self.assertEqual(results[1][0]["recent"],'1')
+        self.assertEqual(results[1][0]["date"],'a date string')
+        self.assertEqual(results[1][0]["url"],"twitter.com/status/madeupstatus1")
+
+
+    def test_add_Tweet_to_database__retweet(self):
+        neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
+
+        # Test Data
+        new_tweet = Tweet(None, 'test')
+
+        new_tweet.tweet_id = 1
+        new_tweet.user_id = 400000
+        new_tweet.handle = 'tinyhands'
+        new_tweet.mentions = [(300000, 'Kdog')] 
+        new_tweet.content = 'Generic tweet @Kdog'  # not stored here
+
+        new_tweet.is_retweet = True
+        new_tweet.retweeted_user = (0, 'MBEyes')
+        new_tweet.retweet_status_id = 2
+
+        new_tweet.is_reply = False
+        new_tweet.in_reply_to_user = None
+        new_tweet.in_reply_to_status_id = None
+        
+        new_tweet.retweet_count = 3                # not stored here
+        new_tweet.favourite_count = 4              # not stored here
+        new_tweet.hashtags = []                    # not stored here
+        new_tweet.date = 'a date string'
+        new_tweet.urls = ['https://url.com/']      # not stored here
+        new_tweet.website_link = 'twitter.com/status/madeupstatus1'
+
+        # Add to database
+        neo_db_handler.add_Tweet_to_database(new_tweet) 
+
+        # Preliminary check
+        results = [ _ for _ in self.graph.cypher.execute(
+            "MATCH (a {handle:'tinyhands'})-[r]->(b) RETURN r, b.name ORDER BY b.name")]        
+        
+        self.assertEqual(len(results), 2)
+
+        # In depth check
+        self.assertEqual(results[0][0].type, u'MENTION_BY_PROXY')
+        self.assertEqual(results[0][1], 'Kendog Lamar')
+
+        self.assertEqual(results[0][0]["count"], 1)
+        self.assertEqual(results[0][0]["recent"],'2')  # replied tweet no
+        self.assertEqual(results[0][0]["date"],'a date string')
+        self.assertEqual(results[0][0]["url"],"twitter.com/status/madeupstatus1")
+
+        self.assertEqual(results[1][0].type, u'RETWEET')
+        self.assertEqual(results[1][1], 'Michael Blue Eyes')
+
+        self.assertEqual(results[1][0]["count"], 1)
+        self.assertEqual(results[1][0]["recent"],'2')
+        self.assertEqual(results[1][0]["date"],'a date string')
+        self.assertEqual(results[1][0]["url"],"twitter.com/status/madeupstatus1")
+
+    def test_add_Tweet_to_database__multi_relationships(self):
+        pass
+
+    def test_get_party_nodes(self):
+        pass
+
+    def test_get_cross_party_nodes(self):
+        pass
+
+
+
+
+
+
+
+        
+        
+
+
+
+
+
+
+        
+        
+
+
+
 
         
         
