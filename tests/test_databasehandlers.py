@@ -19,7 +19,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.node_list = [Node("TEST", test_id=i) for i in xrange(5)]
         
         # Nodes
-        
+        # -----
         for i, node in enumerate(self.node_list):
             node.labels.add("Twirp")
             node.properties.update({                
@@ -45,6 +45,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.node_list[4].properties.update({"username":"TinyHands", "name":"Tiny Hands", "handle":"tinyhands", "favourite_hashtag":"#ihavetinyhands" })
 
         # Relationships
+        # --------------
         # mbe -[MENTIONS]> lrich
         # mbe -[REPLIES]> ken 
         # lrich -[REPLIES]> mbe
@@ -56,8 +57,6 @@ class TestNeoDBHandler(unittest.TestCase):
         mbe2 = Relationship(self.node_list[0], "REPLIES" ,self.node_list[3])
         lrich = Relationship(self.node_list[1], "REPLIES", self.node_list[0])
         tbw = Relationship(self.node_list[2], "REPLIES", self.node_list[1])
-
-
 
         mbe1.properties.update({"count":5, "recent":1000000, "date":"today", "url":"this_url"})
         mbe2.properties.update({"count":10, "recent":2000000, "date":"tommorow", "url":"that_url"})
@@ -75,11 +74,31 @@ class TestNeoDBHandler(unittest.TestCase):
         self.graph.push()
 
     def tearDown(self):
+        
         # remove test items
         self.graph.cypher.execute("MATCH (n:TEST) DETACH DELETE n")
 
         empty_list = [ _ for _ in self.graph.find('TEST') ]
         self.assertEqual( empty_list, [])
+
+
+
+
+        ########################################################################
+        #                          CYPHER QUERIES                              #
+        ########################################################################
+
+    def test_get_party_nodes(self):
+        pass
+
+    def test_get_cross_party_nodes(self):
+        pass
+
+
+
+        ########################################################################
+        #                          ADDING TO DB                                #
+        ########################################################################
         
     def test_add_Twirp_to_database(self):
         neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
@@ -102,12 +121,12 @@ class TestNeoDBHandler(unittest.TestCase):
         new_twirp.subscribed = False
         new_twirp.geo = False
 
-        # Add to database
-
-        neo_db_handler.add_Twirp_to_database(new_twirp, is_test_mode=True) # ensure TEST label applie
+        # Add to database (with 'TEST' label)
+        neo_db_handler.add_Twirp_to_database(new_twirp, is_test_mode=True)
 
         # Check results
-        results = [ _ for _ in self.graph.cypher.execute("MATCH (n {handle:'bilbo'}) RETURN n")]        
+        results = [ _ for _ in self.graph.cypher.execute(
+                                    "MATCH (n {handle:'bilbo'}) RETURN n")]        
         self.assertEqual(len(results), 1)
         node = results[0][0]
 
@@ -160,7 +179,9 @@ class TestNeoDBHandler(unittest.TestCase):
         neo_db_handler.add_Tweet_to_database(new_tweet)
 
         # Preliminary check 
-        results = [ _ for _ in self.graph.cypher.execute("MATCH (a {handle:'LRichy'})-[r]->(b {handle:'tinyhands'}) RETURN r")]        
+        results = [ _ for _ in self.graph.cypher.execute(
+                    """MATCH (a {handle:'LRichy'})-[r]->(b {handle:'tinyhands'})
+                       RETURN r""")]        
         self.assertEqual(len(results), 1)
         relationship =  results[0][0]
 
@@ -204,7 +225,9 @@ class TestNeoDBHandler(unittest.TestCase):
 
         # Preliminary check
         results = [ _ for _ in self.graph.cypher.execute(
-            "MATCH (a {handle:'LRichy'})-[r]->(b) WHERE b.handle<>'MBEyes' RETURN r, b.name ORDER BY b.name")]        
+                                """MATCH (a {handle:'LRichy'})-[r]->(b) 
+                                   WHERE b.handle<>'MBEyes' 
+                                   RETURN r, b.name ORDER BY b.name""")]        
         
         self.assertEqual(len(results), 2)
 
@@ -258,8 +281,9 @@ class TestNeoDBHandler(unittest.TestCase):
 
         # Preliminary check
         results = [ _ for _ in self.graph.cypher.execute(
-            "MATCH (a {handle:'tinyhands'})-[r]->(b) RETURN r, b.name ORDER BY b.name")]        
-        
+                                    """MATCH (a {handle:'tinyhands'})-[r]->(b) 
+                                    RETURN r, b.name ORDER BY b.name""")]        
+
         self.assertEqual(len(results), 2)
 
         # In depth check
@@ -267,7 +291,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[0][1], 'Kendog Lamar')
 
         self.assertEqual(results[0][0]["count"], 1)
-        self.assertEqual(results[0][0]["recent"],'2')  # replied tweet no
+        self.assertEqual(results[0][0]["recent"],'2')  # the retweet
         self.assertEqual(results[0][0]["date"],'a date string')
         self.assertEqual(results[0][0]["url"],"twitter.com/status/madeupstatus1")
 
@@ -278,16 +302,6 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[1][0]["recent"],'2')
         self.assertEqual(results[1][0]["date"],'a date string')
         self.assertEqual(results[1][0]["url"],"twitter.com/status/madeupstatus1")
-
-    def test_add_Tweet_to_database__multi_relationships(self):
-        pass
-
-    def test_get_party_nodes(self):
-        pass
-
-    def test_get_cross_party_nodes(self):
-        pass
-
 
 
 
