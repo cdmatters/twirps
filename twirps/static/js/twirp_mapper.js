@@ -288,8 +288,10 @@
 
                 var visibleEdge = {
                         source:s, inter:i, target:t,
-                        contactType:contactType, value:contacts[targetHandle]
+                        contactType:contactType, value:contacts[targetHandle][0], url:contacts[targetHandle][1] 
                 }
+                
+                console.log(targetHandle +': '+visibleEdge.url)
 
                 if (s.handle != t.handle){
                     invisibleNodes.push(i);

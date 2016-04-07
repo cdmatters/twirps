@@ -14,7 +14,7 @@ def return_full_map(min_tweets=0, retweets_only=False, mentions_only=False):
 
 def return_party_nodes(party):
     db_handler = TDBHandler()
-    result = db_handler.get_party_nodes(party) 
+    result = db_handler.get_party_nodes(party)
 
     return neo_to_d3map(result)
 
@@ -52,24 +52,30 @@ def neo_to_d3map(neo_map):
         all_tweets, no_by_proxy = {}, {}
 
         for i, t in enumerate(neo_node.tweeted):
+            url = neo_node.recent_url[i]
+            count = neo_node.count[i]
+
             if t in all_tweets.keys():
-                all_tweets[t] += neo_node.count[i]
+                all_tweets[t][0] += count
+                all_tweets[t][1] = url
             else:
-                all_tweets[t] = neo_node.count[i]
+                all_tweets[t] = [count, url]
 
             if neo_node.tweet_type[i] == u'MENTION':
-                mentions.update({t:neo_node.count[i]})
+                mentions.update({t:[count, url]})
             elif neo_node.tweet_type[i] == u'REPLY':
-                replies.update({t:neo_node.count[i]})
+                replies.update({t:[count, url]})
             elif neo_node.tweet_type[i] == u'RETWEET':
-                retweeted.update({t:neo_node.count[i]})
+                retweeted.update({t:[count, url]})
             
             if neo_node.tweet_type[i] == u'MENTION_BY_PROXY':
-                by_proxy.update({t:neo_node.count[i]})
+                by_proxy.update({t:[count, url]})
             elif t in no_by_proxy.keys():
-                no_by_proxy[t] += neo_node.count[i]
+                no_by_proxy[t][0] += count
+                no_by_proxy[t][1] = url
             else:
-                no_by_proxy[t] = neo_node.count[i]
+                no_by_proxy[t] = [count, url]
+
 
 
         twirp.update( {"relationships":{
