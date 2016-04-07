@@ -67,7 +67,7 @@ class TestNeoDBHandler(unittest.TestCase):
         mbe2.properties.update({"count":10, "recent":"2000000", "date":"tommorow", "url":"that_url"})
         lrich.properties.update({"count":15, "recent":"3000000", "date":"yesterday", "url":"a_url"})
         tbw.properties.update({"count":20, "recent":"4000000", "date":"thismorning", "url":"much_url"})
-        tbw2.properties.update({"count":15, "recent":"3000000", "date":"yesterday", "url":"a_url"})
+        tbw2.properties.update({"count":1, "recent":"3000000", "date":"yesterday", "url":"a_url"})
 
 
         for node in self.node_list:
@@ -131,16 +131,17 @@ class TestNeoDBHandler(unittest.TestCase):
                 "archipelago_id": 2,
 
                 "tweeted":['MBEyes','LRichy'],
-                "count":[1,1],
+                "count":[1,20],
                 "tweet_type":['MENTION_BY_PROXY','RETWEETS'],
                 "recent_url":['a_url', 'much_url'],
-                "recent":['300000','400000']
+                "recent":['3000000','4000000']
            }
         ]
 
-
+        # Make request
         results = [ _ for _ in neo_db_handler.get_party_nodes('Marvel') ]
 
+        # Test against reference
         self.assertEqual(len(results), 2)
 
         for i in range(2):
@@ -148,12 +149,42 @@ class TestNeoDBHandler(unittest.TestCase):
                 self.assertEqual(results[i][key], test_reference[i][key] )
 
     def test_get_cross_party_nodes(self):
-        pass
+        neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
+
+        test_reference = [
+           {
+                "name":"The Boy Wonder", 
+                "handle":"tBW", 
+                "party":"Marvel",
+                "constituency":"CB2",
+                "offices":["office2", "sedge steward"],
+
+                "tweets": 20,
+                "friends": 100, 
+                "followers": 200,
+                "archipelago_id": 2,
+
+                "tweeted":['MBEyes','LRichy'],
+                "count":[1,20],
+                "tweet_type":['MENTION_BY_PROXY','RETWEETS'],
+                "recent_url":['a_url', 'much_url'],
+                "recent":['3000000','4000000']
+           }
+        ]
+
+        results = [ _ for _ in neo_db_handler.get_cross_party_nodes('Marvel', 'DC') ]
+
+        # Test against reference
+        self.assertEqual(len(results), 1)
+
+        for i in range(1):
+            for key in test_reference[i].keys():
+                self.assertEqual(results[i][key], test_reference[i][key] )
 
 
 
         ########################################################################
-        #                          ADDING TO DB                                #
+        #               ADDING TO DB   (TWIRPS CLASSES)->(PY2NEO OBJS)         #
         ########################################################################
         
     def test_add_Twirp_to_database(self):
