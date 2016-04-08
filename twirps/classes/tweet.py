@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -68,10 +70,37 @@ class Tweet(object):
     def __str__(self):
         return u'Tweet: %d %s || RC: %d || FC: %d || RT: %s || @ %s || # %s || Url %s\nContent: %s' %(
             self.tweet_id, self.handle, self.retweet_count, self.favourite_count,
-            self.is_retweet, len(self.mentions), len(self.hashtags), len(self.urls),
+            self.retweeted_user[1] if self.is_retweet else '', len(self.mentions), len(self.hashtags), len(self.urls),
             unicode(self.content) )
 
-    def from_database(self, tweet):
-        pass
+    def from_database(self, tweet_tuple): 
+
+        self.tweet_id =  tweet_tuple[0]
+        self.user_id = tweet_tuple[1]
+        self.handle = tweet_tuple[2].decode('utf-8')
+
+        self.is_retweet = tweet_tuple[3]
+        self.is_reply = tweet_tuple[4]
+
+        self.content = tweet_tuple[5].decode('utf-8')
+        self.favourite_count = tweet_tuple[6]
+        self.retweet_count = tweet_tuple[7]
+
+        self.date =tweet_tuple[8]
+
+        self.from_database_add_entities(tweet_tuple)
+
+    def from_database_add_entities(self, tweet_tuple):
+        if tweet_tuple[9] == 'hashtag':
+            self.hashtags.append( tweet_tuple[10].decode('utf-8') )
+        elif tweet_tuple[9] == 'url':
+            self.urls.append( tweet_tuple[10] )
+        elif tweet_tuple[9] == 'mention':
+            self.mentions.append( (tweet_tuple[11],tweet_tuple[10].decode('utf-8')) )
+        elif tweet_tuple[9] == 'retweet':
+            self.retweeted_user =  (tweet_tuple[11],tweet_tuple[10].decode('utf-8') )
+        elif tweet_tuple[9] == 'reply':
+            self.in_reply_to_user = (tweet_tuple[11],tweet_tuple[10].decode('utf-8') )
+
 
     

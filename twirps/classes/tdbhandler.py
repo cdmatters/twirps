@@ -5,6 +5,8 @@ import psycopg2
 from neo_dbhandler import NeoDBHandler
 from pg_dbhandler import PgDBHandler
 
+from twirps.classes import Tweet
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -72,4 +74,20 @@ class TDBHandler(object):
         second_set = [n for n in self.neo.get_cross_party_nodes(partyB, partyA)]
         return first_set + second_set
 
+    def resync_tweets_pg_to_neo(self):
+        # self.neo.move_tweets_to_archive()
+        
+        last_tweet_id = None
+        current_tweet = None
+        for record in self.pg.get_all_tweets():
+           
+            if record[0] != last_tweet_id: 
+                # if current tweet: self.neo.add_tweet_to_db
+                LOGGER.info(current_tweet)
+                current_tweet = Tweet(record, 'database')
+            else:
+                current_tweet.from_database_add_entities(record)
+
+            last_tweet_id = record[0]
+        # self.neo.delete_archive
 

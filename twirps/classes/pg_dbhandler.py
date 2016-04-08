@@ -172,6 +172,28 @@ class PgDBHandler(object):
                 cur.execute(add_entity_sql, (T.tweet_id, T.user_id, 'reply', T.in_reply_to_user[1], T.in_reply_to_user[0]))
 
 
+    def get_all_tweets(self):
+        request_sql = '''   SELECT    
+                                t.TweetID,
+                                t.UserID, t.UserHandle,
+                                t.Retweet, t.Reply,
+                                t.Content,
+                                t.FavouriteCount, t.RetweetCount,
+                                t.CreatedDate,
+                                e.EntityType, e.Entity, e.EntityToUserID
+                            FROM TweetData as t 
+                            LEFT OUTER JOIN TweetEntities as e
+                            ON t.TweetID = e.TweetID
+                            ORDER BY t.TweetID'''
+
+
+        with psycopg2.connect(self.pg_database) as connection:
+            cur = connection.cursor()
+            cur.execute(request_sql)
+
+            return cur.fetchall()
+
+
     def get_oldest_tweets_stored_from_mps(self):
         with psycopg2.connect(self.pg_database) as connection:
             cur = connection.cursor()

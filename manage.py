@@ -176,6 +176,10 @@ def subscribe_all_twirps_to_twitter():
 def sync_neo_with_arch():
     cmds.sync_neo_with_arch()
 
+@manager.command
+def resync_tweets_pg_to_neo():
+    cmds.resync_tweets_pg_to_neo()
+
 set_up_logging(app)
 if __name__ == "__main__":
     

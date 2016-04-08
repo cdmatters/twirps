@@ -90,6 +90,10 @@ def subscribe_all_twirps_to_twitter():
 def sync_neo_with_arch():
     data_collection.sync_neo_with_arch()
 
+def resync_tweets_pg_to_neo():
+    db_handler = TDBHandler()
+    db_handler.resync_tweets_pg_to_neo()
+
 
 
 
