@@ -147,8 +147,61 @@ class TestNeoDBHandler(unittest.TestCase):
         for i in range(2):
             for key in test_reference[i].keys():
                 self.assertEqual(results[i][key], test_reference[i][key] )
+    
+    def test_get_party_nodes_min_tweet(self):
+        neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
 
-    def test_get_cross_party_nodes(self):
+        test_reference = [
+           {
+                "name":"Kendog Lamar", 
+                "handle":"Kdog", 
+                "party":"Marvel",
+                "constituency":"CB3",
+                "offices":["office3", "sedge steward"],
+
+                "tweets": 30,
+                "friends": 150, 
+                "followers": 300,
+                "archipelago_id": 3,
+
+                "tweeted":[],
+                "count":[],
+                "tweet_type":[],
+                "recent_url":[],
+                "recent":[]
+           },
+           {
+                "name":"The Boy Wonder", 
+                "handle":"tBW", 
+                "party":"Marvel",
+                "constituency":"CB2",
+                "offices":["office2", "sedge steward"],
+
+                "tweets": 20,
+                "friends": 100, 
+                "followers": 200,
+                "archipelago_id": 2,
+
+                "tweeted":['LRichy'],
+                "count":[20],
+                "tweet_type":['RETWEETS'],
+                "recent_url":['much_url'],
+                "recent":['4000000']
+           }
+        ]
+
+        # Make request
+        results = [ _ for _ in neo_db_handler.get_party_nodes('Marvel', 5) ]
+
+        # Test against reference
+        self.assertEqual(len(results), 2)
+
+        for i in range(2):
+            for key in test_reference[i].keys():
+                self.assertEqual(results[i][key], test_reference[i][key] )
+
+
+    def test_get_cross_party_nodes_default(self):
         neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
 
         test_reference = [
@@ -173,6 +226,39 @@ class TestNeoDBHandler(unittest.TestCase):
         ]
 
         results = [ _ for _ in neo_db_handler.get_cross_party_nodes('Marvel', 'DC') ]
+
+        # Test against reference
+        self.assertEqual(len(results), 1)
+
+        for i in range(1):
+            for key in test_reference[i].keys():
+                self.assertEqual(results[i][key], test_reference[i][key] )
+
+    def test_get_cross_party_nodes_min_tweets(self):
+        neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
+
+        test_reference = [
+           {
+                "name":"The Boy Wonder", 
+                "handle":"tBW", 
+                "party":"Marvel",
+                "constituency":"CB2",
+                "offices":["office2", "sedge steward"],
+
+                "tweets": 20,
+                "friends": 100, 
+                "followers": 200,
+                "archipelago_id": 2,
+
+                "tweeted":['LRichy'],
+                "count":[20],
+                "tweet_type":['RETWEETS'],
+                "recent_url":['much_url'],
+                "recent":['4000000']
+           }
+        ]
+
+        results = [ _ for _ in neo_db_handler.get_cross_party_nodes('Marvel', 'DC', 5) ]
 
         # Test against reference
         self.assertEqual(len(results), 1)

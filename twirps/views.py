@@ -26,12 +26,14 @@ LOGGER = logging.getLogger(__name__)
 app.url_map.converters['regex'] = RegexConverter
 
 @app.route('/', methods=['GET', 'POST'])
-def index():
-    return render_template('index.html', endpoint='/home')
+@app.route('/min/<regex("[0-9]{1,3}"):min_tweets>', methods=['GET', 'POST'])
+def index(min_tweets='5'):
+    return render_template('index.html', endpoint='/home/min/'+min_tweets)
 
 @app.route('/data/home', methods=['GET'])
-def home_call():
-    return jsonify(data_assimilation.return_full_map())
+@app.route('/data/home/min/<regex("[0-9]{1,3}"):min_tweets>', methods=['GET'])
+def home_call(min_tweets='5'):
+    return jsonify(data_assimilation.return_full_map(int(min_tweets)))
 
 # placeholder note for API
 @app.route('/data/mouthpiece/{userid}', methods=['GET', 'POST'])
@@ -50,24 +52,28 @@ def committees():
 
 # IMPLEMENTED
 @app.route('/party/<regex("[a-zA-Z0-9_]{4,35}"):party>', methods=['GET'])
-def redirect_get_parties(party):
-    return render_template('index.html', endpoint='/party/'+ party)
+@app.route('/party/<regex("[a-zA-Z0-9_]{4,35}"):party>/min/<regex("[0-9]{1,3}"):min_tweets>', methods=['GET'])
+def redirect_get_parties(party, min_tweets='5'):
+    return render_template('index.html', endpoint='/party/'+ party+'/min/'+min_tweets)
 
 @app.route('/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>', methods=['GET'])
-def redirect_get_crossparties(partyA, partyB):
-    return render_template('index.html', endpoint='/crossparty/'+ partyA+'/'+partyB)
+@app.route('/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>/min/<regex("[0-9]{1,3}"):min_tweets>', methods=['GET'])
+def redirect_get_crossparties(partyA, partyB, min_tweets='5'):
+    return render_template('index.html', endpoint='/crossparty/'+ partyA+'/'+partyB+'/min/'+min_tweets)
 
 # DATA VIEWS
 @app.route('/data/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>', methods=['GET'])
-def get_crossparties(partyA, partyB):
+@app.route('/data/crossparty/<regex("[a-zA-Z0-9_]{4,35}"):partyA>/<regex("[a-zA-Z0-9_]{4,35}"):partyB>/min/<regex("[0-9]{1,3}"):min_tweets>', methods=['GET'])
+def get_crossparties(partyA, partyB, min_tweets='5'):
     partyA = partyA.replace('_', ' ')
     partyB = partyB.replace('_', ' ')
-    return jsonify(data_assimilation.return_crossparty_nodes(partyA, partyB))
+    return jsonify(data_assimilation.return_crossparty_nodes(partyA, partyB, int(min_tweets)))
 
 @app.route('/data/party/<regex("[a-zA-Z0-9_]{4,35}"):party>', methods=['GET'])
-def get_parties(party):
+@app.route('/data/party/<regex("[a-zA-Z0-9_]{4,35}"):party>/min/<regex("[0-9]{1,3}"):min_tweets>', methods=['GET'])
+def get_parties(party, min_tweets='5'):
     party = party.replace('_', ' ')
-    return jsonify(data_assimilation.return_party_nodes(party))
+    return jsonify(data_assimilation.return_party_nodes(party, int(min_tweets)))
 
 ################################################################################
 #                                ADMIN BACKEND                                 #

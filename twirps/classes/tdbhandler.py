@@ -63,15 +63,15 @@ class TDBHandler(object):
     def update_neo_with_arch_mp_list(self, mp_list):
         return self.neo.update_with_arch_mp_list(mp_list)
 
-    def get_full_map(self, min_tweets=5):
+    def get_full_map(self, min_tweets):
         return self.neo.get_full_map(min_tweets)
 
-    def get_party_nodes(self, party):
-        return self.neo.get_party_nodes(party)
+    def get_party_nodes(self, party, min_tweets):
+        return self.neo.get_party_nodes(party, min_tweets)
 
-    def get_crossparty_nodes(self, partyA,partyB):
-        first_set = [n for n in self.neo.get_cross_party_nodes(partyA, partyB)]
-        second_set = [n for n in self.neo.get_cross_party_nodes(partyB, partyA)]
+    def get_crossparty_nodes(self, partyA, partyB, min_tweets):
+        first_set = [n for n in self.neo.get_cross_party_nodes(partyA, partyB, min_tweets)]
+        second_set = [n for n in self.neo.get_cross_party_nodes(partyB, partyA, min_tweets)]
         return first_set + second_set
 
     def resync_tweets_pg_to_neo(self):

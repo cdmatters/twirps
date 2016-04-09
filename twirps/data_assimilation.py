@@ -6,21 +6,21 @@ from classes import Twirp, Tweet, TDBHandler
 
 LOGGER = logging.getLogger(__name__)
 
-def return_full_map(min_tweets=0, retweets_only=False, mentions_only=False):
+def return_full_map(min_tweets, retweets_only=False, mentions_only=False):
     db_handler = TDBHandler()
     result = db_handler.get_full_map(min_tweets)
 
     return neo_to_d3map(result)
 
-def return_party_nodes(party):
+def return_party_nodes(party, min_tweets):
     db_handler = TDBHandler()
-    result = db_handler.get_party_nodes(party)
+    result = db_handler.get_party_nodes(party, min_tweets)
 
     return neo_to_d3map(result)
 
-def return_crossparty_nodes(partyA, partyB):
+def return_crossparty_nodes(partyA, partyB, min_tweets):
     db_handler = TDBHandler()
-    result = db_handler.get_crossparty_nodes(partyA,partyB) 
+    result = db_handler.get_crossparty_nodes(partyA,partyB,min_tweets) 
 
     return neo_to_d3map(result)
 

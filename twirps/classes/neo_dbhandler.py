@@ -118,7 +118,7 @@ class NeoDBHandler(object):
             transfer.append(cypher_request, req)
         transfer.commit()
 
-    def get_full_map(self, min_tweets=0):
+    def get_full_map(self, min_tweets):
         cypher_request = u''' 
             MATCH (a)
             OPTIONAL MATCH (a)-[r]->(b) 
@@ -145,11 +145,12 @@ class NeoDBHandler(object):
         graph = Graph(self.n4_database)
         return graph.cypher.execute(cypher_request, request_input)
 
-    def get_party_nodes(self, partyA):
+    def get_party_nodes(self, partyA, min_tweets):
         cypher_request = u''' 
             MATCH (a {party:{node_partyA}})
             OPTIONAL MATCH (a)-[r]->(b)
             WHERE a.party = {node_partyA}
+                AND r.count >= {min_tweets} 
                 AND a <> b
             RETURN a.name AS name, 
                    a.handle AS handle,
@@ -167,18 +168,18 @@ class NeoDBHandler(object):
                     collect(r.recent) as recent
                 '''
 
-        request_input = {'node_partyA':partyA}
+        request_input = {'node_partyA':partyA, 'min_tweets':min_tweets}
 
         graph = Graph(self.n4_database)
         return graph.cypher.execute(cypher_request, request_input)
 
-    def get_cross_party_nodes(self, partyA, partyB):
+    def get_cross_party_nodes(self, partyA, partyB, min_tweets):
         cypher_request = u''' 
             MATCH (a)-[r]->(b)
             WHERE a.party = {node_partyA}
                 AND b.party = {node_partyB}  
                 AND a <> b
-                AND r.count >=1
+                AND r.count >= {min_tweets} 
             RETURN a.name AS name, 
                    a.handle AS handle,
                    a.party AS party,
@@ -195,7 +196,7 @@ class NeoDBHandler(object):
                     collect(r.recent) as recent
                 '''
 
-        request_input = {'node_partyA':partyA, 'node_partyB':partyB}
+        request_input = {'node_partyA':partyA, 'node_partyB':partyB, 'min_tweets':min_tweets}
 
         graph = Graph(self.n4_database)
         return graph.cypher.execute(cypher_request, request_input)
