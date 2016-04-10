@@ -80,7 +80,8 @@ class TDBHandler(object):
         last_tweet_id = None
         current_tweet = None
         counter = 0 
-        for record in self.pg.get_all_tweets():
+        cursor = self.pg.get_all_tweets()
+        for record in cursor:
            
             if record[0] != last_tweet_id: 
                 self.neo.add_Tweet_to_database(current_tweet) if current_tweet else None
@@ -92,6 +93,7 @@ class TDBHandler(object):
                 current_tweet.from_database_add_entities(record)
             
             last_tweet_id = record[0]
+        cursor.close()
         
         self.neo.add_Tweet_to_database(current_tweet) if current_tweet else None
         self.neo.delete_archived_map()

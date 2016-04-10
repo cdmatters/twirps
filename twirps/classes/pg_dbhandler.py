@@ -188,11 +188,10 @@ class PgDBHandler(object):
 
 
         with psycopg2.connect(self.pg_database) as connection:
-            cur = connection.cursor()
+            cur = connection.cursor(name='AllTweets',withhold=True)
             cur.execute(request_sql)
 
-            return cur.fetchall()
-
+            return cur  # must remember to close on other side!
 
     def get_oldest_tweets_stored_from_mps(self):
         with psycopg2.connect(self.pg_database) as connection:
