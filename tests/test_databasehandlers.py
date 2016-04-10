@@ -139,7 +139,7 @@ class TestNeoDBHandler(unittest.TestCase):
         ]
 
         # Make request
-        results = [ _ for _ in neo_db_handler.get_party_nodes('Marvel') ]
+        results = [ _ for _ in neo_db_handler.get_party_nodes('Marvel', 0) ]
 
         # Test against reference
         self.assertEqual(len(results), 2)
@@ -225,7 +225,7 @@ class TestNeoDBHandler(unittest.TestCase):
            }
         ]
 
-        results = [ _ for _ in neo_db_handler.get_cross_party_nodes('Marvel', 'DC') ]
+        results = [ _ for _ in neo_db_handler.get_cross_party_nodes('Marvel', 'DC', 0 ) ]
 
         # Test against reference
         self.assertEqual(len(results), 1)
