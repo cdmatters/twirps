@@ -227,7 +227,7 @@ class NeoDBHandler(object):
         node_batch.push()
 
 
-    def archive_neo_map(self):
+    def archive_map(self):
         r_types = ['MENTION', 'RETWEET', 'REPLY', 'MENTION_BY_PROXY']
         cypher_request = u'''
             MATCH ()-[r:«label»]-()
@@ -245,8 +245,17 @@ class NeoDBHandler(object):
         graph = Graph(self.n4_database)
         return graph.cypher.execute(cypher_request)
 
-    
-
-        
-
+    def unarchive_map(self):
+        LOGGER.info('Replacing map with archive')
+        cypher_request1 = u'''
+            MATCH ()-[r {archive:0}]-()
+            DELETE r
+        '''
+        cypher_request2 = u'''
+            MATCH ()-[r {archive:1}]-()
+            SET r.archive = 0
+        '''
+        graph = Graph(self.n4_database)
+        graph.cypher.execute(cypher_request1)
+        graph.cypher.execute(cypher_request2)
 

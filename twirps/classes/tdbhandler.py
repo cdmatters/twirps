@@ -75,8 +75,8 @@ class TDBHandler(object):
         return first_set + second_set
 
     def resync_tweets_pg_to_neo(self):
-        self.neo.archive_neo_map()
-        
+        self.neo.archive_map()
+
         last_tweet_id = None
         current_tweet = None
         counter = 0 
@@ -90,6 +90,12 @@ class TDBHandler(object):
                 counter+=1
             else:
                 current_tweet.from_database_add_entities(record)
+            
             last_tweet_id = record[0]
+        
         self.neo.delete_archived_map()
 
+
+    
+
+    
