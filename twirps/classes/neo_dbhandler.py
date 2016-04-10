@@ -58,64 +58,121 @@ class NeoDBHandler(object):
         graph.create(twirp_node)
 
     def add_Tweet_to_database(self, tweet):
-        if not tweet.mentions:
+
+        if not tweet.mentions and not tweet.is_reply and not tweet.is_retweet:
+            # dont waste my time: quick return
             return
-        cypher_request = u'''
-            MATCH (a:Twirp { user_id: {twirp} }), (b:Twirp { user_id: {tweeted} })
-            MERGE (a)-[r:«type» {archive:0}]->(b)
-            ON CREATE SET
-                r.count = 1,
-                r.recent={tweet_id},
-                r.date={date},
-                r.url={url}
-            ON MATCH SET
-                r.count = r.count + 1,
-                r.recent = {tweet_id},
-                r.date={date},
-                r.url={url}
-        ''' 
+        
+        # In the pg database we store tweets as is, straight from twitter
+        # EG @A -[reply]->B: content - "Hey @B, how are you"
+        # This gives a reply AND a mention (since you can reply without mentioning)
+        
+        # The neo db now needs to filter duplicates 
+        def _is_not_double_counted(mention):
+            if tweet.is_reply:
+                return mention[0] != tweet.in_reply_to_user[0]
+            if tweet.is_retweet:
+                return mention[0] != tweet.retweeted_user[0]
+            else:
+                return True
+
+        tweet.mentions = filter(_is_not_double_counted, tweet.mentions)
+
+
+        # Build custom cypher request for input type
+        def _build_cypher(request_type):
+            request_array = ['']*8
+            
+            request_array[0] = u'''
+                MATCH (a:Twirp { user_id: {twirp} }), (b:Twirp { user_id: {tweeted} })
+                MERGE (a)-[r:«type» {archive:0}]->(b)
+                ON CREATE SET '''
+            request_array[1]=u'''
+                    r.mentions = {m},
+                    r.mention_last = { m_l },
+                    r.mention_date = {m_d} '''
+            request_array[2]=u'''
+                    r.replies = {r},
+                    r.reply_last = {r_l},
+                    r.reply_date = {r_d} '''
+            request_array[3]=u'''
+                    r.retweet = {t},
+                    r.retweet_last = {t_l},
+                    r.retweet_date = {t_d} '''
+            request_array[4]=u'''
+                ON MATCH SET '''
+            request_array[5]=u'''
+                    r.mentions = r.mentions + {m},
+                    r.mention_last = {m_l},
+                    r.mention_date = {m_d} '''
+            request_array[6]=u'''
+                    r.replies = r.replies + {r},
+                    r.reply_last = {r_l},
+                    r.reply_date = {r_d} '''
+            request_array[7]=u'''
+                    r.retweet =  r.retweet +{t},
+                    r.retweet_last = {t_l},
+                    r.retweet_date = {t_d}
+            '''
+
+            if request_type!='m':
+                request_array[1], request_array[5] = '',''
+            if request_type!='r':
+                request_array[2], request_array[6] = '',''
+            if request_type!='t':
+                request_array[3], request_array[7] = '',''
+            return ''.join(request_array)
+
 
         requests = []
-        
-        _proxy="_BY_PROXY" if tweet.is_retweet else ""
-        mention_tweet_id = tweet.tweet_id if not tweet.is_retweet else tweet.retweet_status_id
 
-        mentions_request_input = [{ 
-            "twirp" : tweet.user_id,
-            "tweeted": mentioned[0],
-            "type": "MENTION"+_proxy,
-            "tweet_id": str(mention_tweet_id),
-            "date":tweet.date,
-            "url": tweet.website_link
-            } for mentioned in tweet.mentions if not tweet.is_reply or mentioned[0]!=tweet.in_reply_to_user[0]]
+        mentions_request_input = [
+            (   _build_cypher('m'),
+                { 
+                    "twirp" : tweet.user_id,
+                    "tweeted": mentioned[0],
+                    "type": "DIRECT" if not tweet.is_retweet else "INDIRECT",
+                    "m":1,
+                    "m_d":tweet.date,
+                    "m_l": str(tweet.tweet_id)
+                    }
+            ) for mentioned in tweet.mentions ]
+
+        replies_request_input = [
+            ( _build_cypher('r'),
+                { 
+                    "twirp" : tweet.user_id,
+                    "tweeted": tweet.in_reply_to_user[0],
+                    "type": "DIRECT",
+                    "r":1,
+                    "r_d": tweet.date,
+                    "r_l": str(tweet.tweet_id)
+                }
+            )] if tweet.is_reply else []
+
+        retweets_request_input = [
+            ( _build_cypher('t'),
+                { 
+                    "twirp" : tweet.user_id,
+                    "tweeted": tweet.retweeted_user[0],
+                    "type": "DIRECT",
+                    "t":1,
+                    "t_d": tweet.date,
+                    "t_l": str(tweet.tweet_id)
+                }
+            )] if tweet.is_retweet else []
+
+
         requests.extend(mentions_request_input)
-
-        retweet_request_input = [{ 
-            "twirp" : tweet.user_id,
-            "tweeted": tweet.retweeted_user[0],
-            "type": "RETWEET",
-            "tweet_id": str(tweet.retweet_status_id),
-            "date":tweet.date,
-            "url": tweet.website_link
-            }] if tweet.is_retweet else []
-        requests.extend(retweet_request_input)
-
-        reply_request_input = [{ 
-            "twirp" : tweet.user_id,
-            "tweeted": tweet.in_reply_to_user[0],
-            "type": "REPLY",
-            "tweet_id": str(tweet.in_reply_to_status_id),
-            "date":tweet.date,
-            "url": tweet.website_link
-            }] if tweet.is_reply else []
-        requests.extend(reply_request_input)
+        requests.extend(replies_request_input)
+        requests.extend(retweets_request_input)
 
 
         graph = Graph(self.n4_database)
         
         transfer = graph.cypher.begin()
         for req in requests:
-            transfer.append(cypher_request, req)
+            transfer.append(req[0], req[1])
         transfer.commit()
 
     def get_full_map(self, min_tweets):

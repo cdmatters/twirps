@@ -322,6 +322,7 @@ class TestNeoDBHandler(unittest.TestCase):
 
 
     def test_add_Tweet_to_database__mention(self):
+        # TEST: (LRich)->(tinyhands) - mention: ("Hey @tinyhands")
         neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
 
         # Test Data
@@ -359,14 +360,24 @@ class TestNeoDBHandler(unittest.TestCase):
         relationship =  results[0][0]
 
         # In depth check
-        self.assertEqual(relationship.type, u'MENTION')
+        self.assertEqual(relationship.type, u'DIRECT')
 
-        self.assertEqual(relationship["count"], 1)
-        self.assertEqual(relationship["recent"],'1')
-        self.assertEqual(relationship["date"],'a date string')
-        self.assertEqual(relationship["url"],"twitter.com/status/madeupstatus1")
+        self.assertEqual(relationship["mentions"], 1)
+        self.assertEqual(relationship["mention_last"], '1')
+        self.assertEqual(relationship["mention_date"], 'a date string')
+
+        self.assertEqual(relationship["replies"], None)
+        self.assertEqual(relationship["reply_last"], None)
+        self.assertEqual(relationship["reply_date"], None)
+        
+        self.assertEqual(relationship["retweet"], None)
+        self.assertEqual(relationship["retweet_last"], None)
+        self.assertEqual(relationship["retweet_date"], None)
+       
 
     def test_add_Tweet_to_database__reply(self):
+        # TEST: (LRich) ->(tBW) - reply & mention; 
+        #       (LRich) ->(tinyhands) mention   EG: (reply->tBW):"Hey @tBW, @tinyhands"
         neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
 
         # Test Data
@@ -405,24 +416,42 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(len(results), 2)
 
         # In depth check
-        self.assertEqual(results[0][0].type, u'REPLY')
+        self.assertEqual(results[0][0].type, u'DIRECT')
         self.assertEqual(results[0][1], 'The Boy Wonder')
 
-        self.assertEqual(results[0][0]["count"], 1)
-        self.assertEqual(results[0][0]["recent"],'2')  # replied tweet no
-        self.assertEqual(results[0][0]["date"],'a date string')
-        self.assertEqual(results[0][0]["url"],"twitter.com/status/madeupstatus1")
+        self.assertEqual(results[0][0]["mentions"], None)
+        self.assertEqual(results[0][0]["mention_last"], None)
+        self.assertEqual(results[0][0]["mention_date"], None)
 
-        self.assertEqual(results[1][0].type, u'MENTION')
+        self.assertEqual(results[0][0]["replies"], 1)
+        self.assertEqual(results[0][0]["reply_last"], '1')
+        self.assertEqual(results[0][0]["reply_date"], 'a date string')
+        
+        self.assertEqual(results[0][0]["retweet"], None)
+        self.assertEqual(results[0][0]["retweet_last"], None)
+        self.assertEqual(results[0][0]["retweet_date"], None)
+
+
+        self.assertEqual(results[1][0].type, u'DIRECT')
         self.assertEqual(results[1][1], 'Tiny Hands')
 
-        self.assertEqual(results[1][0]["count"], 1)
-        self.assertEqual(results[1][0]["recent"],'1')
-        self.assertEqual(results[1][0]["date"],'a date string')
-        self.assertEqual(results[1][0]["url"],"twitter.com/status/madeupstatus1")
+        self.assertEqual(results[1][0]["mentions"], 1)
+        self.assertEqual(results[1][0]["mention_last"], '1')
+        self.assertEqual(results[1][0]["mention_date"], 'a date string')
+
+        self.assertEqual(results[1][0]["replies"], None)
+        self.assertEqual(results[1][0]["reply_last"], None)
+        self.assertEqual(results[1][0]["reply_date"],  None)
+        
+        self.assertEqual(results[1][0]["retweet"], None)
+        self.assertEqual(results[1][0]["retweet_last"], None)
+        self.assertEqual(results[1][0]["retweet_date"], None)
 
 
     def test_add_Tweet_to_database__retweet(self):
+        # TEST: (tiny) ->(MBEyes) - reply & mention; 
+        #       (tiny) ->(Kdog) mention_by_proxy   EG: (ret->MBE):"Hey @MBE, @Kdog"
+
         neo_db_handler = NeoDBHandler(n4_database=TEST_GRAPH_DB)
 
         # Test Data
@@ -460,24 +489,36 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(len(results), 2)
 
         # In depth check
-        self.assertEqual(results[0][0].type, u'MENTION_BY_PROXY')
+        self.assertEqual(results[0][0].type, u'INDIRECT')
         self.assertEqual(results[0][1], 'Kendog Lamar')
 
-        self.assertEqual(results[0][0]["count"], 1)
-        self.assertEqual(results[0][0]["recent"],'2')  # the retweet
-        self.assertEqual(results[0][0]["date"],'a date string')
-        self.assertEqual(results[0][0]["url"],"twitter.com/status/madeupstatus1")
+        self.assertEqual(results[0][0]["mentions"], 1)
+        self.assertEqual(results[0][0]["mention_last"], '1')
+        self.assertEqual(results[0][0]["mention_date"], 'a date string')
 
-        self.assertEqual(results[1][0].type, u'RETWEET')
+        self.assertEqual(results[0][0]["replies"], None)
+        self.assertEqual(results[0][0]["reply_last"], None)
+        self.assertEqual(results[0][0]["reply_date"], None)
+        
+        self.assertEqual(results[0][0]["retweet"], None)
+        self.assertEqual(results[0][0]["retweet_last"], None)
+        self.assertEqual(results[0][0]["retweet_date"], None)
+
+
+        self.assertEqual(results[1][0].type, u'DIRECT')
         self.assertEqual(results[1][1], 'Michael Blue Eyes')
 
-        self.assertEqual(results[1][0]["count"], 1)
-        self.assertEqual(results[1][0]["recent"],'2')
-        self.assertEqual(results[1][0]["date"],'a date string')
-        self.assertEqual(results[1][0]["url"],"twitter.com/status/madeupstatus1")
+        self.assertEqual(results[1][0]["mentions"], None)
+        self.assertEqual(results[1][0]["mention_last"], None)
+        self.assertEqual(results[1][0]["mention_date"], None)
 
-
-
+        self.assertEqual(results[1][0]["replies"], None)
+        self.assertEqual(results[1][0]["reply_last"], None)
+        self.assertEqual(results[1][0]["reply_date"], None)
+        
+        self.assertEqual(results[1][0]["retweet"], 1)
+        self.assertEqual(results[1][0]["retweet_last"], '1')
+        self.assertEqual(results[1][0]["retweet_date"], 'a date string')
 
 
 
