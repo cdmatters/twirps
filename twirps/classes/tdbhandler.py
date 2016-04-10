@@ -75,19 +75,21 @@ class TDBHandler(object):
         return first_set + second_set
 
     def resync_tweets_pg_to_neo(self):
-        # self.neo.move_tweets_to_archive()
+        self.neo.archive_neo_map()
         
         last_tweet_id = None
         current_tweet = None
+        counter = 0 
         for record in self.pg.get_all_tweets():
            
             if record[0] != last_tweet_id: 
-                # if current tweet: self.neo.add_tweet_to_db
-                LOGGER.info(current_tweet)
+                self.neo.add_Tweet_to_database(current_tweet) if current_tweet else None
+                if (counter%3000 == 0):
+                    LOGGER.info("%s:%s "%(counter,current_tweet))
                 current_tweet = Tweet(record, 'database')
+                counter+=1
             else:
                 current_tweet.from_database_add_entities(record)
-
             last_tweet_id = record[0]
-        # self.neo.delete_archive
+        self.neo.delete_archived_map()
 

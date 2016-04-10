@@ -62,7 +62,7 @@ class NeoDBHandler(object):
             return
         cypher_request = u'''
             MATCH (a:Twirp { user_id: {twirp} }), (b:Twirp { user_id: {tweeted} })
-            MERGE (a)-[r:«type»]->(b)
+            MERGE (a)-[r:«type» {archive:0}]->(b)
             ON CREATE SET
                 r.count = 1,
                 r.recent={tweet_id},
@@ -225,6 +225,28 @@ class NeoDBHandler(object):
                 node_batch.append(mp_node)
 
         node_batch.push()
+
+
+    def archive_neo_map(self):
+        r_types = ['MENTION', 'RETWEET', 'REPLY', 'MENTION_BY_PROXY']
+        cypher_request = u'''
+            MATCH ()-[r:«label»]-()
+            SET r.archive = 1
+        '''
+        graph = Graph(self.n4_database)
+        for i in r_types:
+            graph.cypher.execute(cypher_request, {u'label':i,u'labelA':i, u'_label':'_'+i})
+
+    def delete_archived_map(self):
+        cypher_request = u'''
+            MATCH ()-[r {archive:1}]-()
+            DELETE r
+        '''
+        graph = Graph(self.n4_database)
+        return graph.cypher.execute(cypher_request)
+
+    
+
         
 
 

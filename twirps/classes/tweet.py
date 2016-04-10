@@ -88,7 +88,11 @@ class Tweet(object):
 
         self.date =tweet_tuple[8]
 
+        self.website_link=u'https://twitter.com/'+self.handle+u'/status/'+str(self.tweet_id)
+        
         self.from_database_add_entities(tweet_tuple)
+
+
 
     def from_database_add_entities(self, tweet_tuple):
         if tweet_tuple[9] == 'hashtag':
