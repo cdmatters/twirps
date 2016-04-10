@@ -93,6 +93,7 @@ class TDBHandler(object):
             
             last_tweet_id = record[0]
         
+        self.neo.add_Tweet_to_database(current_tweet) if current_tweet else None
         self.neo.delete_archived_map()
 
 

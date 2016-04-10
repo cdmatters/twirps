@@ -27,7 +27,7 @@ app.url_map.converters['regex'] = RegexConverter
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/min/<regex("[0-9]{1,3}"):min_tweets>', methods=['GET', 'POST'])
-def index(min_tweets='5'):
+def index(min_tweets='10'):
     return render_template('index.html', endpoint='/home/min/'+min_tweets)
 
 @app.route('/data/home', methods=['GET'])

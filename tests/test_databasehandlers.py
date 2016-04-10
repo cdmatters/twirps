@@ -441,7 +441,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(relationship["reply_last"], '')
         self.assertEqual(relationship["reply_date"], '')
         
-        self.assertEqual(relationship["retweet"], 0)
+        self.assertEqual(relationship["retweets"], 0)
         self.assertEqual(relationship["retweet_last"], '')
         self.assertEqual(relationship["retweet_date"], '')
        
@@ -498,7 +498,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[0][0]["reply_last"], '1')
         self.assertEqual(results[0][0]["reply_date"], 'a date string')
         
-        self.assertEqual(results[0][0]["retweet"], 0)
+        self.assertEqual(results[0][0]["retweets"], 0)
         self.assertEqual(results[0][0]["retweet_last"], '')
         self.assertEqual(results[0][0]["retweet_date"], '')
 
@@ -514,7 +514,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[1][0]["reply_last"], '')
         self.assertEqual(results[1][0]["reply_date"],  '')
         
-        self.assertEqual(results[1][0]["retweet"], 0)
+        self.assertEqual(results[1][0]["retweets"], 0)
         self.assertEqual(results[1][0]["retweet_last"], '')
         self.assertEqual(results[1][0]["retweet_date"], '')
 
@@ -571,7 +571,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[0][0]["reply_last"], '')
         self.assertEqual(results[0][0]["reply_date"], '')
         
-        self.assertEqual(results[0][0]["retweet"], 0)
+        self.assertEqual(results[0][0]["retweets"], 0)
         self.assertEqual(results[0][0]["retweet_last"], '')
         self.assertEqual(results[0][0]["retweet_date"], '')
 
@@ -587,7 +587,7 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[1][0]["reply_last"], '')
         self.assertEqual(results[1][0]["reply_date"], '')
         
-        self.assertEqual(results[1][0]["retweet"], 1)
+        self.assertEqual(results[1][0]["retweets"], 1)
         self.assertEqual(results[1][0]["retweet_last"], '1')
         self.assertEqual(results[1][0]["retweet_date"], 'a date string')
 

@@ -119,7 +119,7 @@ class NeoDBHandler(object):
                     r.reply_last = {r_l},
                     r.reply_date = {r_d}, '''
             request_array[3]=u'''
-                    r.retweet = {t},
+                    r.retweets = {t},
                     r.retweet_last = {t_l},
                     r.retweet_date = {t_d} '''
             request_array[4]=u'''
@@ -133,7 +133,7 @@ class NeoDBHandler(object):
                     r.reply_last = {r_l},
                     r.reply_date = {r_d} '''
             request_array[7]=u'''
-                    r.retweets =  r.retweets +{t},
+                    r.retweets = r.retweets + {t},
                     r.retweet_last = {t_l},
                     r.retweet_date = {t_d}
             '''
@@ -211,23 +211,9 @@ class NeoDBHandler(object):
         cypher_request = u''' 
             MATCH (a)
             OPTIONAL MATCH (a)-[r]->(b) 
-            WHERE r.count >= {min_tweets} 
+            WHERE r.mentions + r.retweets + r.replies >= {min_tweets} 
                 AND a <> b
-            RETURN a.name AS name, 
-                   a.handle AS handle,
-                   a.party AS party,
-                   a.constituency AS constituency,
-                   a.offices AS offices,
-                   a.tweet_count AS tweets,
-                   a.friends_count AS friends, 
-                   a.followers_count AS followers,
-                   a.archipelago_id AS archipelago_id,
-                    collect(b.handle) as tweeted, 
-                    collect(r.count) as count,
-                    collect(type(r)) as tweet_type,
-                    collect(r.url) as recent_url,
-                    collect(r.recent) as recent
-        '''
+            RETURN ''' + self.map_format_return
 
         request_input = {'min_tweets':min_tweets}
 

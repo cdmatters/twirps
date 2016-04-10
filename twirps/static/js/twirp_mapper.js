@@ -116,7 +116,7 @@
                 array[index]=node
             })
         }
-        filterTweetType(backend_map.nodes, 'no_by_proxy');
+        //filterTweetType(backend_map.nodes, 'no_by_proxy');
 
         return { 
             visibleNodes:backend_map.nodes,

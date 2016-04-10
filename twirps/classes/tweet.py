@@ -18,8 +18,7 @@ class Tweet(object):
         self.is_reply = False
         self.in_reply_to_user = None
         self.in_reply_to_status_id = None
-        
-        self.retweet = None
+
         
         self.retweet_count = 0
         self.favourite_count = 0
@@ -62,10 +61,10 @@ class Tweet(object):
 
         self.content = tweet.text
         self.mentions = [ (ent['id'],ent['screen_name'] 
-                            ) for ent in tweet.entities['user_mentions'] ]
+                            ) for ent in tweet.entities['user_mentions']]
         self.hashtags =  [ent['text'] for ent in tweet.entities['hashtags']]
         self.urls = [urls['expanded_url'] for urls in tweet.entities['urls']]
-
+    
 
     def __str__(self):
         return u'Tweet: %d %s || RC: %d || FC: %d || RT: %s || @ %s || # %s || Url %s\nContent: %s' %(

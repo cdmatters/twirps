@@ -31,8 +31,6 @@ def return_crossparty_nodes(partyA, partyB, min_tweets):
 #     return neo_to_d3map(result)
 
 def neo_to_d3map(neo_map): 
-    offical_id_list = [node.archipelago_id for node in neo_map]
-
     nodes = []
     for neo_node in neo_map:
         twirp = {
@@ -48,46 +46,35 @@ def neo_to_d3map(neo_map):
             "clicked":0
         }
 
-        retweeted, mentions, replies, by_proxy = {}, {}, {}, {}
+        retweets, mentions, replies, by_proxy = {}, {}, {}, {}
         all_tweets, no_by_proxy = {}, {}
 
         for i, t in enumerate(neo_node.tweeted):
-            url = neo_node.recent_url[i]
-            count = neo_node.count[i]
-
-            if t in all_tweets.keys():
-                all_tweets[t][0] += count
-                all_tweets[t][1] = url
-            else:
-                all_tweets[t] = [count, url]
-
-            if neo_node.tweet_type[i] == u'MENTION':
-                mentions.update({t:[count, url]})
-            elif neo_node.tweet_type[i] == u'REPLY':
-                replies.update({t:[count, url]})
-            elif neo_node.tweet_type[i] == u'RETWEET':
-                retweeted.update({t:[count, url]})
-            
-            if neo_node.tweet_type[i] == u'MENTION_BY_PROXY':
-                by_proxy.update({t:[count, url]})
-            elif t in no_by_proxy.keys():
-                no_by_proxy[t][0] += count
-                no_by_proxy[t][1] = url
-            else:
-                no_by_proxy[t] = [count, url]
-
-
+            if neo_node.tweet_type[i] == 'DIRECT':
+                if neo_node.mentions[i]>0:
+                    mentions[t] = (neo_node.mentions[i], neo_node.mention_last[i])  
+                if neo_node.replies[i]>0:
+                    replies[t] = (neo_node.replies[i], neo_node.reply_last[i])
+                if neo_node.retweets[i]>0:
+                    retweets[t] = (neo_node.retweets[i], neo_node.retweet_last[i])
+                
+            elif neo_node.tweet_type[i] =='INDIRECT':
+                if neo_node.mentions[i]>0:
+                    by_proxy[t] = (neo_node.mentions[i], neo_node.mention_last[i])
+    
 
         twirp.update( {"relationships":{
                                 "mentions":mentions,
-                                "retweets":retweeted,
+                                "retweets":retweets,
                                 "replies":replies,
                                 "by_proxy":by_proxy,
-                                "all_tweets":all_tweets,
-                                "no_by_proxy":no_by_proxy
+                                # "all_tweets":all_tweets,
+                                # "no_by_proxy":no_by_proxy
                             }
         })
 
+        # LOGGER.info(twirp['relationships'])
+        # LOGGER.info(neo_node.tweeted)
         nodes.append(twirp)
     return {"nodes": nodes}
 
