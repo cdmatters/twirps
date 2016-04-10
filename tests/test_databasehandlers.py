@@ -56,18 +56,50 @@ class TestNeoDBHandler(unittest.TestCase):
         # ken -!->
         # th  -!->
 
-        mbe1 = Relationship(self.node_list[0], "MENTION" ,self.node_list[1])
-        mbe2 = Relationship(self.node_list[0], "REPLIES" ,self.node_list[3])
-        lrich = Relationship(self.node_list[1], "REPLIES", self.node_list[0])
-        tbw = Relationship(self.node_list[2], "RETWEETS", self.node_list[1])
-        tbw2 = Relationship(self.node_list[2], "MENTION_BY_PROXY", self.node_list[0])
+        defaults = {
+            "mentions":0,
+            "mention_last":"",
+            "mention_date":"",
+            "replies":0,
+            "reply_last":"",
+            "reply_date":"",
+            "retweets":0,
+            "retweet_last":"",
+            "retweet_date":""
+            }
+
+        mbe1 = Relationship(self.node_list[0], "DIRECT" ,self.node_list[1], **defaults)
+        mbe2 = Relationship(self.node_list[0], "DIRECT" ,self.node_list[3], **defaults)
+        lrich = Relationship(self.node_list[1], "DIRECT", self.node_list[0], **defaults)
+        tbw = Relationship(self.node_list[2], "DIRECT", self.node_list[1],  **defaults)
+        tbw2 = Relationship(self.node_list[2], "INDIRECT", self.node_list[0],  **defaults)
 
 
-        mbe1.properties.update({"count":5, "recent":"1000000", "date":"today", "url":"this_url"})
-        mbe2.properties.update({"count":10, "recent":"2000000", "date":"tommorow", "url":"that_url"})
-        lrich.properties.update({"count":15, "recent":"3000000", "date":"yesterday", "url":"a_url"})
-        tbw.properties.update({"count":20, "recent":"4000000", "date":"thismorning", "url":"much_url"})
-        tbw2.properties.update({"count":1, "recent":"3000000", "date":"yesterday", "url":"a_url"})
+        mbe1.properties.update({
+            "mentions":5,
+            "mention_last":"1000000",
+            "mention_date":"today"
+        })
+        mbe2.properties.update({
+            "replies":10,
+            "reply_last":"2000000",
+            "reply_date":"tommorow"
+        })
+        lrich.properties.update({
+            "replies":15,
+            "reply_last":"3000000",
+            "reply_date":"yesterday"
+        })
+        tbw.properties.update({
+            "retweets":20,
+            "retweet_last":"4000000",
+            "retweet_date":"thismorning"
+        })
+        tbw2.properties.update({
+            "mentions":1,
+            "mention_last":"3000000",
+            "mention_date":"yesterday"
+        })
 
 
         for node in self.node_list:
@@ -113,10 +145,17 @@ class TestNeoDBHandler(unittest.TestCase):
                 "archipelago_id": 3,
 
                 "tweeted":[],
-                "count":[],
-                "tweet_type":[],
-                "recent_url":[],
-                "recent":[]
+                "mentions":[],
+                "mention_last":[],
+                "mention_date":[],                
+                "replies":[],
+                "reply_last":[],
+                "reply_date":[],
+                "retweets":[],
+                "retweet_last":[],
+                "retweet_date":[],
+                "tweet_type":[]
+
            },
            {
                 "name":"The Boy Wonder", 
@@ -130,11 +169,19 @@ class TestNeoDBHandler(unittest.TestCase):
                 "followers": 200,
                 "archipelago_id": 2,
 
+                
                 "tweeted":['MBEyes','LRichy'],
-                "count":[1,20],
-                "tweet_type":['MENTION_BY_PROXY','RETWEETS'],
-                "recent_url":['a_url', 'much_url'],
-                "recent":['3000000','4000000']
+                "mentions":[1, 0],
+                "mention_last":['3000000', ""],
+                "mention_date":['yesterday', ""],                
+                "replies":[0,0],
+                "reply_last":["",""],
+                "reply_date":["",""],
+                "retweets":[0, 20],
+                "retweet_last":["",'4000000'],
+                "retweet_date":["", 'thismorning'],
+                "tweet_type":["INDIRECT", "DIRECT"]
+
            }
         ]
 
@@ -143,7 +190,7 @@ class TestNeoDBHandler(unittest.TestCase):
 
         # Test against reference
         self.assertEqual(len(results), 2)
-
+        
         for i in range(2):
             for key in test_reference[i].keys():
                 self.assertEqual(results[i][key], test_reference[i][key] )
@@ -165,10 +212,16 @@ class TestNeoDBHandler(unittest.TestCase):
                 "archipelago_id": 3,
 
                 "tweeted":[],
-                "count":[],
-                "tweet_type":[],
-                "recent_url":[],
-                "recent":[]
+                "mentions":[],
+                "mention_last":[],
+                "mention_date":[],                
+                "replies":[],
+                "reply_last":[],
+                "reply_date":[],
+                "retweets":[],
+                "retweet_last":[],
+                "retweet_date":[],
+                "tweet_type":[]
            },
            {
                 "name":"The Boy Wonder", 
@@ -183,10 +236,16 @@ class TestNeoDBHandler(unittest.TestCase):
                 "archipelago_id": 2,
 
                 "tweeted":['LRichy'],
-                "count":[20],
-                "tweet_type":['RETWEETS'],
-                "recent_url":['much_url'],
-                "recent":['4000000']
+                "mentions":[0],
+                "mention_last":[""],
+                "mention_date":[""],                
+                "replies":[0],
+                "reply_last":[""],
+                "reply_date":[""],
+                "retweets":[20],
+                "retweet_last":['4000000'],
+                "retweet_date":['thismorning'],
+                "tweet_type":["DIRECT"]
            }
         ]
 
@@ -218,10 +277,16 @@ class TestNeoDBHandler(unittest.TestCase):
                 "archipelago_id": 2,
 
                 "tweeted":['MBEyes','LRichy'],
-                "count":[1,20],
-                "tweet_type":['MENTION_BY_PROXY','RETWEETS'],
-                "recent_url":['a_url', 'much_url'],
-                "recent":['3000000','4000000']
+                "mentions":[1, 0],
+                "mention_last":['3000000', ""],
+                "mention_date":['yesterday', ""],                
+                "replies":[0,0],
+                "reply_last":["",""],
+                "reply_date":["",""],
+                "retweets":[0, 20],
+                "retweet_last":["",'4000000'],
+                "retweet_date":["", 'thismorning'],
+                "tweet_type":["INDIRECT", "DIRECT"]
            }
         ]
 
@@ -251,10 +316,16 @@ class TestNeoDBHandler(unittest.TestCase):
                 "archipelago_id": 2,
 
                 "tweeted":['LRichy'],
-                "count":[20],
-                "tweet_type":['RETWEETS'],
-                "recent_url":['much_url'],
-                "recent":['4000000']
+                "mentions":[0],
+                "mention_last":[""],
+                "mention_date":[""],                
+                "replies":[0],
+                "reply_last":[""],
+                "reply_date":[""],
+                "retweets":[20],
+                "retweet_last":['4000000'],
+                "retweet_date":['thismorning'],
+                "tweet_type":["DIRECT"]
            }
         ]
 
@@ -366,13 +437,13 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(relationship["mention_last"], '1')
         self.assertEqual(relationship["mention_date"], 'a date string')
 
-        self.assertEqual(relationship["replies"], None)
-        self.assertEqual(relationship["reply_last"], None)
-        self.assertEqual(relationship["reply_date"], None)
+        self.assertEqual(relationship["replies"], 0)
+        self.assertEqual(relationship["reply_last"], '')
+        self.assertEqual(relationship["reply_date"], '')
         
-        self.assertEqual(relationship["retweet"], None)
-        self.assertEqual(relationship["retweet_last"], None)
-        self.assertEqual(relationship["retweet_date"], None)
+        self.assertEqual(relationship["retweet"], 0)
+        self.assertEqual(relationship["retweet_last"], '')
+        self.assertEqual(relationship["retweet_date"], '')
        
 
     def test_add_Tweet_to_database__reply(self):
@@ -419,17 +490,17 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[0][0].type, u'DIRECT')
         self.assertEqual(results[0][1], 'The Boy Wonder')
 
-        self.assertEqual(results[0][0]["mentions"], None)
-        self.assertEqual(results[0][0]["mention_last"], None)
-        self.assertEqual(results[0][0]["mention_date"], None)
+        self.assertEqual(results[0][0]["mentions"], 0)
+        self.assertEqual(results[0][0]["mention_last"], '')
+        self.assertEqual(results[0][0]["mention_date"], '')
 
         self.assertEqual(results[0][0]["replies"], 1)
         self.assertEqual(results[0][0]["reply_last"], '1')
         self.assertEqual(results[0][0]["reply_date"], 'a date string')
         
-        self.assertEqual(results[0][0]["retweet"], None)
-        self.assertEqual(results[0][0]["retweet_last"], None)
-        self.assertEqual(results[0][0]["retweet_date"], None)
+        self.assertEqual(results[0][0]["retweet"], 0)
+        self.assertEqual(results[0][0]["retweet_last"], '')
+        self.assertEqual(results[0][0]["retweet_date"], '')
 
 
         self.assertEqual(results[1][0].type, u'DIRECT')
@@ -439,13 +510,13 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[1][0]["mention_last"], '1')
         self.assertEqual(results[1][0]["mention_date"], 'a date string')
 
-        self.assertEqual(results[1][0]["replies"], None)
-        self.assertEqual(results[1][0]["reply_last"], None)
-        self.assertEqual(results[1][0]["reply_date"],  None)
+        self.assertEqual(results[1][0]["replies"], 0)
+        self.assertEqual(results[1][0]["reply_last"], '')
+        self.assertEqual(results[1][0]["reply_date"],  '')
         
-        self.assertEqual(results[1][0]["retweet"], None)
-        self.assertEqual(results[1][0]["retweet_last"], None)
-        self.assertEqual(results[1][0]["retweet_date"], None)
+        self.assertEqual(results[1][0]["retweet"], 0)
+        self.assertEqual(results[1][0]["retweet_last"], '')
+        self.assertEqual(results[1][0]["retweet_date"], '')
 
 
     def test_add_Tweet_to_database__retweet(self):
@@ -496,25 +567,25 @@ class TestNeoDBHandler(unittest.TestCase):
         self.assertEqual(results[0][0]["mention_last"], '1')
         self.assertEqual(results[0][0]["mention_date"], 'a date string')
 
-        self.assertEqual(results[0][0]["replies"], None)
-        self.assertEqual(results[0][0]["reply_last"], None)
-        self.assertEqual(results[0][0]["reply_date"], None)
+        self.assertEqual(results[0][0]["replies"], 0)
+        self.assertEqual(results[0][0]["reply_last"], '')
+        self.assertEqual(results[0][0]["reply_date"], '')
         
-        self.assertEqual(results[0][0]["retweet"], None)
-        self.assertEqual(results[0][0]["retweet_last"], None)
-        self.assertEqual(results[0][0]["retweet_date"], None)
+        self.assertEqual(results[0][0]["retweet"], 0)
+        self.assertEqual(results[0][0]["retweet_last"], '')
+        self.assertEqual(results[0][0]["retweet_date"], '')
 
 
         self.assertEqual(results[1][0].type, u'DIRECT')
         self.assertEqual(results[1][1], 'Michael Blue Eyes')
 
-        self.assertEqual(results[1][0]["mentions"], None)
-        self.assertEqual(results[1][0]["mention_last"], None)
-        self.assertEqual(results[1][0]["mention_date"], None)
+        self.assertEqual(results[1][0]["mentions"], 0)
+        self.assertEqual(results[1][0]["mention_last"], '')
+        self.assertEqual(results[1][0]["mention_date"], '')
 
-        self.assertEqual(results[1][0]["replies"], None)
-        self.assertEqual(results[1][0]["reply_last"], None)
-        self.assertEqual(results[1][0]["reply_date"], None)
+        self.assertEqual(results[1][0]["replies"], 0)
+        self.assertEqual(results[1][0]["reply_last"], '')
+        self.assertEqual(results[1][0]["reply_date"], '')
         
         self.assertEqual(results[1][0]["retweet"], 1)
         self.assertEqual(results[1][0]["retweet_last"], '1')

@@ -14,6 +14,29 @@ class NeoDBHandler(object):
     def __init__(self, n4_database = os.getenv('N4_DATABASE_URL', None) ):
         self.n4_database = n4_database
 
+        self.map_format_return = u"""
+                   a.name AS name, 
+                   a.handle AS handle,
+                   a.party AS party,
+                   a.constituency AS constituency,
+                   a.offices AS offices,
+                   a.tweet_count AS tweets,
+                   a.friends_count AS friends, 
+                   a.followers_count AS followers,
+                   a.archipelago_id AS archipelago_id,
+                    collect(b.handle) as tweeted, 
+                    collect(r.mentions) as mentions,
+                    collect(r.mention_last) as mention_last,
+                    collect(r.mention_date) as mention_date,
+                    collect(r.replies) as replies,
+                    collect(r.reply_last) as reply_last,
+                    collect(r.reply_date) as reply_date,
+                    collect(r.retweets) as retweets,
+                    collect(r.retweet_last) as retweet_last,
+                    collect(r.retweet_date) as retweet_date,
+                    collect(type(r)) as tweet_type
+                """
+
     def test_graph(self):
         n4_graph = Graph(self.n4_database)
 
@@ -89,12 +112,12 @@ class NeoDBHandler(object):
                 ON CREATE SET '''
             request_array[1]=u'''
                     r.mentions = {m},
-                    r.mention_last = { m_l },
-                    r.mention_date = {m_d} '''
+                    r.mention_last = {m_l},
+                    r.mention_date = {m_d}, '''
             request_array[2]=u'''
                     r.replies = {r},
                     r.reply_last = {r_l},
-                    r.reply_date = {r_d} '''
+                    r.reply_date = {r_d}, '''
             request_array[3]=u'''
                     r.retweet = {t},
                     r.retweet_last = {t_l},
@@ -110,19 +133,28 @@ class NeoDBHandler(object):
                     r.reply_last = {r_l},
                     r.reply_date = {r_d} '''
             request_array[7]=u'''
-                    r.retweet =  r.retweet +{t},
+                    r.retweets =  r.retweets +{t},
                     r.retweet_last = {t_l},
                     r.retweet_date = {t_d}
             '''
 
             if request_type!='m':
-                request_array[1], request_array[5] = '',''
+                request_array[5] = ''
+                request_array[1] = request_array[1].format(m=0,m_l='""',m_d='""')
             if request_type!='r':
-                request_array[2], request_array[6] = '',''
+                request_array[6] = ''
+                request_array[2] = request_array[2].format(r=0,r_l='""',r_d='""')
             if request_type!='t':
-                request_array[3], request_array[7] = '',''
+                request_array[7] = ''
+                request_array[3] = request_array[3].format(t=0,t_l='""',t_d='""')
             return ''.join(request_array)
 
+
+
+        # default_params {
+        #     'm':0, 'm_d':'', 'm_l':'',
+        #     'r':0, 'r_d':'', 'r_d':'',
+        #     't':0, 't_d':''}
 
         requests = []
 
@@ -135,7 +167,7 @@ class NeoDBHandler(object):
                     "m":1,
                     "m_d":tweet.date,
                     "m_l": str(tweet.tweet_id)
-                    }
+                }
             ) for mentioned in tweet.mentions ]
 
         replies_request_input = [
@@ -207,23 +239,9 @@ class NeoDBHandler(object):
             MATCH (a {party:{node_partyA}})
             OPTIONAL MATCH (a)-[r]->(b)
             WHERE a.party = {node_partyA}
-                AND r.count >= {min_tweets} 
+                AND r.mentions + r.retweets + r.replies >= {min_tweets} 
                 AND a <> b
-            RETURN a.name AS name, 
-                   a.handle AS handle,
-                   a.party AS party,
-                   a.constituency AS constituency,
-                   a.offices AS offices,
-                   a.tweet_count AS tweets,
-                   a.friends_count AS friends, 
-                   a.followers_count AS followers,
-                   a.archipelago_id AS archipelago_id,
-                    collect(b.handle) as tweeted, 
-                    collect(r.count) as count,
-                    collect(type(r)) as tweet_type,
-                    collect(r.url) as recent_url,
-                    collect(r.recent) as recent
-                '''
+            RETURN ''' + self.map_format_return
 
         request_input = {'node_partyA':partyA, 'min_tweets':min_tweets}
 
@@ -236,22 +254,8 @@ class NeoDBHandler(object):
             WHERE a.party = {node_partyA}
                 AND b.party = {node_partyB}  
                 AND a <> b
-                AND r.count >= {min_tweets} 
-            RETURN a.name AS name, 
-                   a.handle AS handle,
-                   a.party AS party,
-                   a.constituency AS constituency,
-                   a.offices AS offices,
-                   a.tweet_count AS tweets,
-                   a.friends_count AS friends, 
-                   a.followers_count AS followers,
-                   a.archipelago_id AS archipelago_id,
-                    collect(b.handle) as tweeted, 
-                    collect(r.count) as count,
-                    collect(type(r)) as tweet_type,
-                    collect(r.url) as recent_url,
-                    collect(r.recent) as recent
-                '''
+                AND r.mentions + r.retweets + r.replies >= {min_tweets} 
+            RETURN ''' + self.map_format_return
 
         request_input = {'node_partyA':partyA, 'node_partyB':partyB, 'min_tweets':min_tweets}
 
