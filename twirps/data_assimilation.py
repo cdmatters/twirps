@@ -46,35 +46,22 @@ def neo_to_d3map(neo_map):
             "clicked":0
         }
 
-        retweets, mentions, replies, by_proxy = {}, {}, {}, {}
-        all_tweets, no_by_proxy = {}, {}
+        relationships = {}
 
         for i, t in enumerate(neo_node.tweeted):
+            retweets, mentions, replies, by_proxy = None, None, None, None
             if neo_node.tweet_type[i] == 'DIRECT':
-                if neo_node.mentions[i]>0:
-                    mentions[t] = (neo_node.mentions[i], neo_node.mention_last[i])  
-                if neo_node.replies[i]>0:
-                    replies[t] = (neo_node.replies[i], neo_node.reply_last[i])
-                if neo_node.retweets[i]>0:
-                    retweets[t] = (neo_node.retweets[i], neo_node.retweet_last[i])
-                
+                mentions = (neo_node.mentions[i], neo_node.mention_last[i]) if neo_node.mentions[i]>0 else None
+                replies  = (neo_node.replies[i], neo_node.reply_last[i]) if neo_node.replies[i]>0 else None
+                retweets = (neo_node.retweets[i], neo_node.retweet_last[i]) if neo_node.retweets[i]>0 else None
+
             elif neo_node.tweet_type[i] =='INDIRECT':
-                if neo_node.mentions[i]>0:
-                    by_proxy[t] = (neo_node.mentions[i], neo_node.mention_last[i])
+                by_proxy = (neo_node.mentions[i], neo_node.mention_last[i]) if neo_node.mentions[i]>0 else None
     
 
-        twirp.update( {"relationships":{
-                                "mentions":mentions,
-                                "retweets":retweets,
-                                "replies":replies,
-                                "by_proxy":by_proxy,
-                                # "all_tweets":all_tweets,
-                                # "no_by_proxy":no_by_proxy
-                            }
-        })
+            relationships.update({t:{"m":mentions,"r":replies,"t":retweets,"b":by_proxy}})
 
-        # LOGGER.info(twirp['relationships'])
-        # LOGGER.info(neo_node.tweeted)
+        twirp.update({'relationships':relationships})
         nodes.append(twirp)
     return {"nodes": nodes}
 

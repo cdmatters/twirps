@@ -105,6 +105,18 @@
 
     }
 
+
+
+    function edgeToUrls(edge){
+        urls = {}
+        for (c in edge.contact){
+            if (edge.contact[c][1] !== null){ 
+                urls[c]='http://twitter.com/'+edge.handle+'/status/'+edge.contact[c][1]
+            }
+        }
+        return urls
+    }
+
     function requestMapToD3Map(backend_map){
         function filterTweetType(nodeList, passes){
             return nodeList.forEach( function(node, index, array){
@@ -264,49 +276,54 @@
     }
 
     function addNodesBezierEdges(clickedNode){
-
-        for (contactType in clickedNode.relationships){
-            var contacts = clickedNode.relationships[contactType]
-
-            for ( targetHandle in contacts){
-                
-                //  ERROR: if node not plotted, ignore & continue
-                if  (visibleNodesHandleMap[targetHandle] == undefined){
-                    console.log("Missing node: "+targetHandle+" for "+clickedNode.handle);
-                    continue;
-                }
-                
-                var s_index = visibleNodesHandleMap[clickedNode.handle], 
-                    t_index = visibleNodesHandleMap[targetHandle];
-
-                var s = visibleNodes[s_index],
-                    t = visibleNodes[t_index],
-                    i = {};
-
-                var invisibleEdgeA = {source : s, target : i},
-                    invisibleEdgeB = {source : i, target : t};
-
-                var visibleEdge = {
-                        source:s, inter:i, target:t,
-                        contactType:contactType, value:contacts[targetHandle][0], url:contacts[targetHandle][1] 
-                }
-                
-                console.log(targetHandle +': '+visibleEdge.url)
-
-                if (s.handle != t.handle){
-                    invisibleNodes.push(i);
-                    invisibleEdges.push(invisibleEdgeA, invisibleEdgeB);
-
-                    visibleEdges.push(visibleEdge);
-
-                    allNodes.push(i)
-                    allEdges.push(invisibleEdgeA, invisibleEdgeB, visibleEdge)
-
-                    // node.push(i)
-                    // link.push(visibleEdge)
-                }
-            
+        for (targetHandle in clickedNode.relationships){
+    
+            //  ERROR: if node not plotted, ignore & continue
+            if  (visibleNodesHandleMap[targetHandle] == undefined){
+                console.log("Missing node: "+targetHandle+" for "+clickedNode.handle);
+                continue;
             }
+
+            var s_index = visibleNodesHandleMap[clickedNode.handle], 
+                t_index = visibleNodesHandleMap[targetHandle];
+
+            var s = visibleNodes[s_index],
+                t = visibleNodes[t_index],
+                i = {};
+
+            var invisibleEdgeA = {source : s, target : i},
+                invisibleEdgeB = {source : i, target : t};
+
+            var visibleEdge = {
+                    source:s, inter:i, target:t,
+                    handle:clickedNode.handle,
+                    contact:{
+                        mentions:clickedNode.relationships[targetHandle]['m']||[0,null],
+                        replies:clickedNode.relationships[targetHandle]['r']||[0,null],
+                        retweets:clickedNode.relationships[targetHandle]['t']||[0,null],
+                        by_proxy:clickedNode.relationships[targetHandle]['b']||[0,null],
+                    }
+            }
+            
+            urls = edgeToUrls(visibleEdge);
+            for (u in urls){
+                console.log(targetHandle +': '+u+' '+urls[u]);
+            }
+
+            if (s.handle != t.handle){
+                invisibleNodes.push(i);
+                invisibleEdges.push(invisibleEdgeA, invisibleEdgeB);
+
+                visibleEdges.push(visibleEdge);
+
+                allNodes.push(i)
+                allEdges.push(invisibleEdgeA, invisibleEdgeB, visibleEdge)
+
+                // node.push(i)
+                // link.push(visibleEdge)
+            }
+            
+            
 
         }
     }
