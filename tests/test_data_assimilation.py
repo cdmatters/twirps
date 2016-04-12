@@ -99,8 +99,8 @@ class TestDataAssimilation(unittest.TestCase):
         results = data_assimilation.neo_to_d3map(mock_object_input)
 
 
-        self.assertEqual(len(results['nodes']), len(test_reference))
+        self.assertEqual(len(results), len(test_reference))
         for i, t in enumerate(test_reference):
             for k in t.keys():
-                self.assertEqual(results['nodes'][i][k], test_reference[i][k])
+                self.assertEqual(results[i][k], test_reference[i][k])
 

@@ -131,8 +131,9 @@
         //filterTweetType(backend_map.nodes, 'no_by_proxy');
 
         return { 
-            visibleNodes:backend_map.nodes,
-            visibleEdges:[]
+            visibleNodes:backend_map.unclicked_nodes.concat(backend_map.clicked_nodes),
+            clickedNodes:backend_map.clicked_nodes,
+            visibleEdges:[],
         }
     }
 
@@ -144,10 +145,13 @@
 
         allNodes = map.visibleNodes.slice();
         allEdges = map.visibleEdges.slice();
-
+        
         visibleNodes.forEach(function(d){ 
             visibleNodesHandleMap[d.handle] = visibleNodes.indexOf(d)
         });
+
+        map.clickedNodes.forEach(addNodesBezierEdges);
+
 
         force = d3.layout.force()
             .charge(-200)
@@ -307,7 +311,7 @@
             
             urls = edgeToUrls(visibleEdge);
             for (u in urls){
-                console.log(targetHandle +': '+u+' '+urls[u]);
+                // console.log(targetHandle +': '+u+' '+urls[u]);
             }
 
             if (s.handle != t.handle){

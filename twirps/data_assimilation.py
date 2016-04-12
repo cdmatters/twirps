@@ -10,19 +10,22 @@ def return_full_map(min_tweets, retweets_only=False, mentions_only=False):
     db_handler = TDBHandler()
     result = db_handler.get_full_map(min_tweets)
 
-    return neo_to_d3map(result)
+    return mark_clicked(neo_to_d3map(result), lambda x: False)
 
 def return_party_nodes(party, min_tweets):
     db_handler = TDBHandler()
     result = db_handler.get_party_nodes(party, min_tweets)
 
-    return neo_to_d3map(result)
+    d3map = neo_to_d3map(result)
+    comp = party_comparator(party)
+
+    return mark_clicked(neo_to_d3map(result), comp)
 
 def return_crossparty_nodes(partyA, partyB, min_tweets):
     db_handler = TDBHandler()
     result = db_handler.get_crossparty_nodes(partyA,partyB,min_tweets) 
 
-    return neo_to_d3map(result)
+    return mark_clicked(neo_to_d3map(result), lambda x: False)
 
 # def return_neighbours():
 #     db_handler = TDBHandler()
@@ -63,7 +66,23 @@ def neo_to_d3map(neo_map):
 
         twirp.update({'relationships':relationships})
         nodes.append(twirp)
-    return {"nodes": nodes}
+    return nodes
+
+def mark_clicked(d3_map, comparator):
+    clicked, unclicked = [],[]
+    for node in d3_map:
+        if comparator(node):
+            node["clicked"] = 1
+            clicked.append(node)
+        else:
+            unclicked.append(node)
+    return {'unclicked_nodes':unclicked, "clicked_nodes":clicked}
+
+def party_comparator(party):
+    p = party
+    def closure(node):
+        return node["party"]==party
+    return closure
 
 # This module is used to assimilate and clean the data provided in the 
 # twirpy.db database. It is also used to isolate useful pieces of data and
