@@ -6,32 +6,43 @@ from classes import Twirp, Tweet, TDBHandler
 
 LOGGER = logging.getLogger(__name__)
 
-def return_full_map(min_tweets, retweets_only=False, mentions_only=False):
+def return_full_map(min_tweets, clicked, click_arg):
     db_handler = TDBHandler()
     result = db_handler.get_full_map(min_tweets)
 
-    return mark_clicked(neo_to_d3map(result), lambda x: False)
-
-def return_party_nodes(party, min_tweets):
-    db_handler = TDBHandler()
-    result = db_handler.get_party_nodes(party, min_tweets)
-
-    d3map = neo_to_d3map(result)
-    comp = party_comparator(party)
+    comp = select_comparator(clicked, click_arg) 
 
     return mark_clicked(neo_to_d3map(result), comp)
 
-def return_crossparty_nodes(partyA, partyB, min_tweets):
+def return_party_nodes(party, min_tweets, clicked, click_arg):
+    db_handler = TDBHandler()
+    result = db_handler.get_party_nodes(party, min_tweets)
+
+    comp = select_comparator(clicked, click_arg) 
+
+    return mark_clicked(neo_to_d3map(result), comp)
+
+def return_crossparty_nodes(partyA, partyB, min_tweets, clicked, click_arg):
     db_handler = TDBHandler()
     result = db_handler.get_crossparty_nodes(partyA,partyB,min_tweets) 
 
-    return mark_clicked(neo_to_d3map(result), lambda x: False)
+    comp = select_comparator(clicked, click_arg) 
+
+    return mark_clicked(neo_to_d3map(result), comp)
 
 # def return_neighbours():
 #     db_handler = TDBHandler()
 #     result = db_handler.get_neighbours()
 
 #     return neo_to_d3map(result)
+
+def select_comparator(comp_string, arg=None):
+    if comp_string == 'party':
+        return party_comparator(arg)
+    elif comp_string == 'all':
+        return lambda x:True
+    else:
+        return lambda x:False
 
 def neo_to_d3map(neo_map): 
     nodes = []
