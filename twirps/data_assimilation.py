@@ -40,7 +40,7 @@ def select_comparator(comp_string, arg=None):
     if comp_string == 'party':
         return party_comparator(arg)
     elif comp_string == 'all':
-        return lambda x:True
+        return all_comparator(arg)
     else:
         return lambda x:False
 
@@ -94,6 +94,12 @@ def party_comparator(party):
     def closure(node):
         return node["party"]==party
     return closure
+
+def all_comparator(strict):
+    if strict=='strict':
+        return lambda x:True
+    else: 
+        return lambda x: x["relationships"]!={}
 
 # This module is used to assimilate and clean the data provided in the 
 # twirpy.db database. It is also used to isolate useful pieces of data and
