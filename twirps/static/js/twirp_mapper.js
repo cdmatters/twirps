@@ -118,20 +118,30 @@
     }
 
     function requestMapToD3Map(backend_map){
-        function filterTweetType(nodeList, passes){
+        function filterOutTweetType(nodeList, filterOut){
             return nodeList.forEach( function(node, index, array){
-                for (relationshipType in node.relationships){
-                    if (relationshipType != passes){
-                        delete node.relationships[relationshipType]
+                for (handle in node.relationships){
+                    for (relType in node.relationships[handle]){
+                        if (node.relationships[handle][relType]==null || relType==filterOut){
+                            delete node.relationships[handle][relType];
+
+                        }
+                    }
+                    if (jQuery.isEmptyObject(node.relationships[handle])){
+                        delete node.relationships[handle]
                     }
                 }
+        
                 array[index]=node
             })
         }
-        //filterTweetType(backend_map.nodes, 'no_by_proxy');
+
+
+        all_visible_nodes = backend_map.unclicked_nodes.concat(backend_map.clicked_nodes),
+        filterOutTweetType(all_visible_nodes, 'b');
 
         return { 
-            visibleNodes:backend_map.unclicked_nodes.concat(backend_map.clicked_nodes),
+            visibleNodes:all_visible_nodes,
             clickedNodes:backend_map.clicked_nodes,
             visibleEdges:[],
         }
@@ -262,6 +272,7 @@
     }
 
     function clickNode(clickedNode){
+        console.log(clickedNode);
 
         if (clickedNode.clicked==0){
             clickedNode.clicked=1;
