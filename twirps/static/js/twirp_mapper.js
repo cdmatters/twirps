@@ -204,7 +204,7 @@
 
         force
             .nodes(allNodes)
-            .links(allEdges)
+            .links(invisibleEdges)
             .start()
         
         // draw order: links under arrows under nodes
