@@ -124,25 +124,34 @@
                     for (relType in node.relationships[handle]){
                         if (node.relationships[handle][relType]==null || relType==filterOut){
                             delete node.relationships[handle][relType];
-
                         }
                     }
-                    if (jQuery.isEmptyObject(node.relationships[handle])){
+                    if ($.isEmptyObject(node.relationships[handle])){
                         delete node.relationships[handle]
                     }
                 }
-        
-                array[index]=node
             })
         }
 
+        function filterUnclickedNoRelationships(nodeList){
+            return nodeList.forEach(function(node, index, array){
+                if ($.isEmptyObject(node.relationships)){
+                    node.clicked = 0
+                }
+                array[index]=node  
+            })
+        }
 
         all_visible_nodes = backend_map.unclicked_nodes.concat(backend_map.clicked_nodes),
+        clicked_nodes = backend_map.clicked_nodes
+
         filterOutTweetType(all_visible_nodes, 'b');
+        filterUnclickedNoRelationships(clicked_nodes)
+
 
         return { 
             visibleNodes:all_visible_nodes,
-            clickedNodes:backend_map.clicked_nodes,
+            clickedNodes:clicked_nodes,
             visibleEdges:[],
         }
     }
