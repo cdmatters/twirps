@@ -30,7 +30,7 @@ Archipelago requires a They Work For You api, available from They Work For You d
 
 About
 -------------
-###Current Functionality
+### Current Functionality
 
 
 A working web app is under construction. This will live update the data set, whilst also providing an engaging front end, and tools to explore the data.
@@ -39,27 +39,27 @@ This work can be found in the main **twirps** directory.
 
 To be updated shortly. 
 
-###Historical Fuctionality
+### Historical Fuctionality
 
 This idea was born at the Recurse Centre in April/May `15 at the time of the British General Election.
 
 Back then it was effectively 3 scripts for collecting, assimilating and investigating data, to generate static json and visualise data locally in the browser. This old code can still be found in the **historical** directory, along with some of the raw data.
 
-#####Data & Code
+##### Data & Code
 + *twirps_data_collection* is responsible for all data collection from Twitter
 + *twirps_data_assimilation* takes the raw data and generates some useful JSON
 + *twirps_data_investigation* provides analytical investigations of data using scikit and numpy
 
-#####Visualization
+##### Visualization
 + d3 force graph used to generate an intereactive map of tweets and retweets for MPs using 4 years data in run up to General Election 2015 
 + d3 divergent force graph showing the clusters from the kmeans data analysis investigations, but visually coloured by potential causes of clustering (party, geography, etc).  *in progress*
 
-#####Analysis
+##### Analysis
 + The K-Mean clustering algorithm is implemented in *twirps_data_assimilation*, designed to work on frequency json, to see if any natural clusterings form from data on hashtags, words, urls etc.  *refinement of model in progress*
 
 RoadMap
 -----------
-####App
+#### App
 + ~~build generic Flask backend~~
 + ~~move SQL -> graph database~~   *//maybe keep both*
 + ~~data collection methods~~
